@@ -1,0 +1,14 @@
+# .github/ISSUE_TEMPLATE/feature_request.yaml
+name: ✨ 기능 제안
+description: 새로운 기능이나 개선사항을 제안해주세요.
+title: "[FEAT] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    attributes:
+      label: 제안 내용
+      description: 어떤 기능이 필요하거나 개선되었으면 하나요?
+  - type: textarea
+    attributes:
+      label: 기대 효과
+      description: 이 기능이 도입되면 어떤 점이 좋아지나요?

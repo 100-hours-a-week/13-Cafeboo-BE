@@ -1,0 +1,31 @@
+name: 📋 일반 이슈
+description: 기타 요청, 질문, 논의가 있을 때 사용해주세요.
+title: "[GENERAL] "
+labels: ["question", "discussion"]
+body:
+  - type: textarea
+    attributes:
+      label: 이슈 내용
+      description: 어떤 주제에 대해 이야기하고 싶으신가요?
+      placeholder: |
+        예) 코드 스타일 규칙에 대해 논의하고 싶습니다.
+  - type: dropdown
+    attributes:
+      label: 이슈 유형
+      description: 이 이슈는 어떤 성격인가요?
+      options:
+        - 질문 / 질의
+        - 논의 / 제안
+        - 작업 요청
+        - 문서 개선
+        - 기타
+  - type: textarea
+    attributes:
+      label: 관련 정보 / 배경
+      description: 배경 설명, 참고 링크, 관련 코드 등 추가 정보를 작성해주세요.
+      placeholder: |
+        예: 이전 PR #42에서 논의되었던 사항입니다.
+  - type: textarea
+    attributes:
+      label: 추가 의견
+      description: 기타 자유롭게 의견을 작성해주세요.

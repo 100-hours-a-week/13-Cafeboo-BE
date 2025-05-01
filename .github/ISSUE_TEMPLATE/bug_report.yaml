@@ -1,0 +1,29 @@
+# .github/ISSUE_TEMPLATE/bug_report.yaml
+name: 🐞 버그 리포트
+description: 버그를 신고하고 재현 과정을 공유해주세요.
+title: "[BUG] "
+labels: ["bug"]
+body:
+  - type: textarea
+    attributes:
+      label: 버그 설명
+      description: 어떤 문제가 발생했는지 간단히 설명해주세요.
+      placeholder: 예) 로그인 버튼을 눌러도 반응이 없습니다.
+  - type: textarea
+    attributes:
+      label: 재현 절차
+      description: 문제를 어떻게 재현할 수 있나요?
+      placeholder: |
+        1. 로그인 페이지로 이동  
+        2. 아이디와 비밀번호 입력  
+        3. 로그인 버튼 클릭  
+        4. 아무 반응 없음
+  - type: textarea
+    attributes:
+      label: 예상 동작
+      description: 원래 기대했던 동작을 설명해주세요.
+  - type: input
+    attributes:
+      label: 브라우저 / OS / 환경
+      description: 문제가 발생한 환경을 입력해주세요.
+      placeholder: Chrome 123 / macOS / Android

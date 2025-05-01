@@ -1,7 +1,9 @@
-package com.ktb.cafeboo.domain.caffeinediary.model;
+package com.ktb.cafeboo.domain.drink.model;
 
 import com.ktb.cafeboo.global.BaseEntity;
-import jakarta.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,12 +13,13 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@Table(name = "CaffeineIntakes")
+@Entity
+@Table(name = "Drinks")
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CaffineIntake extends BaseEntity {
+public class Drink extends BaseEntity {
+    private String name;
 
-
-
+    private String type;
 }

@@ -109,7 +109,6 @@ public class CaffeineIntakeService {
      * @return 수정된 카페인 섭취 기록에 대한 응답
      * @throws IllegalArgumentException 해당 ID의 섭취 기록이 없거나, 유효하지 않은 음료 ID가 입력된 경우 발생
      */
-    @Transactional
     public CaffeineIntakeResponse updateCaffeineIntake(Long intakeId, CaffeineIntakeRequest request) {
         // 1. 수정할 섭취 기록 조회
         CaffeineIntake intake = getCaffeineIntakeById(intakeId);
@@ -238,5 +237,20 @@ public class CaffeineIntakeService {
             }
         }
         residualRepository.saveAll(residuals);
+    }
+
+    public void deleteCaffeineIntake(Long intakeId) {
+        // 1. 수정할 섭취 기록 조회
+        CaffeineIntake intake = getCaffeineIntakeById(intakeId);
+        User user = intake.getUser();
+        LocalDateTime previousIntakeTime = intake.getIntakeTime();
+        float previousCaffeineAmount = intake.getCaffeineAmountMg();
+        int previousDrinkCount = intake.getDrinkCount();
+
+        // 2. 해당 섭취 내역의 영향이 있는 시간 범위 내의 카페인 잔존량 수치 수정
+        modifyResidualAmounts(user, previousIntakeTime, previousCaffeineAmount * previousDrinkCount);
+
+        // 3. 해당 데이터 CaffeineIntakes 테이블에서 삭제
+        intakeRepository.deleteById(intakeId);
     }
 }

@@ -1,0 +1,85 @@
+package com.ktb.cafeboo.domain.auth.service;
+
+import com.ktb.cafeboo.domain.auth.dto.KakaoLoginResponse;
+import com.ktb.cafeboo.domain.auth.dto.KakaoTokenResponse;
+import com.ktb.cafeboo.domain.auth.dto.KakaoUserResponse;
+import com.ktb.cafeboo.domain.auth.infra.KakaoTokenClient;
+import com.ktb.cafeboo.domain.auth.infra.KakaoUserClient;
+import com.ktb.cafeboo.domain.user.model.User;
+import com.ktb.cafeboo.domain.user.repository.UserRepository;
+import com.ktb.cafeboo.global.enums.LoginType;
+import com.ktb.cafeboo.global.enums.UserRole;
+import com.ktb.cafeboo.global.security.JwtProvider;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import java.util.Optional;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class KakaoOauthService {
+    private final KakaoTokenClient kakaoTokenClient;
+    private final KakaoUserClient kakaoUserClient;
+    private final UserRepository userRepository;
+    private final JwtProvider jwtProvider;
+
+    @Value("${spring.security.oauth2.client.registration.kakao.client-id}")
+    private String clientId;
+
+    @Value("${spring.security.oauth2.client.registration.kakao.redirect-uri}")
+    private String redirectUri;
+
+    @Value("${spring.security.oauth2.client.registration.kakao.scope}")
+    private String scopes;
+
+
+    @Value("${spring.security.oauth2.client.registration.kakao.authorization-grant-type}")
+    private String grantType;
+
+
+    public String buildKakaoAuthorizationUrl() {
+        return UriComponentsBuilder.fromHttpUrl("https://kauth.kakao.com/oauth/authorize")
+                .queryParam("client_id", clientId)
+                .queryParam("redirect_uri", redirectUri)
+                .queryParam("response_type", "code")
+                .queryParam("scope", scopes)
+                .build()
+                .toUriString();
+    }
+
+    public KakaoLoginResponse login(String code) {
+        KakaoTokenResponse kakaoToken = kakaoTokenClient.getToken(code, clientId, redirectUri, grantType);
+        KakaoUserResponse kakaoUser = kakaoUserClient.getUserInfo(kakaoToken.getAccessToken());
+
+        Optional<User> userOpt = userRepository.findByOauthIdAndLoginType(kakaoUser.getId(), LoginType.KAKAO);
+        User user;
+        boolean isNewUser;
+
+        if (userOpt.isPresent()) {
+            user = userOpt.get();
+            isNewUser = false;
+        } else {
+            user = userRepository.save(User.fromKakao(kakaoUser));
+            isNewUser = true;
+        }
+
+        String accessToken = jwtProvider.createAccessToken(
+                String.valueOf(user.getId()),
+                LoginType.KAKAO.name(),
+                user.getRole().name()
+        );
+        String refreshToken = jwtProvider.createRefreshToken(
+                String.valueOf(user.getId()),
+                LoginType.KAKAO.name(),
+                user.getRole().name()
+        );
+        user.updateRefreshToken(refreshToken);
+
+        return new KakaoLoginResponse(accessToken, refreshToken, isNewUser);
+    }
+}

@@ -19,6 +19,11 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 public class Drink extends BaseEntity {
+    // 섭취 음료 ID
+    @ManyToOne
+    @JoinColumn(name = "cafe_id", nullable = false)
+    private Cafe cafe;
+
     private String name;
 
     private String type;

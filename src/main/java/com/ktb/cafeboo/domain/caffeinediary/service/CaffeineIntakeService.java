@@ -3,27 +3,18 @@ package com.ktb.cafeboo.domain.caffeinediary.service;
 import com.ktb.cafeboo.domain.caffeinediary.dto.CaffeineIntakeRequest;
 import com.ktb.cafeboo.domain.caffeinediary.dto.CaffeineIntakeResponse;
 import com.ktb.cafeboo.domain.caffeinediary.model.CaffeineIntake;
-import com.ktb.cafeboo.domain.caffeinediary.model.CaffeineResidual;
 import com.ktb.cafeboo.domain.drink.model.Drink;
 import com.ktb.cafeboo.domain.caffeinediary.repository.CaffeineIntakeRepository;
 import com.ktb.cafeboo.domain.caffeinediary.repository.CaffeineResidualRepository;
-import com.ktb.cafeboo.domain.drink.repository.DrinkRepository;
 import com.ktb.cafeboo.domain.drink.service.DrinkService;
 import com.ktb.cafeboo.domain.report.service.DailyStatisticsService;
 import com.ktb.cafeboo.domain.user.model.User;
-import com.ktb.cafeboo.domain.user.repository.UserRepository;
 import com.ktb.cafeboo.domain.user.service.UserService;
 import jakarta.transaction.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.cache.annotation.Cacheable;
 
 @Service
 @RequiredArgsConstructor
@@ -36,7 +27,7 @@ public class CaffeineIntakeService {
     private final DailyStatisticsService dailyStatisticsService;
     private final UserService userService;
     private final DrinkService drinkService;
-    private final ResidualAmountService residualAmountService;
+    private final CaffeineResidualService caffeineResidualService;
 
     private static final double DEFAULT_HALF_LIFE_HOUR = 5.0; // 평균 반감기
 
@@ -67,7 +58,7 @@ public class CaffeineIntakeService {
         intakeRepository.save(intake);
 
         // 2. 잔존량 계산
-        residualAmountService.updateResidualAmounts(user, request.getIntakeTime(), request.getCaffeineAmount());
+        caffeineResidualService.updateResidualAmounts(user, request.getIntakeTime(), request.getCaffeineAmount());
 
         // 3. DailyStatistics 업데이트
         dailyStatisticsService.updateDailyStatistics(user, LocalDate.from(request.getIntakeTime()), request.getCaffeineAmount());
@@ -130,11 +121,11 @@ public class CaffeineIntakeService {
         LocalDateTime newIntakeTime = request.getIntakeTime() != null ? request.getIntakeTime() : intake.getIntakeTime();
 
         // 기존 시간 기준 삭제 ->  수정 이전의 잔존량 삭제
-        residualAmountService.modifyResidualAmounts(user, previousIntakeTime, previousCaffeineAmount);
+        caffeineResidualService.modifyResidualAmounts(user, previousIntakeTime, previousCaffeineAmount);
         dailyStatisticsService.updateDailyStatistics(user, LocalDate.from(previousIntakeTime), previousCaffeineAmount * -1);
 
         // 새로운 시간 기준으로 update -> 수정 후의 잔존량 계산 및 저장
-        residualAmountService.updateResidualAmounts(user, newIntakeTime, newCaffeineAmount);
+        caffeineResidualService.updateResidualAmounts(user, newIntakeTime, newCaffeineAmount);
         dailyStatisticsService.updateDailyStatistics(user, LocalDate.from(request.getIntakeTime()), request.getCaffeineAmount());
 
         return CaffeineIntakeResponse.builder()
@@ -156,7 +147,7 @@ public class CaffeineIntakeService {
         int previousDrinkCount = intake.getDrinkCount();
 
         // 2. 해당 섭취 내역의 영향이 있는 시간 범위 내의 카페인 잔존량 수치 수정
-        residualAmountService.modifyResidualAmounts(user, previousIntakeTime, previousCaffeineAmount);
+        caffeineResidualService.modifyResidualAmounts(user, previousIntakeTime, previousCaffeineAmount);
         dailyStatisticsService.updateDailyStatistics(user, LocalDate.from(previousIntakeTime), previousCaffeineAmount * -1);
 
         // 3. 해당 데이터 CaffeineIntakes 테이블에서 삭제

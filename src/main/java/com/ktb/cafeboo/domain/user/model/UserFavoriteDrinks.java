@@ -1,6 +1,6 @@
 package com.ktb.cafeboo.domain.user.model;
 
-import com.ktb.cafeboo.domain.caffeinediary.model.Drink;
+import com.ktb.cafeboo.domain.drink.model.Drink;
 import com.ktb.cafeboo.global.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Getter;

@@ -48,9 +48,12 @@ public class DailyStatisticsService {
      * @param additionalCaffeine 섭취 내역이 추가/변경됨에 따라 변경될 카페인 수치
      */
     public void updateDailyStatistics(User user, LocalDate date, float additionalCaffeine) {
+        //우선은 동기적으로 구현 진행
         YearlyReport yearlyReport = yearlyReportService.getOrCreateYearlyReport(user.getId(), date);
+        yearlyReportService.updateYearlyReport(user.getId(), yearlyReport, additionalCaffeine);
 
         MonthlyReport monthlyReport = monthlyReportService.getOrCreateMonthlyReport(user.getId(), yearlyReport, date);
+        monthlyReportService.updateMonthlyReport(user.getId(), monthlyReport, additionalCaffeine);
 
         WeeklyReport weeklyReport = weeklyReportService.getOrCreateWeeklyReport(user.getId(), monthlyReport, date);
         weeklyReportService.updateWeeklyReport(user.getId(), weeklyReport, additionalCaffeine);

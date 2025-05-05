@@ -21,9 +21,6 @@ public interface DailyStatisticsRepository extends JpaRepository<DailyStatistics
         @Param("endDate") LocalDate endDate
     );
 
-    // 주간 통계 ID로 조회
-    List<DailyStatistics> findByWeeklyStatisticsId(Long weeklyStatisticsId);
-
     // 특정 유저의 특정 날짜의 총 카페인 섭취량 조회
     @Query("SELECT ds.totalCaffeineMg FROM DailyStatistics ds WHERE ds.user.id = :userId AND ds.date = :date")
     Optional<Float> findTotalCaffeineByDate(@Param("userId") Long userId, @Param("date") LocalDate date);

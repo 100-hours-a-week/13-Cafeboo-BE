@@ -9,4 +9,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface WeeklyReportRepository extends JpaRepository<WeeklyReport, Long> {
     Optional<WeeklyReport> findByUserIdAndYearAndWeekNum(Long userId, int year, int weekNum);
+
+    List<WeeklyReport> findByUserIdAndYearAndMonth(Long userId, Integer year, Integer month);
 }

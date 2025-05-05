@@ -97,7 +97,7 @@ public class WeeklyReportController {
 
         return ResponseEntity.ok(ApiResponse.<com.ktb.cafeboo.domain.report.dto.WeeklyCaffeineReportResponse>builder()
             .status(200)
-            .code("DAILY_CAFFEINE_REPORT_SUCCESS")
+            .code("WEEKLY_CAFFEINE_REPORT_SUCCESS")
             .message("주간 카페인 리포트를 성공적으로 조회했습니다.")
             .data(response)
             .build());

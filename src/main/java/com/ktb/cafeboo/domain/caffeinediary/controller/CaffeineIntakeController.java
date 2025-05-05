@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,12 +30,12 @@ public class CaffeineIntakeController {
         @RequestBody CaffeineIntakeRequest request) {
 
         // 1. 더미 유저 조회
-        User dummyUser = userService.getUserById(2L); // 예시: ID가 1인 유저를 조회
+        User dummyUser = userService.findUserById(2L); // 예시: ID가 1인 유저를 조회
         // Long userId = Long.parseLong(userDetails.getUsername()); // Assuming username contains userId -> 더미 유저 사용
         Long userId = dummyUser.getId();
 
         // 2. 서비스 메서드 호출
-        CaffeineIntakeResponse response = caffeineIntakeService.recordCaffeineIntake(dummyUser, request);
+        CaffeineIntakeResponse response = caffeineIntakeService.recordCaffeineIntake(userId, request);
 
         // 3. 응답 반환
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -46,13 +47,14 @@ public class CaffeineIntakeController {
                 .build());
     }
 
-    @PatchMapping
+    @PatchMapping("/{id}")
     public ResponseEntity<ApiResponse<CaffeineIntakeResponse>> updateCaffeineIntake(
         /*@AuthenticationPrincipal UserDetails userDetails,  더미 유저 사용으로 주석 처리*/
+        @PathVariable Long id,
         @RequestBody CaffeineIntakeRequest request) {
 
         // 1. 서비스 메서드 호출
-        CaffeineIntakeResponse response = caffeineIntakeService.updateCaffeineIntake(1L, request);
+        CaffeineIntakeResponse response = caffeineIntakeService.updateCaffeineIntake(id, request);
 
         // 2. 응답 반환
         return ResponseEntity.status(HttpStatus.OK)
@@ -64,13 +66,13 @@ public class CaffeineIntakeController {
                 .build());
     }
 
-    @DeleteMapping
+    @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<CaffeineIntakeResponse>>deleteCaffeineIntake(
         /*@AuthenticationPrincipal UserDetails userDetails,  더미 유저 사용으로 주석 처리*/
-        @RequestBody CaffeineIntakeRequest request) {
+        @PathVariable Long id) {
 
         // 1. 서비스 메서드 호출
-        caffeineIntakeService.deleteCaffeineIntake(request.getDrinkId());
+        caffeineIntakeService.deleteCaffeineIntake(id);
 
         // 2. 응답 반환
         return ResponseEntity.status(HttpStatus.NO_CONTENT)

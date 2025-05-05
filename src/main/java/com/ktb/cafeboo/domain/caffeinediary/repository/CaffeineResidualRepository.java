@@ -20,8 +20,8 @@ public interface CaffeineResidualRepository extends JpaRepository<CaffeineResidu
         "AND cr.targetDate BETWEEN :startDate AND :endDate")
     List<CaffeineResidual> findByUserAndTargetDateBetween(
         @Param("user") User user,
-        @Param("startDate") LocalDate startDate,
-        @Param("endDate") LocalDate endDate
+        @Param("startDate") LocalDateTime startDate,
+        @Param("endDate") LocalDateTime endDate
     );
 
     /**

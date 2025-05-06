@@ -1,6 +1,5 @@
 package com.ktb.cafeboo.global.apiPayload;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.ktb.cafeboo.global.apiPayload.code.BaseCode;
 import com.ktb.cafeboo.global.apiPayload.code.status.SuccessStatus;
@@ -19,21 +18,21 @@ public class ApiResponse<T> {
     private T data;
 
     // 성공 응답
-    public static <T> ApiResponse<T> onSuccess(T result) {
+    public static <T> ApiResponse<T> onSuccess(T data) {
         return new ApiResponse<>(
                 SuccessStatus.OK.getStatus(),
                 SuccessStatus.OK.getCode(),
                 SuccessStatus.OK.getMessage(),
-                result
+                data
         );
     }
 
-    public static <T> ApiResponse<T> of(BaseCode code, T result) {
+    public static <T> ApiResponse<T> of(BaseCode code, T data) {
         return new ApiResponse<>(
                 code.getStatus(),
                 code.getCode(),
                 code.getMessage(),
-                result
+                data
         );
     }
 

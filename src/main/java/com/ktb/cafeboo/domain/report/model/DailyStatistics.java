@@ -19,8 +19,9 @@ public class DailyStatistics extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(name = "weekly_statistics_id", nullable = false)
-    private Long weeklyStatisticsId;
+    @ManyToOne
+    @JoinColumn(name = "weekly_statistics_id", nullable = false)
+    private WeeklyReport weeklyStatisticsId;
 
     @Column(name = "date", nullable = false)
     private LocalDate date;

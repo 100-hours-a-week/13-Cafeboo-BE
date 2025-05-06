@@ -3,7 +3,9 @@ package com.ktb.cafeboo.domain.report.service;
 import com.ktb.cafeboo.domain.caffeinediary.model.CaffeineResidual;
 import com.ktb.cafeboo.domain.caffeinediary.repository.CaffeineResidualRepository;
 import com.ktb.cafeboo.domain.report.model.DailyStatistics;
+import com.ktb.cafeboo.domain.report.model.MonthlyReport;
 import com.ktb.cafeboo.domain.report.model.WeeklyReport;
+import com.ktb.cafeboo.domain.report.model.YearlyReport;
 import com.ktb.cafeboo.domain.report.repository.DailyStatisticsRepository;
 import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.domain.user.service.UserService;
@@ -35,6 +37,8 @@ public class DailyStatisticsService {
     private final CaffeineResidualRepository caffeineResidualRepository;
 
     private final WeeklyReportService weeklyReportService;
+    private final MonthlyReportService monthlyReportService;
+    private final YearlyReportService yearlyReportService;
     private final UserService userService;
 
     /**
@@ -44,32 +48,37 @@ public class DailyStatisticsService {
      * @param additionalCaffeine 섭취 내역이 추가/변경됨에 따라 변경될 카페인 수치
      */
     public void updateDailyStatistics(User user, LocalDate date, float additionalCaffeine) {
+        //우선은 동기적으로 구현 진행
+        YearlyReport yearlyReport = yearlyReportService.getOrCreateYearlyReport(user.getId(), date);
+        yearlyReportService.updateYearlyReport(user.getId(), yearlyReport, additionalCaffeine);
+
+        MonthlyReport monthlyReport = monthlyReportService.getOrCreateMonthlyReport(user.getId(), yearlyReport, date);
+        monthlyReportService.updateMonthlyReport(user.getId(), monthlyReport, additionalCaffeine);
+
+        WeeklyReport weeklyReport = weeklyReportService.getOrCreateWeeklyReport(user.getId(), monthlyReport, date);
+        weeklyReportService.updateWeeklyReport(user.getId(), weeklyReport, additionalCaffeine);
+
         DailyStatistics statistics = dailyStatisticsRepository
             .findByUserIdAndDate(user.getId(), date)
-            .orElseGet(() -> createDailyStatistics(user, date));
+            .orElseGet(() -> createDailyStatistics(user, weeklyReport, date));
 
         statistics.setTotalCaffeineMg(statistics.getTotalCaffeineMg() + additionalCaffeine);
         DailyStatistics savedStatistics = dailyStatisticsRepository.save(statistics);
-
-        WeeklyReport weeklyReport = weeklyReportService.getWeeklyReport(user.getId(), date);
-        weeklyReportService.updateWeeklyReport(user.getId(), weeklyReport, additionalCaffeine);
     }
 
     /**
      * 일일 통계 데이터를 생성합니다.
      * @param user 일일 통계를 기록할 유저 정보
+     * @param weeklyReport 일일 통계가 속할 주간 기록으로의 FK
      * @param date 섭취 내역을 등록한 시점의 연-월-일 정보
      */
-    private DailyStatistics createDailyStatistics(User user, LocalDate date) {
-        //해당 날짜가 속한 주의 정보를 가져옴. 없는 경우 새롭게 생성 후 WeeklyReport 테이블에 저장.
-        WeeklyReport weeklyReport = weeklyReportService.getWeeklyReport(user.getId(), date);
-
+    private DailyStatistics createDailyStatistics(User user, WeeklyReport weeklyReport, LocalDate date) {
         //일일 통계 데이터를 반환
         return DailyStatistics.builder()
             .user(user)
             .date(date)
             .totalCaffeineMg(0f)
-            .weeklyStatisticsId(weeklyReport.getId())
+            .weeklyStatisticsId(weeklyReport)
             .build();
     }
 

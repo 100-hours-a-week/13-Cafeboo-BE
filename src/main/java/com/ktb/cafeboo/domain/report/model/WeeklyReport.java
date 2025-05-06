@@ -14,8 +14,9 @@ import lombok.*;
 @Builder
 public class WeeklyReport extends BaseEntity {
 
-//    @Column(name = "monthly_statistics_id", nullable = false)
-//    private Long monthlyStatisticsId;
+    @ManyToOne
+    @JoinColumn(name = "monthly_statistics_id", nullable = false)
+    private MonthlyReport monthlyReport;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)

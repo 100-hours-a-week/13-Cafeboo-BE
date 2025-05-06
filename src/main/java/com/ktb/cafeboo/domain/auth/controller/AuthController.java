@@ -4,6 +4,8 @@ import com.ktb.cafeboo.domain.auth.dto.KakaoLoginRequest;
 import com.ktb.cafeboo.domain.auth.dto.KakaoLoginResponse;
 import com.ktb.cafeboo.domain.auth.service.KakaoOauthService;
 import com.ktb.cafeboo.global.apiPayload.ApiResponse;
+import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
+import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -22,14 +24,13 @@ public class AuthController {
     private final KakaoOauthService kakaoOauthService;
 
     @PostMapping("/oauth")
-    public ResponseEntity<Void> redirectToOauth(@RequestParam("type") String type) {
-        String redirectUrl;
+    public ResponseEntity<ApiResponse<String>> redirectToOauth(@RequestParam("type") String type) {
 
-        if ("kakao".equalsIgnoreCase(type)) {
-            redirectUrl = kakaoOauthService.buildKakaoAuthorizationUrl();
-        } else {
-            throw new IllegalArgumentException("지원하지 않는 소셜 로그인 타입입니다.");
+        if (!"kakao".equalsIgnoreCase(type)) {
+            throw new CustomApiException(ErrorStatus.UNSUPPORTED_SOCIAL_LOGIN_TYPE);
         }
+
+        String redirectUrl = kakaoOauthService.buildKakaoAuthorizationUrl();
 
         HttpHeaders headers = new HttpHeaders();
         headers.setLocation(URI.create(redirectUrl));

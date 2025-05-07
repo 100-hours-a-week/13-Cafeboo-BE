@@ -4,6 +4,7 @@ import com.ktb.cafeboo.global.apiPayload.ApiResponse;
 import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.code.BaseCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -17,6 +18,13 @@ public class ApiExceptionHandler {
                 .body(ApiResponse.onFailure(ErrorStatus.INTERNAL_SERVER_ERROR));
     }
 
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse<?>> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
+        return ResponseEntity
+                .badRequest()
+                .body(ApiResponse.onFailure(ErrorStatus.BAD_REQUEST));
+    }
+
     @ExceptionHandler(CustomApiException.class)
     public ResponseEntity<ApiResponse<Void>> handleCustomApiException(CustomApiException ex) {
         BaseCode error = ex.getErrorCode();
@@ -24,5 +32,4 @@ public class ApiExceptionHandler {
                 .status(error.getStatus())
                 .body(ApiResponse.onFailure(error));
     }
-
 }

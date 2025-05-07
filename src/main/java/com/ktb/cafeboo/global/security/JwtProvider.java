@@ -15,7 +15,7 @@ public class JwtProvider {
     @Value("${jwt.secret}")
     private String SECRET_KEY;
 
-    private final long accessTokenValidity = 60 * 60 * 1000;  // 60분
+    private final long accessTokenValidity = 24 * 60 * 60 * 1000;  // 60분
     private final long refreshTokenValidity = 14 * 24 * 60 * 60 * 1000;  // 14일
 
     public String createAccessToken(String userId, String loginType, String role) {

@@ -8,11 +8,9 @@ import com.ktb.cafeboo.domain.auth.infra.KakaoUserClient;
 import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.domain.user.repository.UserRepository;
 import com.ktb.cafeboo.global.enums.LoginType;
-import com.ktb.cafeboo.global.enums.UserRole;
 import com.ktb.cafeboo.global.security.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -79,6 +77,7 @@ public class KakaoOauthService {
                 user.getRole().name()
         );
         user.updateRefreshToken(refreshToken);
+        userRepository.save(user);
 
         return new KakaoLoginResponse(accessToken, refreshToken, isNewUser);
     }

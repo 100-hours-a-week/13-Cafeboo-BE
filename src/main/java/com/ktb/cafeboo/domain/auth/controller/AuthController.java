@@ -2,9 +2,12 @@ package com.ktb.cafeboo.domain.auth.controller;
 
 import com.ktb.cafeboo.domain.auth.dto.KakaoLoginRequest;
 import com.ktb.cafeboo.domain.auth.dto.KakaoLoginResponse;
+import com.ktb.cafeboo.domain.auth.dto.TokenRefreshResponse;
+import com.ktb.cafeboo.domain.auth.service.AuthService;
 import com.ktb.cafeboo.domain.auth.service.KakaoOauthService;
 import com.ktb.cafeboo.global.apiPayload.ApiResponse;
 import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
+import com.ktb.cafeboo.global.apiPayload.code.status.SuccessStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +24,7 @@ import java.net.URI;
 @RequiredArgsConstructor
 public class AuthController {
 
+    private final AuthService authService;
     private final KakaoOauthService kakaoOauthService;
 
     @PostMapping("/oauth")
@@ -40,6 +44,25 @@ public class AuthController {
     @PostMapping("/kakao")
     public ResponseEntity<ApiResponse<KakaoLoginResponse>> kakaoLogin(@RequestBody KakaoLoginRequest request) {
         KakaoLoginResponse loginResponse = kakaoOauthService.login(request.getCode());
-        return ResponseEntity.ok(ApiResponse.onSuccess(loginResponse));
+        return ResponseEntity.ok(ApiResponse.of(SuccessStatus.LOGIN_SUCCESS, loginResponse));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<TokenRefreshResponse>> refreshAccessToken(
+            @RequestHeader("Authorization") String authorizationHeader) {
+
+        String refreshToken = authorizationHeader.replace("Bearer ", "");
+        TokenRefreshResponse response = authService.refreshAccessToken(refreshToken);
+        return ResponseEntity.ok(ApiResponse.of(SuccessStatus.TOKEN_REFRESH_SUCCESS, response));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(
+            @RequestHeader("Authorization") String authorizationHeader) {
+
+        String accessToken = authorizationHeader.replace("Bearer ", "");
+        authService.logout(accessToken);
+
+        return ResponseEntity.noContent().build(); // 204 No Content
     }
 }

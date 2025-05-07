@@ -30,7 +30,7 @@ public class User extends BaseEntity {
     @Column(nullable = false, length = 10)
     private String nickname;
 
-    @Column(nullable = false, length = 512)
+    @Column(nullable = true, length = 512)
     private String refreshToken;
 
     @Enumerated(EnumType.STRING)

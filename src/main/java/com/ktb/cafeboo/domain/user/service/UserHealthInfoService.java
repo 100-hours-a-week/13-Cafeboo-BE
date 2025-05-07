@@ -1,9 +1,6 @@
 package com.ktb.cafeboo.domain.user.service;
 
-import com.ktb.cafeboo.domain.user.dto.UserHealthInfoCreateRequest;
-import com.ktb.cafeboo.domain.user.dto.UserHealthInfoCreateResponse;
-import com.ktb.cafeboo.domain.user.dto.UserHealthInfoUpdateRequest;
-import com.ktb.cafeboo.domain.user.dto.UserHealthInfoUpdateResponse;
+import com.ktb.cafeboo.domain.user.dto.*;
 import com.ktb.cafeboo.domain.user.mapper.UserHealthInfoMapper;
 import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.domain.user.model.UserHealthInfo;
@@ -64,5 +61,16 @@ public class UserHealthInfoService {
                 .userId(userId)
                 .updatedAt(healthInfo.getUpdatedAt())
                 .build();
+    }
+
+    @Transactional(readOnly = true)
+    public UserHealthInfoResponse getHealthInfo(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomApiException(ErrorStatus.USER_NOT_FOUND));
+
+        UserHealthInfo healthInfo = userHealthInfoRepository.findById(userId)
+                .orElseThrow(() -> new CustomApiException(ErrorStatus.HEALTH_PROFILE_NOT_FOUND));
+
+        return UserHealthInfoMapper.toResponse(healthInfo);
     }
 }

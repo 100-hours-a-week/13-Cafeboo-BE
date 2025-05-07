@@ -21,7 +21,7 @@ public enum SuccessStatus implements BaseCode {
     BASIC_PROFILE_FETCH_SUCCESS(200, "BASIC_PROFILE_FETCH_SUCCESS", "기본 프로필이 성공적으로 조회되었습니다."),
     HEALTH_PROFILE_CREATION_SUCCESS(201, "HEALTH_PROFILE_CREATION_SUCCESS", "건강 프로필이 성공적으로 저장되었습니다."),
     HEALTH_PROFILE_UPDATE_SUCCESS(200, "HEALTH_PROFILE_UPDATE_SUCCESS", "건강 프로필이 성공적으로 수정되었습니다."),
-    ;
+    HEALTH_PROFILE_FETCH_SUCCESS(200, "HEALTH_PROFILE_FETCH_SUCCESS", "건강 프로필이 성공적으로 조회되었습니다.");
 
 
     private final int status;

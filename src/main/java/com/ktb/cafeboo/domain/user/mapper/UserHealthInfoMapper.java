@@ -1,6 +1,7 @@
 package com.ktb.cafeboo.domain.user.mapper;
 
 import com.ktb.cafeboo.domain.user.dto.UserHealthInfoCreateRequest;
+import com.ktb.cafeboo.domain.user.dto.UserHealthInfoResponse;
 import com.ktb.cafeboo.domain.user.dto.UserHealthInfoUpdateRequest;
 import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.domain.user.model.UserHealthInfo;
@@ -38,5 +39,22 @@ public class UserHealthInfoMapper {
         if (dto.getHasLiverDisease() != null) entity.setHasLiverDisease(dto.getHasLiverDisease());
         if (dto.getSleepTime() != null) entity.setSleepTime(LocalTime.parse(dto.getSleepTime()));
         if (dto.getWakeUpTime() != null) entity.setWakeUpTime(LocalTime.parse(dto.getWakeUpTime()));
+    }
+
+    public static UserHealthInfoResponse toResponse(UserHealthInfo entity) {
+        return UserHealthInfoResponse.builder()
+                .gender(entity.getGender())
+                .age(entity.getAge())
+                .height(entity.getHeight())
+                .weight(entity.getWeight())
+                .isPregnant(entity.getPregnant())
+                .isTakingBirthPill(entity.getTakingBirthPill())
+                .isSmoking(entity.getSmoking())
+                .hasLiverDisease(entity.getHasLiverDisease())
+                .sleepTime(entity.getSleepTime().toString())
+                .wakeUpTime(entity.getWakeUpTime().toString())
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
+                .build();
     }
 }

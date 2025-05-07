@@ -53,4 +53,15 @@ public class UserController {
         UserHealthInfoUpdateResponse response = userHealthInfoService.update(userId, request);
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.HEALTH_PROFILE_UPDATE_SUCCESS, response));
     }
+
+    @GetMapping("/{userId}/health")
+    public ResponseEntity<ApiResponse<UserHealthInfoResponse>> getHealthInfo(
+            @PathVariable Long userId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        AuthChecker.checkOwnership(userId, userDetails.getUserId());
+
+        UserHealthInfoResponse response = userHealthInfoService.getHealthInfo(userId);
+        return ResponseEntity.ok(ApiResponse.of(SuccessStatus.HEALTH_PROFILE_FETCH_SUCCESS, response));
+    }
 }

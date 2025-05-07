@@ -46,7 +46,4 @@ public class UserHealthInfo extends BaseEntity {
     @Column(nullable = false)
     private LocalTime wakeUpTime;
 
-    public void update() {
-
-    }
 }

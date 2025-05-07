@@ -29,7 +29,7 @@ public class UserHealthInfoService {
         }
 
         try {
-            UserHealthInfo entity = UserHealthInfoMapper.createEntity(request, user);
+            UserHealthInfo entity = UserHealthInfoMapper.toEntity(request, user);
             userHealthInfoRepository.save(entity);
 
             return UserHealthInfoCreateResponse.builder()

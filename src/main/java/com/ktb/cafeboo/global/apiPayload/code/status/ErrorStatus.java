@@ -26,8 +26,12 @@ public enum ErrorStatus implements BaseCode {
     // 유저 관련 오류
     USER_NOT_FOUND(401, "USER_NOT_FOUND", "사용자를 찾을 수 없습니다."),
     ACCESS_DENIED(403, "ACCESS_DENIED", "해당 요청에 대한 권한이 없습니다."),
-    HEALTH_PROFILE_ALREADY_EXISTS(400, "HEALTH_PROFILE_ALREADY_EXISTS", "이미 건강 정보가 등록되어 있습니다."),
+
+    HEALTH_PROFILE_ALREADY_EXISTS(409, "HEALTH_PROFILE_ALREADY_EXISTS", "이미 건강 정보가 등록되어 있습니다."),
     HEALTH_PROFILE_NOT_FOUND(404, "HEALTH_PROFILE_NOT_FOUND", "건강 정보가 존재하지 않습니다."),
+
+    CAFFEINE_PROFILE_ALREADY_EXISTS(409, "CAFFEINE_PROFILE_ALREADY_EXISTS", "이미 카페인 정보가 등록되어 있습니다."),
+    CAFFEINE_PROFILE_NOT_FOUND(404, "CAFFEINE_PROFILE_NOT_FOUND", "카페인 정보가 존재하지 않습니다."),
     ;
 
     private final int status;

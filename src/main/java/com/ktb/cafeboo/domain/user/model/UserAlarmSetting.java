@@ -24,7 +24,4 @@ public class UserAlarmSetting extends BaseEntity {
     @Column(nullable = false)
     private boolean alarmForChat = false;
 
-    public void update() {
-
-    }
 }

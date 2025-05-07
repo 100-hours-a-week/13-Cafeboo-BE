@@ -10,7 +10,7 @@ import java.time.LocalTime;
 
 public class UserHealthInfoMapper {
 
-    public static UserHealthInfo createEntity(UserHealthInfoCreateRequest dto, User user) {
+    public static UserHealthInfo toEntity(UserHealthInfoCreateRequest dto, User user) {
 
         UserHealthInfo entity = new UserHealthInfo();
         entity.setUser(user);

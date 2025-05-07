@@ -77,6 +77,7 @@ public class KakaoOauthService {
                 user.getRole().name()
         );
         user.updateRefreshToken(refreshToken);
+        userRepository.save(user);
 
         return new KakaoLoginResponse(accessToken, refreshToken, isNewUser);
     }

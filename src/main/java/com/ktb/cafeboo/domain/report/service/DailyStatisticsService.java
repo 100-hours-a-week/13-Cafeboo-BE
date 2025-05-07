@@ -28,7 +28,6 @@ import org.springframework.stereotype.Service;
 public class DailyStatisticsService {
 
     private final DailyStatisticsRepository dailyStatisticsRepository;
-    private final CaffeineResidualRepository caffeineResidualRepository;
 
     private final WeeklyReportService weeklyReportService;
     private final MonthlyReportService monthlyReportService;

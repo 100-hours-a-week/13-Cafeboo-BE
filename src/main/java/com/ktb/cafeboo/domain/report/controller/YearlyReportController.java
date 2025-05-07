@@ -5,12 +5,15 @@ import com.ktb.cafeboo.domain.report.dto.YearlyCaffeineReportResponse;
 import com.ktb.cafeboo.domain.report.model.MonthlyReport;
 import com.ktb.cafeboo.domain.report.service.MonthlyReportService;
 import com.ktb.cafeboo.global.apiPayload.ApiResponse;
+import com.ktb.cafeboo.global.apiPayload.code.status.SuccessStatus;
+import com.ktb.cafeboo.global.security.userdetails.CustomUserDetails;
 import java.time.Year;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -24,9 +27,13 @@ public class YearlyReportController {
 
     @GetMapping
     ResponseEntity<ApiResponse<YearlyCaffeineReportResponse>> getYearlyCaffeineReport(
+        @AuthenticationPrincipal CustomUserDetails userDetails,
         @RequestParam(required = false) Year targetYear) {
+
+        Long userId = userDetails.getId();
+
         int year = targetYear != null ? targetYear.getValue() : Year.now().getValue();
-        List<MonthlyReport> monthlyReports = monthReportService.getMonthlyReportForYear(2L, targetYear);
+        List<MonthlyReport> monthlyReports = monthReportService.getMonthlyReportForYear(userId, targetYear);
 
         List<YearlyCaffeineReportResponse.MonthlyIntakeTotal> monthlyIntakeTotals = monthlyReports.stream()
             .map(report -> YearlyCaffeineReportResponse.MonthlyIntakeTotal.builder()
@@ -55,11 +62,6 @@ public class YearlyReportController {
             .summaryMessage("")
             .build();
 
-        return ResponseEntity.ok(ApiResponse.<com.ktb.cafeboo.domain.report.dto.YearlyCaffeineReportResponse>builder()
-            .status(200)
-            .code("YEARLY_CAFFEINE_REPORT_SUCCESS")
-            .message("연간 카페인 리포트를 성공적으로 조회했습니다.")
-            .data(response)
-            .build());
+        return ResponseEntity.ok(ApiResponse.of(SuccessStatus.YEARLY_CAFFEINE_REPORT_SUCCESS, response));
     }
 }

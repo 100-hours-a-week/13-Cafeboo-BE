@@ -8,6 +8,8 @@ import com.ktb.cafeboo.domain.report.model.WeeklyReport;
 import com.ktb.cafeboo.domain.report.service.DailyStatisticsService;
 import com.ktb.cafeboo.domain.report.service.WeeklyReportService;
 import com.ktb.cafeboo.global.apiPayload.ApiResponse;
+import com.ktb.cafeboo.global.apiPayload.code.status.SuccessStatus;
+import com.ktb.cafeboo.global.security.userdetails.CustomUserDetails;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -16,6 +18,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -39,7 +42,9 @@ public class WeeklyReportController {
      */
     @GetMapping
     public ResponseEntity<ApiResponse<WeeklyCaffeineReportResponse>> getWeeklyCaffeineReport(
+        @AuthenticationPrincipal CustomUserDetails userDetails,
         @RequestParam(required = false) LocalDate targetDate) {
+
         int year = targetDate.get(IsoFields.WEEK_BASED_YEAR);
         int weekNum = targetDate.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
         int month = targetDate.getMonthValue();
@@ -48,13 +53,15 @@ public class WeeklyReportController {
 
         String isoWeek = String.format("%d-W%02d", year, weekNum);
 
-        WeeklyReport weeklyReport = weeklyReportService.getWeeklyReport(2L, targetDate);
+        Long userId = userDetails.getId();
+
+        WeeklyReport weeklyReport = weeklyReportService.getWeeklyReport(userId, targetDate);
         float weeklyTotal = weeklyReport.getTotalCaffeineMg();
         //float dailyLimit = user.getDailyLimit();
         int overLimitDays = weeklyReport.getOverIntakeDays();
         float dailyAvg = weeklyReport.getDailyCaffeineAvgMg();
 
-        List<DailyStatistics> dailyStats = dailyStatisticsService.getDailyStatisticsForWeek(2L, targetDate);
+        List<DailyStatistics> dailyStats = dailyStatisticsService.getDailyStatisticsForWeek(userId, targetDate);
 
         List<WeeklyCaffeineReportResponse.DailyIntakeTotal> dailyIntakeTotals = dailyStats.stream()
             .map(stat -> WeeklyCaffeineReportResponse.DailyIntakeTotal.builder()
@@ -95,11 +102,6 @@ public class WeeklyReportController {
             .summaryMessage(summaryMessage)
             .build();
 
-        return ResponseEntity.ok(ApiResponse.<com.ktb.cafeboo.domain.report.dto.WeeklyCaffeineReportResponse>builder()
-            .status(200)
-            .code("WEEKLY_CAFFEINE_REPORT_SUCCESS")
-            .message("주간 카페인 리포트를 성공적으로 조회했습니다.")
-            .data(response)
-            .build());
+        return ResponseEntity.ok(ApiResponse.of(SuccessStatus.WEEKLY_CAFFEINE_REPORT_SUCCESS, response));
     }
 }

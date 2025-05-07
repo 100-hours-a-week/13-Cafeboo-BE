@@ -2,17 +2,25 @@ package com.ktb.cafeboo.domain.caffeinediary.service;
 
 import com.ktb.cafeboo.domain.caffeinediary.dto.CaffeineIntakeRequest;
 import com.ktb.cafeboo.domain.caffeinediary.dto.CaffeineIntakeResponse;
+import com.ktb.cafeboo.domain.caffeinediary.dto.MonthlyCaffeineDiaryResponse;
 import com.ktb.cafeboo.domain.caffeinediary.model.CaffeineIntake;
 import com.ktb.cafeboo.domain.drink.model.Cafe;
 import com.ktb.cafeboo.domain.drink.model.Drink;
 import com.ktb.cafeboo.domain.caffeinediary.repository.CaffeineIntakeRepository;
 import com.ktb.cafeboo.domain.caffeinediary.repository.CaffeineResidualRepository;
+import com.ktb.cafeboo.domain.drink.service.DrinkService;
 import com.ktb.cafeboo.domain.report.service.DailyStatisticsService;
 import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.domain.user.service.UserService;
 import jakarta.transaction.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.YearMonth;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -22,10 +30,10 @@ import org.springframework.stereotype.Service;
 public class CaffeineIntakeService {
 
     private final CaffeineIntakeRepository intakeRepository;
-    private final CaffeineResidualRepository residualRepository;
 
     private final DailyStatisticsService dailyStatisticsService;
     private final UserService userService;
+    private final DrinkService drinkService;
     private final CaffeineResidualService caffeineResidualService;
 
     private static final double DEFAULT_HALF_LIFE_HOUR = 5.0; // 평균 반감기
@@ -44,17 +52,8 @@ public class CaffeineIntakeService {
     public CaffeineIntakeResponse recordCaffeineIntake(Long userId, CaffeineIntakeRequest request) {
         // 0. 데이터 유효성 겁사. 사용자 정보, 음료 정보가 유효하지 않을 시 IllegalArgumentException 발생
         User user = userService.findUserById(userId);
-
-        //더미 데이터
-        Cafe cafe = Cafe.builder()
-            .name("스타벅스")
-            .build();
-
-        Drink drink = Drink.builder()
-            .name("아메리카노")
-            .cafe(cafe)
-            .type("커피")
-            .build();
+        
+        Drink drink = drinkService.findDrinkById(request.getDrinkId());
 
         // 1. 섭취 정보 저장
         CaffeineIntake intake = CaffeineIntake.builder()
@@ -67,7 +66,7 @@ public class CaffeineIntakeService {
         intakeRepository.save(intake);
 
         // 2. 잔존량 계산
-        caffeineResidualService.updateResidualAmounts(user, request.getIntakeTime(), request.getCaffeineAmount());
+        caffeineResidualService.updateResidualAmounts(userId, request.getIntakeTime(), request.getCaffeineAmount());
 
         // 3. DailyStatistics 업데이트
         dailyStatisticsService.updateDailyStatistics(user, LocalDate.from(request.getIntakeTime()), request.getCaffeineAmount());
@@ -112,16 +111,7 @@ public class CaffeineIntakeService {
         // 2. 수정할 필드 적용
         if (request.getDrinkId() != null) {
             //더미 데이터
-            Cafe cafe = Cafe.builder()
-                .name("스타벅스")
-                .build();
-
-            Drink drink = Drink.builder()
-                .name("아메리카노")
-                .cafe(cafe)
-                .type("커피")
-                .build();
-
+            Drink drink = drinkService.findDrinkById(request.getDrinkId());
             intake.setDrink(drink);
         }
         if (request.getIntakeTime() != null) {
@@ -140,15 +130,15 @@ public class CaffeineIntakeService {
         LocalDateTime newIntakeTime = request.getIntakeTime() != null ? request.getIntakeTime() : intake.getIntakeTime();
 
         // 기존 시간 기준 삭제 ->  수정 이전의 잔존량 삭제
-        caffeineResidualService.modifyResidualAmounts(user, previousIntakeTime, previousCaffeineAmount);
+        caffeineResidualService.modifyResidualAmounts(user.getId(), previousIntakeTime, previousCaffeineAmount);
         dailyStatisticsService.updateDailyStatistics(user, LocalDate.from(previousIntakeTime), previousCaffeineAmount * -1);
 
         // 새로운 시간 기준으로 update -> 수정 후의 잔존량 계산 및 저장
-        caffeineResidualService.updateResidualAmounts(user, newIntakeTime, newCaffeineAmount);
+        caffeineResidualService.updateResidualAmounts(user.getId(), newIntakeTime, newCaffeineAmount);
         dailyStatisticsService.updateDailyStatistics(user, LocalDate.from(request.getIntakeTime()), request.getCaffeineAmount());
 
         return CaffeineIntakeResponse.builder()
-            .id(intake.getId())
+            .id(intakeId)
             .drinkId(intake.getDrink().getId())
             .drinkName(intake.getDrink().getName())
             .intakeTime(intake.getIntakeTime())
@@ -166,10 +156,48 @@ public class CaffeineIntakeService {
         int previousDrinkCount = intake.getDrinkCount();
 
         // 2. 해당 섭취 내역의 영향이 있는 시간 범위 내의 카페인 잔존량 수치 수정
-        caffeineResidualService.modifyResidualAmounts(user, previousIntakeTime, previousCaffeineAmount);
+        caffeineResidualService.modifyResidualAmounts(user.getId(), previousIntakeTime, previousCaffeineAmount);
         dailyStatisticsService.updateDailyStatistics(user, LocalDate.from(previousIntakeTime), previousCaffeineAmount * -1);
 
         // 3. 해당 데이터 CaffeineIntakes 테이블에서 삭제
         intakeRepository.deleteById(intakeId);
+    }
+
+    public List<CaffeineIntake> getCaffeineIntakeDiary(Long userId, int year, int month){
+        LocalDateTime start = LocalDate.of(year, month, 1).atStartOfDay();
+        LocalDateTime end = start.plusMonths(1).minusNanos(1);
+        return intakeRepository.findByUserIdAndIntakeTimeBetween(userId, start, end);
+    }
+
+    public List<MonthlyCaffeineDiaryResponse.DailyIntake> getDailyIntakeListForMonth(List<CaffeineIntake> intakes, int year, int month) {
+        // 1. 일별 합계 Map 생성
+        Map<LocalDate, Float> dailySumMap = intakes.stream()
+            .collect(Collectors.groupingBy(
+                intake -> intake.getIntakeTime().toLocalDate(),
+                Collectors.summingDouble(CaffeineIntake::getCaffeineAmountMg)
+            ))
+            .entrySet().stream()
+            .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().floatValue()));
+
+        // 2. 월의 모든 날짜에 대해 리스트 생성 (없는 날은 0)
+        YearMonth yearMonth = YearMonth.of(year, month);
+        List<MonthlyCaffeineDiaryResponse.DailyIntake> dailyIntakeList = new ArrayList<>();
+        for (int day = 1; day <= yearMonth.lengthOfMonth(); day++) {
+            LocalDate date = yearMonth.atDay(day);
+            float total = dailySumMap.getOrDefault(date, 0f);
+            dailyIntakeList.add(
+                MonthlyCaffeineDiaryResponse.DailyIntake.builder()
+                    .date(date.toString())
+                    .totalCaffeineMg(total)
+                    .build()
+            );
+        }
+        return dailyIntakeList;
+    }
+
+    public List<CaffeineIntake> getDailyCaffeineIntake(Long userId, LocalDate date){
+        LocalDateTime start = date.atStartOfDay();
+        LocalDateTime end = date.atTime(LocalTime.MAX);
+        return intakeRepository.findByUserIdAndIntakeTimeBetween(userId, start, end);
     }
 }

@@ -8,6 +8,7 @@ import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import com.ktb.cafeboo.global.security.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -17,16 +18,7 @@ public class AuthService {
     private final JwtProvider jwtProvider;
 
     public TokenRefreshResponse refreshAccessToken(String refreshToken) {
-        String userId;
-
-        try {
-            userId = jwtProvider.validateToken(refreshToken);
-            if (userId == null) {
-                throw new CustomApiException(ErrorStatus.REFRESH_TOKEN_INVALID);
-            }
-        } catch (RuntimeException e) {
-            throw new CustomApiException(ErrorStatus.REFRESH_TOKEN_EXPIRED);
-        }
+        String userId = jwtProvider.validateRefreshToken(refreshToken);
 
         User user = userRepository.findById(Long.parseLong(userId))
                 .orElseThrow(() -> new CustomApiException(ErrorStatus.USER_NOT_FOUND));
@@ -42,5 +34,17 @@ public class AuthService {
         );
 
         return new TokenRefreshResponse(newAccessToken);
+    }
+
+    @Transactional
+    public void logout(String accessToken) {
+        String userId = jwtProvider.validateAccessToken(accessToken);
+
+        Long userIdLong = Long.parseLong(userId);
+        User user = userRepository.findById(userIdLong)
+                .orElseThrow(() -> new CustomApiException(ErrorStatus.USER_NOT_FOUND));
+
+        user.updateRefreshToken(null);
+        userRepository.save(user);
     }
 }

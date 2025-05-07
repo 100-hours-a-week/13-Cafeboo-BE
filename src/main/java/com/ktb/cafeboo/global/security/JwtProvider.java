@@ -4,6 +4,8 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.exceptions.TokenExpiredException;
+import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
+import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -35,16 +37,29 @@ public class JwtProvider {
                 .sign(Algorithm.HMAC256(SECRET_KEY));
     }
 
-    public String validateToken(String token) {
+    public String validateAccessToken(String token) {
         try {
             return JWT.require(Algorithm.HMAC256(SECRET_KEY))
                     .build()
                     .verify(token)
-                    .getSubject();  // userId 반환
+                    .getSubject();
         } catch (TokenExpiredException e) {
-            throw new RuntimeException("Token expired");
+            throw new CustomApiException(ErrorStatus.ACCESS_TOKEN_EXPIRED);
         } catch (JWTVerificationException e) {
-            return null;
+            throw new CustomApiException(ErrorStatus.ACCESS_TOKEN_INVALID);
+        }
+    }
+
+    public String validateRefreshToken(String token) {
+        try {
+            return JWT.require(Algorithm.HMAC256(SECRET_KEY))
+                    .build()
+                    .verify(token)
+                    .getSubject();
+        } catch (TokenExpiredException e) {
+            throw new CustomApiException(ErrorStatus.REFRESH_TOKEN_EXPIRED);
+        } catch (JWTVerificationException e) {
+            throw new CustomApiException(ErrorStatus.REFRESH_TOKEN_INVALID);
         }
     }
 }

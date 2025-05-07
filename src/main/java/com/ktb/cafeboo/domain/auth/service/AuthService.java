@@ -37,11 +37,8 @@ public class AuthService {
     }
 
     @Transactional
-    public void logout(String accessToken) {
-        String userId = jwtProvider.validateAccessToken(accessToken);
-
-        Long userIdLong = Long.parseLong(userId);
-        User user = userRepository.findById(userIdLong)
+    public void logout(Long userId) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomApiException(ErrorStatus.USER_NOT_FOUND));
 
         user.updateRefreshToken(null);

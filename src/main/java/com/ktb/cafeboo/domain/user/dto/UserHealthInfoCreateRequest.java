@@ -30,7 +30,6 @@ public class UserHealthInfoCreateRequest {
 
     @JsonProperty("wakeUpTime")
     private String wakeUpTime;
-
 }
 
 

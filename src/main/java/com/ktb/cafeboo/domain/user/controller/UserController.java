@@ -1,14 +1,13 @@
 package com.ktb.cafeboo.domain.user.controller;
 
-import com.ktb.cafeboo.domain.user.dto.EmailDuplicationResponse;
-import com.ktb.cafeboo.domain.user.dto.UserHealthInfoCreateRequest;
-import com.ktb.cafeboo.domain.user.dto.UserHealthInfoCreateResponse;
+import com.ktb.cafeboo.domain.user.dto.*;
 import com.ktb.cafeboo.domain.user.service.UserHealthInfoService;
 import com.ktb.cafeboo.domain.user.service.UserService;
 import com.ktb.cafeboo.global.apiPayload.ApiResponse;
 import com.ktb.cafeboo.global.apiPayload.code.status.*;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import com.ktb.cafeboo.global.security.userdetails.CustomUserDetails;
+import com.ktb.cafeboo.global.util.AuthChecker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -37,11 +36,21 @@ public class UserController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody UserHealthInfoCreateRequest request
     ) {
-        if (!userId.equals(userDetails.getUserId())) {
-            throw new CustomApiException(ErrorStatus.ACCESS_DENIED);
-        }
+        AuthChecker.checkOwnership(userId, userDetails.getUserId());
 
         UserHealthInfoCreateResponse response = userHealthInfoService.create(userId, request);
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.HEALTH_PROFILE_CREATION_SUCCESS, response));
+    }
+
+    @PatchMapping("/{userId}/health")
+    public ResponseEntity<ApiResponse<UserHealthInfoUpdateResponse>> updateHealthInfo(
+            @PathVariable Long userId,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody UserHealthInfoUpdateRequest request
+    ) {
+        AuthChecker.checkOwnership(userId, userDetails.getUserId());
+
+        UserHealthInfoUpdateResponse response = userHealthInfoService.update(userId, request);
+        return ResponseEntity.ok(ApiResponse.of(SuccessStatus.HEALTH_PROFILE_UPDATE_SUCCESS, response));
     }
 }

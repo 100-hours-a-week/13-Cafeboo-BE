@@ -2,6 +2,8 @@ package com.ktb.cafeboo.domain.user.service;
 
 import com.ktb.cafeboo.domain.user.dto.UserHealthInfoCreateRequest;
 import com.ktb.cafeboo.domain.user.dto.UserHealthInfoCreateResponse;
+import com.ktb.cafeboo.domain.user.dto.UserHealthInfoUpdateRequest;
+import com.ktb.cafeboo.domain.user.dto.UserHealthInfoUpdateResponse;
 import com.ktb.cafeboo.domain.user.mapper.UserHealthInfoMapper;
 import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.domain.user.model.UserHealthInfo;
@@ -30,7 +32,7 @@ public class UserHealthInfoService {
         }
 
         try {
-            UserHealthInfo entity = UserHealthInfoMapper.toEntity(request, user);
+            UserHealthInfo entity = UserHealthInfoMapper.createEntity(request, user);
             userHealthInfoRepository.save(entity);
 
             return UserHealthInfoCreateResponse.builder()
@@ -42,5 +44,25 @@ public class UserHealthInfoService {
             // 매핑/저장 중 오류 발생 시 BAD_REQUEST 반환
             throw new CustomApiException(ErrorStatus.BAD_REQUEST);
         }
+    }
+
+    @Transactional
+    public UserHealthInfoUpdateResponse update(Long userId, UserHealthInfoUpdateRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomApiException(ErrorStatus.USER_NOT_FOUND));
+
+        UserHealthInfo healthInfo = userHealthInfoRepository.findById(userId)
+                .orElseThrow(() -> new CustomApiException(ErrorStatus.HEALTH_PROFILE_NOT_FOUND));
+
+        try {
+            UserHealthInfoMapper.updateEntity(healthInfo, request);
+        } catch (Exception e) {
+            throw new CustomApiException(ErrorStatus.BAD_REQUEST);
+        }
+
+        return UserHealthInfoUpdateResponse.builder()
+                .userId(userId)
+                .updatedAt(healthInfo.getUpdatedAt())
+                .build();
     }
 }

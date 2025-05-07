@@ -1,6 +1,7 @@
 package com.ktb.cafeboo.domain.user.mapper;
 
 import com.ktb.cafeboo.domain.user.dto.UserHealthInfoCreateRequest;
+import com.ktb.cafeboo.domain.user.dto.UserHealthInfoUpdateRequest;
 import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.domain.user.model.UserHealthInfo;
 
@@ -8,7 +9,7 @@ import java.time.LocalTime;
 
 public class UserHealthInfoMapper {
 
-    public static UserHealthInfo toEntity(UserHealthInfoCreateRequest dto, User user) {
+    public static UserHealthInfo createEntity(UserHealthInfoCreateRequest dto, User user) {
 
         UserHealthInfo entity = new UserHealthInfo();
         entity.setUser(user);
@@ -24,5 +25,18 @@ public class UserHealthInfoMapper {
         entity.setWakeUpTime(LocalTime.parse(dto.getWakeUpTime()));
 
         return entity;
+    }
+
+    public static void updateEntity(UserHealthInfo entity, UserHealthInfoUpdateRequest dto) {
+        if (dto.getGender() != null) entity.setGender(dto.getGender());
+        if (dto.getAge() != null) entity.setAge(dto.getAge());
+        if (dto.getHeight() != null) entity.setHeight(dto.getHeight());
+        if (dto.getWeight() != null) entity.setWeight(dto.getWeight());
+        if (dto.getPregnant() != null) entity.setPregnant(dto.getPregnant());
+        if (dto.getTakingBirthPill() != null) entity.setTakingBirthPill(dto.getTakingBirthPill());
+        if (dto.getSmoking() != null) entity.setSmoking(dto.getSmoking());
+        if (dto.getHasLiverDisease() != null) entity.setHasLiverDisease(dto.getHasLiverDisease());
+        if (dto.getSleepTime() != null) entity.setSleepTime(LocalTime.parse(dto.getSleepTime()));
+        if (dto.getWakeUpTime() != null) entity.setWakeUpTime(LocalTime.parse(dto.getWakeUpTime()));
     }
 }

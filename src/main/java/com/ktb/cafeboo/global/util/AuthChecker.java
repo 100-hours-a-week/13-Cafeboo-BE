@@ -7,7 +7,7 @@ public class AuthChecker {
 
     public static void checkOwnership(Long ownerId, Long currentUserId) {
         if (!ownerId.equals(currentUserId)) {
-            throw new CustomApiException(ErrorStatus.FORBIDDEN);
+            throw new CustomApiException(ErrorStatus.ACCESS_DENIED);
         }
     }
 }

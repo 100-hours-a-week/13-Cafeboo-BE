@@ -50,10 +50,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             } catch (CustomApiException e) {
                 logger.warn("[JWT 인증 실패] " + e.getErrorCode().getCode() + ": " + e.getMessage());
-                // 인증 실패: SecurityContext는 설정하지 않음
             }
         }
-
         filterChain.doFilter(request, response);
     }
 }

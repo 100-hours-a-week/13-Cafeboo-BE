@@ -19,10 +19,14 @@ public enum SuccessStatus implements BaseCode {
     // 유저 관련 응답
     EMAIL_DUPLICATION_CHECK_SUCCESS(200, "EMAIL_DUPLICATION_CHECK_SUCCESS", "이메일 중복 확인 결과를 반환했습니다."),
     BASIC_PROFILE_FETCH_SUCCESS(200, "BASIC_PROFILE_FETCH_SUCCESS", "기본 프로필이 성공적으로 조회되었습니다."),
+
     HEALTH_PROFILE_CREATION_SUCCESS(201, "HEALTH_PROFILE_CREATION_SUCCESS", "건강 프로필이 성공적으로 저장되었습니다."),
     HEALTH_PROFILE_UPDATE_SUCCESS(200, "HEALTH_PROFILE_UPDATE_SUCCESS", "건강 프로필이 성공적으로 수정되었습니다."),
-    HEALTH_PROFILE_FETCH_SUCCESS(200, "HEALTH_PROFILE_FETCH_SUCCESS", "건강 프로필이 성공적으로 조회되었습니다.");
+    HEALTH_PROFILE_FETCH_SUCCESS(200, "HEALTH_PROFILE_FETCH_SUCCESS", "건강 프로필이 성공적으로 조회되었습니다."),
 
+    CAFFEINE_PROFILE_CREATION_SUCCESS(201, "CAFFEINE_PROFILE_CREATION_SUCCESS", "카페인 프로필이 성공적으로 저장되었습니다."),
+    CAFFEINE_PROFILE_UPDATE_SUCCESS(200, "CAFFEINE_PROFILE_UPDATE_SUCCESS", "카페인 프로필이 성공적으로 수정되었습니다."),
+    CAFFEINE_PROFILE_FETCH_SUCCESS(200, "CAFFEINE_PROFILE_FETCH_SUCCESS", "카페인 프로필이 성공적으로 조회되었습니다.");
 
     private final int status;
     private final String code;

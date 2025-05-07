@@ -7,7 +7,7 @@ import com.ktb.cafeboo.domain.report.model.DailyStatistics;
 import com.ktb.cafeboo.domain.report.model.WeeklyReport;
 import com.ktb.cafeboo.domain.report.service.DailyStatisticsService;
 import com.ktb.cafeboo.domain.report.service.WeeklyReportService;
-import com.ktb.cafeboo.global.ApiResponse;
+import com.ktb.cafeboo.global.apiPayload.ApiResponse;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;

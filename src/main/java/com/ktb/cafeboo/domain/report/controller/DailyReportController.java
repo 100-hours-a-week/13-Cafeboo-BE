@@ -5,7 +5,7 @@ import com.ktb.cafeboo.domain.caffeinediary.service.CaffeineResidualService;
 import com.ktb.cafeboo.domain.report.service.DailyReportService;
 import com.ktb.cafeboo.domain.report.service.DailyStatisticsService;
 import com.ktb.cafeboo.domain.user.service.UserService;
-import com.ktb.cafeboo.global.ApiResponse;
+import com.ktb.cafeboo.global.apiPayload.ApiResponse;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +35,7 @@ public class DailyReportController {
     @GetMapping
     public ResponseEntity<ApiResponse<DailyCaffeineReportResponse>> getDailyCaffeineReport(
         @RequestParam(required = false) LocalDate targetDate) {
+
 
         // 일일 리포트 생성
         DailyCaffeineReportResponse response = dailyReportService.createDailyReport(2L, targetDate, LocalTime.now());

@@ -4,7 +4,7 @@ import com.ktb.cafeboo.domain.report.dto.MonthlyCaffeineReportResponse;
 import com.ktb.cafeboo.domain.report.dto.YearlyCaffeineReportResponse;
 import com.ktb.cafeboo.domain.report.model.MonthlyReport;
 import com.ktb.cafeboo.domain.report.service.MonthlyReportService;
-import com.ktb.cafeboo.global.ApiResponse;
+import com.ktb.cafeboo.global.apiPayload.ApiResponse;
 import java.time.Year;
 import java.time.YearMonth;
 import java.util.List;

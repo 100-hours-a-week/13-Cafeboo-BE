@@ -3,10 +3,10 @@ package com.ktb.cafeboo.domain.caffeinediary.service;
 import com.ktb.cafeboo.domain.caffeinediary.dto.CaffeineIntakeRequest;
 import com.ktb.cafeboo.domain.caffeinediary.dto.CaffeineIntakeResponse;
 import com.ktb.cafeboo.domain.caffeinediary.model.CaffeineIntake;
+import com.ktb.cafeboo.domain.drink.model.Cafe;
 import com.ktb.cafeboo.domain.drink.model.Drink;
 import com.ktb.cafeboo.domain.caffeinediary.repository.CaffeineIntakeRepository;
 import com.ktb.cafeboo.domain.caffeinediary.repository.CaffeineResidualRepository;
-import com.ktb.cafeboo.domain.drink.service.DrinkService;
 import com.ktb.cafeboo.domain.report.service.DailyStatisticsService;
 import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.domain.user.service.UserService;
@@ -26,7 +26,6 @@ public class CaffeineIntakeService {
 
     private final DailyStatisticsService dailyStatisticsService;
     private final UserService userService;
-    private final DrinkService drinkService;
     private final CaffeineResidualService caffeineResidualService;
 
     private static final double DEFAULT_HALF_LIFE_HOUR = 5.0; // 평균 반감기
@@ -45,7 +44,17 @@ public class CaffeineIntakeService {
     public CaffeineIntakeResponse recordCaffeineIntake(Long userId, CaffeineIntakeRequest request) {
         // 0. 데이터 유효성 겁사. 사용자 정보, 음료 정보가 유효하지 않을 시 IllegalArgumentException 발생
         User user = userService.findUserById(userId);
-        Drink drink = drinkService.findDrinkById(request.getDrinkId());
+
+        //더미 데이터
+        Cafe cafe = Cafe.builder()
+            .name("스타벅스")
+            .build();
+
+        Drink drink = Drink.builder()
+            .name("아메리카노")
+            .cafe(cafe)
+            .type("커피")
+            .build();
 
         // 1. 섭취 정보 저장
         CaffeineIntake intake = CaffeineIntake.builder()
@@ -102,7 +111,17 @@ public class CaffeineIntakeService {
 
         // 2. 수정할 필드 적용
         if (request.getDrinkId() != null) {
-            Drink drink = drinkService.findDrinkById(request.getDrinkId());
+            //더미 데이터
+            Cafe cafe = Cafe.builder()
+                .name("스타벅스")
+                .build();
+
+            Drink drink = Drink.builder()
+                .name("아메리카노")
+                .cafe(cafe)
+                .type("커피")
+                .build();
+
             intake.setDrink(drink);
         }
         if (request.getIntakeTime() != null) {

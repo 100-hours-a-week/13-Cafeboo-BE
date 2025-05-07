@@ -12,6 +12,10 @@ public enum SuccessStatus implements BaseCode {
     CREATED(201, "CREATED", "리소스가 성공적으로 생성되었습니다."),
     NO_CONTENT(204, "NO_CONTENT", "요청은 성공했지만 반환할 데이터가 없습니다."),
 
+    // 인증 관련 응답
+    LOGIN_SUCCESS(200, "LOGIN_SUCCESS", "로그인에 성공하였습니다."),
+    TOKEN_REFRESH_SUCCESS(200, "TOKEN_REFRESH_SUCCESS", "액세스 토큰이 성공적으로 재발급되었습니다."),
+
     // 유저 관련 응답
     EMAIL_DUPLICATION_CHECK_SUCCESS(200, "EMAIL_DUPLICATION_CHECK_SUCCESS", "이메일 중복 확인 결과를 반환했습니다.");
 

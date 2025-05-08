@@ -40,6 +40,12 @@ public class UserService {
         return new EmailDuplicationResponse(email, isDuplicated);
     }
 
+    public boolean hasCompletedOnboarding(User user) {
+        return user.getHealthInfo() != null
+                && user.getCaffeinInfo() != null
+                && user.getAlarmSetting() != null;
+    }
+
 //    public UserProfileResponse getUserProfile(Long targetUserId, Long currentUserId) {
 //        User targetUser = userRepository.findById(targetUserId)
 //                .orElseThrow(() -> new CustomApiException(ErrorStatus.USER_NOT_FOUND));

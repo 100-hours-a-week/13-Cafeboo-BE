@@ -8,5 +8,5 @@ import lombok.Getter;
 public class KakaoLoginResponse {
     private String accessToken;
     private String refreshToken;
-    private boolean isNewUser;
+    private boolean requiresOnboarding;
 }

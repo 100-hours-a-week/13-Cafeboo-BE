@@ -27,4 +27,6 @@ public class Drink extends BaseEntity {
     private String name;
 
     private String type;
+
+    private String temperature;
 }

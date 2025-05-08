@@ -34,7 +34,4 @@ public class YearlyReport extends BaseEntity {
 
     @Column(name = "monthly_caffeine_avg_mg", nullable = false)
     private Float monthlyCaffeineAvgMg;
-
-    @Column(name = "ai_message")
-    private String aiMessage;
 }

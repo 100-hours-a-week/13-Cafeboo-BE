@@ -56,7 +56,6 @@ public class WeeklyReportService {
     public WeeklyReport getWeeklyReport(Long userId, LocalDate date) {
         int year = date.get(IsoFields.WEEK_BASED_YEAR);
         int weekNum = date.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
-        int month = date.getMonthValue();
 
         return weeklyReportRepository.findByUserIdAndYearAndWeekNum(userId, year, weekNum)
             .orElse(null);

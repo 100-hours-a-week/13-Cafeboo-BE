@@ -4,6 +4,9 @@ import com.ktb.cafeboo.domain.drink.model.Drink;
 import com.ktb.cafeboo.domain.drink.model.DrinkSizeNutrition;
 import com.ktb.cafeboo.domain.drink.repository.DrinkRepository;
 import com.ktb.cafeboo.domain.drink.repository.DrinkSizeNutritionRepository;
+import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
+import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
+import com.ktb.cafeboo.global.enums.DrinkSize;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -13,17 +16,16 @@ public class DrinkService {
     private final DrinkRepository drinkRepository;
     private final DrinkSizeNutritionRepository drinkSizeNutritionRepository;
 
-    public void saveDrink(Drink drink){
-        drinkRepository.save(drink);
-    }
+    public DrinkSizeNutrition findDrinkSizeNutritionByIdAndSize(Long drinkSizeNutritionId, DrinkSize size){
+        DrinkSizeNutrition target = drinkSizeNutritionRepository.findByIdAndSize(drinkSizeNutritionId, size)
+            .orElseThrow(() -> new CustomApiException(ErrorStatus.DRINK_NOT_FOUND));
 
-    public void saveDrinkSizeNutrition(DrinkSizeNutrition drinkSizeNutrition){
-        drinkSizeNutritionRepository.save(drinkSizeNutrition);
+        return target;
     }
 
     public Drink findDrinkById(Long drinkId){
         Drink target = drinkRepository.findById(drinkId)
-            .orElseThrow(() -> new IllegalArgumentException("Drink not found"));
+            .orElseThrow(() -> new CustomApiException(ErrorStatus.DRINK_NOT_FOUND));
 
         return target;
     }

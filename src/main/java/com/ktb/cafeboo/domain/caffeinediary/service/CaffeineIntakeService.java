@@ -8,10 +8,14 @@ import com.ktb.cafeboo.domain.drink.model.Cafe;
 import com.ktb.cafeboo.domain.drink.model.Drink;
 import com.ktb.cafeboo.domain.caffeinediary.repository.CaffeineIntakeRepository;
 import com.ktb.cafeboo.domain.caffeinediary.repository.CaffeineResidualRepository;
+import com.ktb.cafeboo.domain.drink.model.DrinkSizeNutrition;
 import com.ktb.cafeboo.domain.drink.service.DrinkService;
 import com.ktb.cafeboo.domain.report.service.DailyStatisticsService;
 import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.domain.user.service.UserService;
+import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
+import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
+import com.ktb.cafeboo.global.enums.DrinkSize;
 import jakarta.transaction.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -55,10 +59,14 @@ public class CaffeineIntakeService {
         
         Drink drink = drinkService.findDrinkById(request.getDrinkId());
 
+        DrinkSize drinkSize = DrinkSize.valueOf(request.getDrinkSize());
+
+        DrinkSizeNutrition drinkSizeNutrition = drinkService.findDrinkSizeNutritionByIdAndSize(drink.getId(), drinkSize);
         // 1. 섭취 정보 저장
         CaffeineIntake intake = CaffeineIntake.builder()
             .user(user)
             .drink(drink)
+            .drinkSizeNutrition(drinkSizeNutrition)
             .intakeTime(request.getIntakeTime())
             .drinkCount(request.getDrinkCount())
             .caffeineAmountMg(request.getCaffeineAmount())
@@ -90,7 +98,7 @@ public class CaffeineIntakeService {
      */
     public CaffeineIntake getCaffeineIntakeById(Long intakeId) {
         return intakeRepository.findById(intakeId)
-            .orElseThrow(() -> new IllegalArgumentException("해당 ID의 카페인 섭취 기록이 없습니다."));
+            .orElseThrow(() -> new CustomApiException(ErrorStatus.INTAKE_INFO_NOT_FOUND));
     }
 
     /**
@@ -122,6 +130,12 @@ public class CaffeineIntakeService {
         }
         if (request.getCaffeineAmount() != null) {
             intake.setCaffeineAmountMg(request.getCaffeineAmount());
+        }
+        if (request.getDrinkSize() != null){
+            DrinkSize drinkSize = DrinkSize.valueOf(request.getDrinkSize());
+            DrinkSizeNutrition drinkSizeNutrition = drinkService.findDrinkSizeNutritionByIdAndSize(
+                request.getDrinkId(), drinkSize);
+            intake.setDrinkSizeNutrition(drinkSizeNutrition);
         }
 
         // 3. 연관된 잔존량 정보 수정. 수정된 섭취 시간, 음료 잔 수에 따라 잔존량 정보를 다시 계산해야 함

@@ -1,6 +1,7 @@
 package com.ktb.cafeboo.domain.caffeinediary.model;
 
 import com.ktb.cafeboo.domain.drink.model.Drink;
+import com.ktb.cafeboo.domain.drink.model.DrinkSizeNutrition;
 import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.global.BaseEntity;
 import jakarta.persistence.Entity;
@@ -32,6 +33,11 @@ public class CaffeineIntake extends BaseEntity {
     @ManyToOne
     @JoinColumn(name = "drink_id", nullable = false)
     private Drink drink;
+
+    // 섭취 음료 사이즈 별 정보 ID
+    @ManyToOne
+    @JoinColumn(name = "drink_size_id", nullable = false)
+    private DrinkSizeNutrition drinkSizeNutrition;
 
     // 섭취 시간
     private LocalDateTime intakeTime;

@@ -41,7 +41,6 @@ public class UserCaffeineInfoService {
         try {
             UserCaffeinInfo entity = UserCaffeineInfoMapper.toEntity(request, user);
 
-            // 선호 음료 매핑
             List<UserFavoriteDrinkType> favoriteDrinkTypes = Optional.ofNullable(request.getUserFavoriteDrinks())
                     .orElse(Collections.emptyList())
                     .stream()
@@ -80,6 +79,25 @@ public class UserCaffeineInfoService {
 
         try {
             UserCaffeineInfoMapper.updateEntity(entity, request);
+
+            List<UserFavoriteDrinkType> favoriteDrinkTypes = Optional.ofNullable(request.getUserFavoriteDrinks())
+                    .orElse(Collections.emptyList())
+                    .stream()
+                    .filter(StringUtils::hasText)
+                    .map(drinkName -> {
+                        DrinkType drinkType = drinkTypeRepository.findByName(drinkName)
+                                .orElseGet(() -> drinkTypeRepository.save(new DrinkType(drinkName)));
+
+                        UserFavoriteDrinkType favorite = new UserFavoriteDrinkType();
+                        favorite.setUser(user);
+                        favorite.setDrinkType(drinkType);
+                        return favorite;
+                    }).toList();
+
+            if (!favoriteDrinkTypes.isEmpty()) {
+                user.setFavoriteDrinks(favoriteDrinkTypes);
+            }
+
             return UserCaffeineInfoUpdateResponse.builder()
                     .userId(user.getId())
                     .updatedAt(entity.getUpdatedAt())

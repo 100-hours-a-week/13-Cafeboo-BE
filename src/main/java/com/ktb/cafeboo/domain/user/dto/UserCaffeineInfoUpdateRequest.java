@@ -9,5 +9,5 @@ public class UserCaffeineInfoUpdateRequest {
     private Integer caffeineSensitivity;
     private Float averageDailyCaffeineIntake;
     private String frequentDrinkTime;
-    private List<String> userFavoriteDrinks; // 현재 미사용
+    private List<String> userFavoriteDrinks;
 }

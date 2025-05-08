@@ -32,7 +32,9 @@ public enum ErrorStatus implements BaseCode {
 
     CAFFEINE_PROFILE_ALREADY_EXISTS(409, "CAFFEINE_PROFILE_ALREADY_EXISTS", "이미 카페인 정보가 등록되어 있습니다."),
     CAFFEINE_PROFILE_NOT_FOUND(404, "CAFFEINE_PROFILE_NOT_FOUND", "카페인 정보가 존재하지 않습니다."),
-    ;
+
+    ALARM_SETTING_ALREADY_EXISTS(409, "ALARM_SETTING_ALREADY_EXISTS", "이미 알림 설정이 존재합니다."),
+    ALARM_SETTING_NOT_FOUND(404, "ALARM_SETTING_NOT_FOUND", "알림 설정 정보를 찾을 수 없습니다.");
 
     private final int status;
     private final String code;

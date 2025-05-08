@@ -16,12 +16,11 @@ public class UserAlarmSetting extends BaseEntity {
     private User user;
 
     @Column(nullable = false)
-    private boolean alarmWhenExceedIntake = false;
+    private boolean alarmWhenExceedIntake;
 
     @Column(nullable = false)
-    private boolean alarmBeforeSleep = false;
+    private boolean alarmBeforeSleep;
 
     @Column(nullable = false)
-    private boolean alarmForChat = false;
-
+    private boolean alarmForChat;
 }

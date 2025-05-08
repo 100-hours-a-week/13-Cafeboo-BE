@@ -11,6 +11,7 @@ import com.ktb.cafeboo.domain.user.service.UserService;
 import com.ktb.cafeboo.global.apiPayload.ApiResponse;
 import com.ktb.cafeboo.global.apiPayload.code.status.SuccessStatus;
 import com.ktb.cafeboo.global.security.userdetails.CustomUserDetails;
+import com.ktb.cafeboo.global.util.AuthChecker;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -59,7 +60,8 @@ public class CaffeineIntakeController {
 
         // 1. 서비스 메서드 호출
         Long userId = userDetails.getId();
-        CaffeineIntakeResponse response = caffeineIntakeService.updateCaffeineIntake(id, request);
+        AuthChecker.checkOwnership(userId, id);
+        CaffeineIntakeResponse response = caffeineIntakeService.updateCaffeineIntake(userId, request);
 
         // 2. 응답 반환
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.CAFFEINE_INTAKE_UPDATED, response));
@@ -71,7 +73,9 @@ public class CaffeineIntakeController {
         @PathVariable Long id) {
 
         // 1. 서비스 메서드 호출
-        caffeineIntakeService.deleteCaffeineIntake(id);
+        Long userId = userDetails.getId();
+        AuthChecker.checkOwnership(userId, id);
+        caffeineIntakeService.deleteCaffeineIntake(userId);
 
         // 2. 응답 반환
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.CAFFEINE_INTAKE_DELETED, null));
@@ -81,10 +85,13 @@ public class CaffeineIntakeController {
     @RequestMapping("/monthly")
     public ResponseEntity<ApiResponse<MonthlyCaffeineDiaryResponse>>getCaffeineIntakeDiary(
         @AuthenticationPrincipal CustomUserDetails userDetails,
-        @RequestParam("year") int year,
-        @RequestParam("month") int month){
+        @RequestParam("year") String targetYear,
+        @RequestParam("month") String targetMonth){
 
         Long userId = userDetails.getId();
+        int year = Integer.parseInt(targetYear);
+        int month = Integer.parseInt(targetMonth);
+
         List<CaffeineIntake> intakes = caffeineIntakeService.getCaffeineIntakeDiary(userId, year, month);
         List<MonthlyCaffeineDiaryResponse.DailyIntake> dailyIntakeList =
             caffeineIntakeService.getDailyIntakeListForMonth(intakes, year, month);
@@ -105,10 +112,11 @@ public class CaffeineIntakeController {
     @RequestMapping("/daily")
     public ResponseEntity<ApiResponse<DailyCaffeineDiaryResponse>> getDailyCaffeineIntake(
         @AuthenticationPrincipal CustomUserDetails userDetails,
-        @RequestParam("date") LocalDate date) {
+        @RequestParam("date") String date) {
 
         Long userId = userDetails.getId();
-        List<CaffeineIntake> intakes = caffeineIntakeService.getDailyCaffeineIntake(userId, date);
+        LocalDate localDate = LocalDate.parse(date);
+        List<CaffeineIntake> intakes = caffeineIntakeService.getDailyCaffeineIntake(userId, localDate);
 
         // 총 카페인 섭취량 계산
         float totalCaffeineMg = (float) intakes.stream()

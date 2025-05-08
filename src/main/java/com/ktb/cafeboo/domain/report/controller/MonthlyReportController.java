@@ -2,14 +2,18 @@ package com.ktb.cafeboo.domain.report.controller;
 
 import com.ktb.cafeboo.domain.report.dto.MonthlyCaffeineReportResponse;
 import com.ktb.cafeboo.domain.report.dto.WeeklyCaffeineReportResponse;
+import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.domain.report.model.WeeklyReport;
 import com.ktb.cafeboo.domain.report.service.WeeklyReportService;
 import com.ktb.cafeboo.global.apiPayload.ApiResponse;
 import com.ktb.cafeboo.global.apiPayload.code.status.SuccessStatus;
+import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import com.ktb.cafeboo.global.security.userdetails.CustomUserDetails;
+import java.time.DateTimeException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.time.ZoneId;
 import java.time.temporal.IsoFields;
 import java.util.List;
 import java.util.Map;
@@ -36,27 +40,27 @@ public class MonthlyReportController {
     @GetMapping
     ResponseEntity<ApiResponse<MonthlyCaffeineReportResponse>> getMonthlyCaffeineReport(
         @AuthenticationPrincipal CustomUserDetails userDetails,
-        @RequestParam(required = false) YearMonth targetMonth){
+        @RequestParam(required = false, name = "year") String year,
+        @RequestParam(required = false, name = "month") String month){
 
         Long userId = userDetails.getId();
+        YearMonth targetMonth;
+
+        // year와 month 파라미터가 제공되지 않은 경우 현재 달을 기본값으로 사용
+        if (year == null || month == null) {
+            targetMonth = YearMonth.now(ZoneId.systemDefault()); // 또는 ZoneId.systemDefault()
+        } else {
+            try {
+                targetMonth = YearMonth.of(Integer.parseInt(year), Integer.parseInt(month));
+            } catch (DateTimeException e) {
+                return ResponseEntity.badRequest().body(ApiResponse.of(
+                    ErrorStatus.BAD_REQUEST, null));
+            }
+        }
 
         List<WeeklyReport> weeklyStats = weeklyReportService.getWeeklyStatisticsForMonth(userId, targetMonth);
-        int year = targetMonth.getYear();
-        int month = targetMonth.getMonthValue();
-
-        log.info("weeklyStats : ");
-        for (WeeklyReport report : weeklyStats) {
-            log.info("id={}, year={}, week_num={}, month={}, totalCaffeineMg={}, dailyAvgMg={}, overIntakeDays={}, userId={}",
-                report.getId(),
-                report.getYear(),
-                report.getWeekNum(),
-                report.getMonth(),
-                report.getTotalCaffeineMg(),
-                report.getDailyCaffeineAvgMg(),
-                report.getOverIntakeDays(),
-                report.getUser() != null ? report.getUser().getId() : null
-            );
-        }
+        int resolvedYear = targetMonth.getYear();
+        int resolvedMonth = targetMonth.getMonthValue();
 
         LocalDate startOfMonth = targetMonth.atDay(1);
         LocalDate endOfMonth = targetMonth.atEndOfMonth();
@@ -82,7 +86,7 @@ public class MonthlyReportController {
                 } else {
                     // 없는 주차는 0으로 채움
                     return MonthlyCaffeineReportResponse.weeklyIntakeTotal.builder()
-                        .isoWeek(String.format("%d-W%02d", year, weekNum))
+                        .isoWeek(String.format("%d-W%02d", resolvedYear, weekNum))
                         .totalCaffeineMg(0)
                         .build();
                 }
@@ -97,8 +101,8 @@ public class MonthlyReportController {
 
         MonthlyCaffeineReportResponse response = MonthlyCaffeineReportResponse.builder()
             .filter(MonthlyCaffeineReportResponse.Filter.builder()
-                .year(String.valueOf(year))
-                .month(String.valueOf(month))
+                .year(String.valueOf(resolvedYear))
+                .month(String.valueOf(resolvedMonth))
                 .build()
             )
             .startDate(startOfMonth.toString())
@@ -106,7 +110,6 @@ public class MonthlyReportController {
             .monthlyCaffeineTotal(sum)
             .weeklyCaffeineAvg(avg)
             .weeklyIntakeTotals(weeklyIntakeTotals)
-            .summaryMessage("")
             .build();
 
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.MONTHLY_CAFFEINE_REPORT_SUCCESS, response));

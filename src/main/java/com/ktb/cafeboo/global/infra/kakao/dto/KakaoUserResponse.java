@@ -1,4 +1,4 @@
-package com.ktb.cafeboo.domain.auth.dto;
+package com.ktb.cafeboo.global.infra.kakao.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;

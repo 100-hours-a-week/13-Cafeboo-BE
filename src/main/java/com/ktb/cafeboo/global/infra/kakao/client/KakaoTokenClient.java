@@ -1,6 +1,6 @@
-package com.ktb.cafeboo.global.infra.kakao;
+package com.ktb.cafeboo.global.infra.kakao.client;
 
-import com.ktb.cafeboo.domain.auth.dto.KakaoTokenResponse;
+import com.ktb.cafeboo.global.infra.kakao.dto.KakaoTokenResponse;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;

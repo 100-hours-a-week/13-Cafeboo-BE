@@ -20,7 +20,6 @@ public class UserCaffeineInfoMapper {
                 // TODO: 인공지능 서버로 하루 임계치 계산 필요
                 .dailyCaffeineLimitMg(400)
                 .sleepSensitiveThresholdMg(100)
-                // TODO: 유저 선호 카페정보 저장로직 구현
                 .build();
     }
 

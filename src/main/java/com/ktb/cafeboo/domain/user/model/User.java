@@ -76,6 +76,11 @@ public class User extends BaseEntity {
         this.refreshToken = newToken;
     }
 
+    public void setFavoriteDrinks(List<UserFavoriteDrinkType> favorites) {
+        this.favoriteDrinks.clear(); // 기존 관계 제거
+        this.favoriteDrinks.addAll(favorites);
+    }
+
     public void withdraw() {
         // TODO: 유저 기록 삭제 로직
         this.delete();

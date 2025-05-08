@@ -21,9 +21,13 @@ public class DrinkType {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 20)
+    @Column(nullable = false, unique = true, length = 20)
     private String name;
 
     @OneToMany(mappedBy = "drinkType", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserFavoriteDrinkType> userFavorites = new ArrayList<>();
+
+    public DrinkType(String name) {
+        this.name = name;
+    }
 }

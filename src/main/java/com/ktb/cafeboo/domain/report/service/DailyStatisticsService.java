@@ -12,17 +12,11 @@ import com.ktb.cafeboo.domain.user.service.UserService;
 import jakarta.transaction.Transactional;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.IsoFields;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -34,7 +28,6 @@ import org.springframework.stereotype.Service;
 public class DailyStatisticsService {
 
     private final DailyStatisticsRepository dailyStatisticsRepository;
-    private final CaffeineResidualRepository caffeineResidualRepository;
 
     private final WeeklyReportService weeklyReportService;
     private final MonthlyReportService monthlyReportService;

@@ -3,12 +3,12 @@ package com.ktb.cafeboo.domain.caffeinediary.service;
 import com.ktb.cafeboo.domain.caffeinediary.model.CaffeineResidual;
 import com.ktb.cafeboo.domain.caffeinediary.repository.CaffeineResidualRepository;
 import com.ktb.cafeboo.domain.user.model.User;
+import com.ktb.cafeboo.domain.user.service.UserService;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -24,14 +24,18 @@ import org.springframework.stereotype.Service;
 public class CaffeineResidualService {
     private final CaffeineResidualRepository residualRepository;
 
+    private final UserService userService;
+
     private static final Integer HOURS_RANGE = 17;
     private static final double DEFAULT_HALF_LIFE_HOUR = 5.0;
     // 카페인 반감기 (현재는 임의로 5시간으로 설정)
     private double k = Math.log(2) / DEFAULT_HALF_LIFE_HOUR;
 
-    public void modifyResidualAmounts(User user, LocalDateTime previousIntakeTime, float previousCaffeineAmount) {
+    public void modifyResidualAmounts(Long userId, LocalDateTime previousIntakeTime, float previousCaffeineAmount) {
         final LocalDateTime previousTargetTime = previousIntakeTime.toLocalDate().atStartOfDay();
         final LocalDateTime previousEndTime = previousIntakeTime.plusHours(24);
+
+        User user = userService.findUserById(userId);
 
         // 1. 섭취 내역 수정으로 인해 영향을 받는 잔존량 데이터 조회 (24hour)
         List<CaffeineResidual> residualsToModify = residualRepository.findByUserAndTargetDateBetween(user, previousTargetTime, previousEndTime);
@@ -68,7 +72,9 @@ public class CaffeineResidualService {
         }
     }
 
-    public void updateResidualAmounts(User user, LocalDateTime intakeTime, float initialCaffeineAmount) {
+    public void updateResidualAmounts(Long userId, LocalDateTime intakeTime, float initialCaffeineAmount) {
+        User user = userService.findUserById(userId);
+
         LocalDateTime endTime = intakeTime.plusHours(24);
 
         List<CaffeineResidual> residuals = new ArrayList<>();

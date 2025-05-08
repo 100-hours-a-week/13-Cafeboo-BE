@@ -4,7 +4,9 @@ import com.ktb.cafeboo.domain.report.dto.MonthlyCaffeineReportResponse;
 import com.ktb.cafeboo.domain.report.dto.WeeklyCaffeineReportResponse;
 import com.ktb.cafeboo.domain.report.model.WeeklyReport;
 import com.ktb.cafeboo.domain.report.service.WeeklyReportService;
-import com.ktb.cafeboo.global.ApiResponse;
+import com.ktb.cafeboo.global.apiPayload.ApiResponse;
+import com.ktb.cafeboo.global.apiPayload.code.status.SuccessStatus;
+import com.ktb.cafeboo.global.security.userdetails.CustomUserDetails;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -18,6 +20,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -32,9 +35,12 @@ public class MonthlyReportController {
 
     @GetMapping
     ResponseEntity<ApiResponse<MonthlyCaffeineReportResponse>> getMonthlyCaffeineReport(
+        @AuthenticationPrincipal CustomUserDetails userDetails,
         @RequestParam(required = false) YearMonth targetMonth){
 
-        List<WeeklyReport> weeklyStats = weeklyReportService.getWeeklyStatisticsForMonth(2L, targetMonth);
+        Long userId = userDetails.getId();
+
+        List<WeeklyReport> weeklyStats = weeklyReportService.getWeeklyStatisticsForMonth(userId, targetMonth);
         int year = targetMonth.getYear();
         int month = targetMonth.getMonthValue();
 
@@ -103,11 +109,6 @@ public class MonthlyReportController {
             .summaryMessage("")
             .build();
 
-        return ResponseEntity.ok(ApiResponse.<com.ktb.cafeboo.domain.report.dto.MonthlyCaffeineReportResponse>builder()
-            .status(200)
-            .code("MONTHLY_CAFFEINE_REPORT_SUCCESS")
-            .message("월간 카페인 리포트를 성공적으로 조회했습니다.")
-            .data(response)
-            .build());
+        return ResponseEntity.ok(ApiResponse.of(SuccessStatus.MONTHLY_CAFFEINE_REPORT_SUCCESS, response));
     }
 }

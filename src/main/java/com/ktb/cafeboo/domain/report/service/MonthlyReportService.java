@@ -8,7 +8,6 @@ import com.ktb.cafeboo.domain.user.service.UserService;
 import jakarta.transaction.Transactional;
 import java.time.LocalDate;
 import java.time.Year;
-import java.time.temporal.IsoFields;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

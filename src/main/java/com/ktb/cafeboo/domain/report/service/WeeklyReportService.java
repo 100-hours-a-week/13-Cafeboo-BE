@@ -1,9 +1,7 @@
 package com.ktb.cafeboo.domain.report.service;
 
-import com.ktb.cafeboo.domain.report.model.DailyStatistics;
 import com.ktb.cafeboo.domain.report.model.MonthlyReport;
 import com.ktb.cafeboo.domain.report.model.WeeklyReport;
-import com.ktb.cafeboo.domain.report.repository.DailyStatisticsRepository;
 import com.ktb.cafeboo.domain.report.repository.WeeklyReportRepository;
 import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.domain.user.service.UserService;

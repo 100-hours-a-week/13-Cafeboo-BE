@@ -2,81 +2,139 @@ package com.ktb.cafeboo.domain.caffeinediary.controller;
 
 import com.ktb.cafeboo.domain.caffeinediary.dto.CaffeineIntakeRequest;
 import com.ktb.cafeboo.domain.caffeinediary.dto.CaffeineIntakeResponse;
+import com.ktb.cafeboo.domain.caffeinediary.dto.DailyCaffeineDiaryResponse;
+import com.ktb.cafeboo.domain.caffeinediary.dto.MonthlyCaffeineDiaryResponse;
+import com.ktb.cafeboo.domain.caffeinediary.model.CaffeineIntake;
 import com.ktb.cafeboo.domain.caffeinediary.service.CaffeineIntakeService;
 import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.domain.user.service.UserService;
-import com.ktb.cafeboo.global.ApiResponse;
+import com.ktb.cafeboo.global.apiPayload.ApiResponse;
+import com.ktb.cafeboo.global.apiPayload.code.status.SuccessStatus;
+import com.ktb.cafeboo.global.security.userdetails.CustomUserDetails;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/caffeine-intakes")
 @RequiredArgsConstructor
+@Slf4j
 public class CaffeineIntakeController {
     private final CaffeineIntakeService caffeineIntakeService;
     private final UserService userService;
 
     @PostMapping
     public ResponseEntity<ApiResponse<CaffeineIntakeResponse>> recordCaffeineIntake(
-        /*@AuthenticationPrincipal UserDetails userDetails,  더미 유저 사용으로 주석 처리*/
+        @AuthenticationPrincipal CustomUserDetails userDetails,
         @RequestBody CaffeineIntakeRequest request) {
 
-        // 1. 더미 유저 조회
-        User dummyUser = userService.findUserById(2L); // 예시: ID가 1인 유저를 조회
-        // Long userId = Long.parseLong(userDetails.getUsername()); // Assuming username contains userId -> 더미 유저 사용
-        Long userId = dummyUser.getId();
+        Long userId = userDetails.getId();
 
-        // 2. 서비스 메서드 호출
+        // 1. 서비스 메서드 호출
         CaffeineIntakeResponse response = caffeineIntakeService.recordCaffeineIntake(userId, request);
 
-        // 3. 응답 반환
-        return ResponseEntity.status(HttpStatus.CREATED)
-            .body(ApiResponse.<CaffeineIntakeResponse>builder()
-                .status(201)
-                .code("CAFFEINE_INTAKE_RECORDED")
-                .message("카페인 섭취 내역이 성공적으로 등록되었습니다.")
-                .data(response)
-                .build());
+        // 2. 응답 반환
+        return ResponseEntity.ok(ApiResponse.of(SuccessStatus.CAFFEINE_INTAKE_RECORDED, response));
     }
 
     @PatchMapping("/{id}")
     public ResponseEntity<ApiResponse<CaffeineIntakeResponse>> updateCaffeineIntake(
-        /*@AuthenticationPrincipal UserDetails userDetails,  더미 유저 사용으로 주석 처리*/
+        @AuthenticationPrincipal CustomUserDetails userDetails,
         @PathVariable Long id,
         @RequestBody CaffeineIntakeRequest request) {
 
         // 1. 서비스 메서드 호출
+        Long userId = userDetails.getId();
         CaffeineIntakeResponse response = caffeineIntakeService.updateCaffeineIntake(id, request);
 
         // 2. 응답 반환
-        return ResponseEntity.status(HttpStatus.OK)
-            .body(ApiResponse.<CaffeineIntakeResponse>builder()
-                .status(200)
-                .code("CAFFEINE_INTAKE_UPDATED")
-                .message("카페인 섭취 내역이 성공적으로 수정되었습니다.")
-                .data(response)
-                .build());
+        return ResponseEntity.ok(ApiResponse.of(SuccessStatus.CAFFEINE_INTAKE_UPDATED, response));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<CaffeineIntakeResponse>>deleteCaffeineIntake(
-        /*@AuthenticationPrincipal UserDetails userDetails,  더미 유저 사용으로 주석 처리*/
+        @AuthenticationPrincipal CustomUserDetails userDetails,
         @PathVariable Long id) {
 
         // 1. 서비스 메서드 호출
         caffeineIntakeService.deleteCaffeineIntake(id);
 
         // 2. 응답 반환
-        return ResponseEntity.status(HttpStatus.NO_CONTENT)
-            .body(ApiResponse.<CaffeineIntakeResponse>builder()
-                .build());
+        return ResponseEntity.ok(ApiResponse.of(SuccessStatus.CAFFEINE_INTAKE_DELETED, null));
+    }
+
+    @GetMapping
+    @RequestMapping("/monthly")
+    public ResponseEntity<ApiResponse<MonthlyCaffeineDiaryResponse>>getCaffeineIntakeDiary(
+        @AuthenticationPrincipal CustomUserDetails userDetails,
+        @RequestParam("year") int year,
+        @RequestParam("month") int month){
+
+        Long userId = userDetails.getId();
+        List<CaffeineIntake> intakes = caffeineIntakeService.getCaffeineIntakeDiary(userId, year, month);
+        List<MonthlyCaffeineDiaryResponse.DailyIntake> dailyIntakeList =
+            caffeineIntakeService.getDailyIntakeListForMonth(intakes, year, month);
+
+        MonthlyCaffeineDiaryResponse response = MonthlyCaffeineDiaryResponse.builder()
+            .filter(MonthlyCaffeineDiaryResponse.Filter.builder()
+                .year(String.valueOf(year))
+                .month(String.valueOf(month))
+                .build())
+            .dailyIntakeList(dailyIntakeList)
+            .build();
+
+        return ResponseEntity.ok(ApiResponse.of(
+            SuccessStatus.MONTHLY_CAFFEINE_CALENDAR_SUCCESS, response));
+    }
+
+    @GetMapping
+    @RequestMapping("/daily")
+    public ResponseEntity<ApiResponse<DailyCaffeineDiaryResponse>> getDailyCaffeineIntake(
+        @AuthenticationPrincipal CustomUserDetails userDetails,
+        @RequestParam("date") LocalDate date) {
+
+        Long userId = userDetails.getId();
+        List<CaffeineIntake> intakes = caffeineIntakeService.getDailyCaffeineIntake(userId, date);
+
+        // 총 카페인 섭취량 계산
+        float totalCaffeineMg = (float) intakes.stream()
+            .mapToDouble(CaffeineIntake::getCaffeineAmountMg)
+            .sum();
+
+        // intakeList 생성
+        List<DailyCaffeineDiaryResponse.IntakeDetail> intakeList = intakes.stream()
+            .map(intake -> DailyCaffeineDiaryResponse.IntakeDetail.builder()
+                .intakeId(intake.getId())
+                .drinkName(intake.getDrink().getName())
+                .drinkCount(intake.getDrinkCount())
+                .caffeineMg(intake.getCaffeineAmountMg())
+                .intakeTime(intake.getIntakeTime().toString()) // ISO 8601
+                .build())
+            .collect(Collectors.toList());
+
+        DailyCaffeineDiaryResponse response = DailyCaffeineDiaryResponse.builder()
+            .filter(DailyCaffeineDiaryResponse.Filter.builder()
+                .date(date.toString())
+                .build())
+            .totalCaffeineMg(totalCaffeineMg)
+            .intakeList(intakeList)
+            .build();
+
+        return ResponseEntity.ok(ApiResponse.of(
+            SuccessStatus.DAILY_CAFFEINE_CALENDAR_SUCCESS, response));
     }
 }

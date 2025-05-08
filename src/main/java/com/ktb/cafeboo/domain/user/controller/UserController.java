@@ -34,6 +34,18 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.EMAIL_DUPLICATION_CHECK_SUCCESS, response));
     }
 
+    @GetMapping("/{userId}/profile")
+    public ResponseEntity<ApiResponse<UserProfileResponse>> getUserProfile(
+            @PathVariable Long userId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        AuthChecker.checkOwnership(userId, userDetails.getUserId());
+
+        UserProfileResponse response = userService.getUserProfile(userId, userDetails.getUserId());
+        return ResponseEntity.ok(ApiResponse.of(SuccessStatus.BASIC_PROFILE_FETCH_SUCCESS, response));
+    }
+
+
     @PostMapping("/{userId}/health")
     public ResponseEntity<ApiResponse<UserHealthInfoCreateResponse>> createHealthInfo(
             @PathVariable Long userId,

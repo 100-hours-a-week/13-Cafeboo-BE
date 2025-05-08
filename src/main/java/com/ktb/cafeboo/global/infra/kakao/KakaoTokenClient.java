@@ -1,4 +1,4 @@
-package com.ktb.cafeboo.domain.auth.infra;
+package com.ktb.cafeboo.global.infra.kakao;
 
 import com.ktb.cafeboo.domain.auth.dto.KakaoTokenResponse;
 import org.springframework.http.MediaType;

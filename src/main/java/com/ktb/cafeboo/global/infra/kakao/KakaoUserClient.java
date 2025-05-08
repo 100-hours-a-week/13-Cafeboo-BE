@@ -1,4 +1,4 @@
-package com.ktb.cafeboo.domain.auth.infra;
+package com.ktb.cafeboo.global.infra.kakao;
 
 import com.ktb.cafeboo.domain.auth.dto.KakaoUserResponse;
 import org.springframework.stereotype.Component;

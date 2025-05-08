@@ -29,7 +29,12 @@ public enum SuccessStatus implements BaseCode {
     CAFFEINE_PROFILE_CREATION_SUCCESS(201, "CAFFEINE_PROFILE_CREATION_SUCCESS", "카페인 프로필이 성공적으로 저장되었습니다."),
     CAFFEINE_PROFILE_UPDATE_SUCCESS(200, "CAFFEINE_PROFILE_UPDATE_SUCCESS", "카페인 프로필이 성공적으로 수정되었습니다."),
     CAFFEINE_PROFILE_FETCH_SUCCESS(200, "CAFFEINE_PROFILE_FETCH_SUCCESS", "카페인 프로필이 성공적으로 조회되었습니다."),
-  
+
+    // 유저 알림 설정 관련 응답
+    ALARM_SETTING_CREATION_SUCCESS(201, "ALARM_SETTING_CREATION_SUCCESS", "알람 설정이 성공적으로 저장되었습니다."),
+    ALARM_SETTING_UPDATE_SUCCESS(200, "ALARM_SETTING_UPDATE_SUCCESS", "알람 설정이 성공적으로 수정되었습니다."),
+    ALARM_SETTING_FETCH_SUCCESS(200, "ALARM_SETTING_FETCH_SUCCESS", "알람 설정 정보가 성공적으로 조회되었습니다."),
+
     //카페인 섭취 관련 응답
     CAFFEINE_INTAKE_RECORDED(201, "CAFFEINE_INTAKE_RECORDED", "카페인 섭취 내역이 성공적으로 등록되었습니다."),
     CAFFEINE_INTAKE_UPDATED(200, "CAFFEINE_INTAKE_UPDATED", "카페인 섭취 내역이 성공적으로 갱신되었습니다."),

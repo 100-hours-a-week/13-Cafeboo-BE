@@ -29,9 +29,9 @@ public class UserCaffeinInfo extends BaseEntity {
     private LocalTime frequentDrinkTime;
 
     @Column(nullable = false)
-    private float dailyCaffeineLimitMg = 100.0f;
+    private float dailyCaffeineLimitMg = 400.0f;
 
     @Column(nullable = false)
-    private float sleepSensitiveThresholdMg = 400.0f;
+    private float sleepSensitiveThresholdMg = 100.0f;
 
 }

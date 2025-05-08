@@ -25,7 +25,7 @@ public class UserCaffeineInfoService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomApiException(ErrorStatus.USER_NOT_FOUND));
 
-        if (userCaffeineInfoRepository.existsById(userId)) {
+        if (userCaffeineInfoRepository.existsByUserId(userId)) {
             throw new CustomApiException(ErrorStatus.CAFFEINE_PROFILE_ALREADY_EXISTS);
         }
 

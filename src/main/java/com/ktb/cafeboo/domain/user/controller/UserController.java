@@ -1,6 +1,7 @@
 package com.ktb.cafeboo.domain.user.controller;
 
 import com.ktb.cafeboo.domain.user.dto.*;
+import com.ktb.cafeboo.domain.user.service.UserAlarmSettingService;
 import com.ktb.cafeboo.domain.user.service.UserCaffeineInfoService;
 import com.ktb.cafeboo.domain.user.service.UserHealthInfoService;
 import com.ktb.cafeboo.domain.user.service.UserService;
@@ -24,6 +25,7 @@ public class UserController {
     private final UserService userService;
     private final UserHealthInfoService userHealthInfoService;
     private final UserCaffeineInfoService userCaffeineInfoService;
+    private final UserAlarmSettingService userAlarmSettingService;
 
     @GetMapping("/email")
     public ResponseEntity<ApiResponse<EmailDuplicationResponse>> checkEmailDuplication(
@@ -102,5 +104,41 @@ public class UserController {
 
         UserCaffeineInfoResponse response = userCaffeineInfoService.getCaffeineInfo(userId);
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.CAFFEINE_PROFILE_FETCH_SUCCESS, response));
+    }
+
+    @PostMapping("/{userId}/alarm")
+    public ResponseEntity<ApiResponse<UserAlarmSettingCreateResponse>> createAlarmSetting(
+            @PathVariable Long userId,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody UserAlarmSettingCreateRequest request
+    ) {
+        AuthChecker.checkOwnership(userId, userDetails.getUserId());
+
+        UserAlarmSettingCreateResponse response = userAlarmSettingService.create(userId, request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.of(SuccessStatus.ALARM_SETTING_CREATION_SUCCESS, response));
+    }
+
+    @PatchMapping("/{userId}/alarm")
+    public ResponseEntity<ApiResponse<UserAlarmSettingUpdateResponse>> updateAlarmSetting(
+            @PathVariable Long userId,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody UserAlarmSettingUpdateRequest request
+    ) {
+        AuthChecker.checkOwnership(userId, userDetails.getUserId());
+
+        UserAlarmSettingUpdateResponse response = userAlarmSettingService.update(userId, request);
+        return ResponseEntity.ok(ApiResponse.of(SuccessStatus.ALARM_SETTING_UPDATE_SUCCESS, response));
+    }
+
+    @GetMapping("/{userId}/alarm")
+    public ResponseEntity<ApiResponse<UserAlarmSettingResponse>> getAlarmSetting(
+            @PathVariable Long userId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        AuthChecker.checkOwnership(userId, userDetails.getUserId());
+
+        UserAlarmSettingResponse response = userAlarmSettingService.get(userId);
+        return ResponseEntity.ok(ApiResponse.of(SuccessStatus.ALARM_SETTING_FETCH_SUCCESS, response));
     }
 }

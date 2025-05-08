@@ -7,6 +7,8 @@ import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.domain.user.model.UserCaffeinInfo;
 
 import java.time.LocalTime;
+import java.util.List;
+import java.util.Optional;
 
 public class UserCaffeineInfoMapper {
 
@@ -33,12 +35,19 @@ public class UserCaffeineInfoMapper {
     }
 
     public static UserCaffeineInfoResponse toResponse(UserCaffeinInfo entity) {
+        List<String> favoriteDrinks = Optional.ofNullable(entity.getUser().getFavoriteDrinks())
+                .orElse(List.of())
+                .stream()
+                .map(fav -> fav.getDrinkType().getName())
+                .toList();
+
         return UserCaffeineInfoResponse.builder()
                 .caffeineSensitivity(entity.getCaffeineSensitivity())
                 .averageDailyCaffeineIntake(entity.getAverageDailyCaffeineIntake())
                 .frequentDrinkTime(entity.getFrequentDrinkTime().toString())
                 .dailyCaffeineLimitMg(entity.getDailyCaffeineLimitMg())
                 .sleepSensitiveThresholdMg(entity.getSleepSensitiveThresholdMg())
+                .userFavoriteDrinks(favoriteDrinks)
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();

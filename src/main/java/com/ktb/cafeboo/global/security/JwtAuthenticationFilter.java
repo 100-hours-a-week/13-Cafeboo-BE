@@ -35,8 +35,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String accessToken = authorizationHeader.replace("Bearer ", "");
 
             try {
-                String userId = jwtProvider.validateAccessToken(accessToken);
-                Long userIdLong = Long.parseLong(userId);
+                String userIdStr = jwtProvider.validateAccessToken(accessToken);
+
+                if (userIdStr == null || !userIdStr.matches("\\d+")) {
+                    throw new CustomApiException(ErrorStatus.ACCESS_TOKEN_INVALID);
+                }
+
+                Long userIdLong = Long.parseLong(userIdStr);
 
                 User user = userRepository.findById(userIdLong)
                         .orElseThrow(() -> new CustomApiException(ErrorStatus.USER_NOT_FOUND));

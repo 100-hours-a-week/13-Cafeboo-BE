@@ -39,9 +39,16 @@ public class UserService {
         return new EmailDuplicationResponse(email, isDuplicated);
     }
 
+    public boolean hasCompletedOnboarding(User user) {
+        return user.getHealthInfo() != null
+                && user.getCaffeinInfo() != null
+                && user.getAlarmSetting() != null;
+    }
+  
     public UserProfileResponse getUserProfile(Long targetUserId, Long currentUserId) {
         User targetUser = userRepository.findById(targetUserId)
                 .orElseThrow(() -> new CustomApiException(ErrorStatus.USER_NOT_FOUND));
+
 
         float dailyCaffeineLimit = targetUser.getCaffeinInfo() != null
                 ? targetUser.getCaffeinInfo().getDailyCaffeineLimitMg()
@@ -56,4 +63,18 @@ public class UserService {
                 0
         );
     }
+  
+  //    public UserProfileResponse getUserProfile(Long targetUserId, Long currentUserId) {
+//        User targetUser = userRepository.findById(targetUserId)
+//                .orElseThrow(() -> new CustomApiException(ErrorStatus.USER_NOT_FOUND));
+//
+//        AuthChecker.checkOwnership(targetUser.getId(), currentUserId);
+//
+//        return new UserProfileResponse(
+//                targetUser.getNickname(),
+//                targetUser.getDailyCaffeineLimitMg(),
+//                targetUser.getCoffeeBean(),
+//                challengeRepository.countByUserId(targetUserId)
+//        );
+//    }
 }

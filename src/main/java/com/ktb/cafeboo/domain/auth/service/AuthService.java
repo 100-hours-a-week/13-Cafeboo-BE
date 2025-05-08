@@ -28,7 +28,7 @@ public class AuthService {
         }
 
         String newAccessToken = jwtProvider.createAccessToken(
-                user.getEmail(),
+                user.getId().toString(),
                 user.getLoginType().name(),
                 user.getRole().name()
         );

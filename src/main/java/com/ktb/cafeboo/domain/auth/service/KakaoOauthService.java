@@ -7,6 +7,7 @@ import com.ktb.cafeboo.domain.auth.infra.KakaoTokenClient;
 import com.ktb.cafeboo.domain.auth.infra.KakaoUserClient;
 import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.domain.user.repository.UserRepository;
+import com.ktb.cafeboo.domain.user.service.UserService;
 import com.ktb.cafeboo.global.enums.LoginType;
 import com.ktb.cafeboo.global.security.JwtProvider;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ public class KakaoOauthService {
     private final KakaoUserClient kakaoUserClient;
     private final UserRepository userRepository;
     private final JwtProvider jwtProvider;
+    private final UserService userService;
 
     @Value("${spring.security.oauth2.client.registration.kakao.client-id}")
     private String clientId;
@@ -56,14 +58,14 @@ public class KakaoOauthService {
 
         Optional<User> userOpt = userRepository.findByOauthIdAndLoginType(kakaoUser.getId(), LoginType.KAKAO);
         User user;
-        boolean isNewUser;
+        boolean requiresOnboarding;
 
         if (userOpt.isPresent()) {
             user = userOpt.get();
-            isNewUser = false;
+            requiresOnboarding = !userService.hasCompletedOnboarding(user);
         } else {
             user = userRepository.save(User.fromKakao(kakaoUser));
-            isNewUser = true;
+            requiresOnboarding = true;
         }
 
         String accessToken = jwtProvider.createAccessToken(
@@ -79,6 +81,6 @@ public class KakaoOauthService {
         user.updateRefreshToken(refreshToken);
         userRepository.save(user);
 
-        return new KakaoLoginResponse(accessToken, refreshToken, isNewUser);
+        return new KakaoLoginResponse(accessToken, refreshToken, requiresOnboarding);
     }
 }

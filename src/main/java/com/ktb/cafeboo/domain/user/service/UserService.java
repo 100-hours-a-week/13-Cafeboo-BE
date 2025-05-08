@@ -1,10 +1,13 @@
 package com.ktb.cafeboo.domain.user.service;
 
 import com.ktb.cafeboo.domain.user.dto.EmailDuplicationResponse;
+import com.ktb.cafeboo.domain.user.dto.UserProfileResponse;
 import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.domain.user.repository.UserRepository;
+import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
+import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
+import com.ktb.cafeboo.global.util.AuthChecker;
 import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -20,11 +23,6 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public EmailDuplicationResponse isEmailDuplicated(String email) {
-        boolean isDuplicated = userRepository.existsByEmail(email);
-        return new EmailDuplicationResponse(email, isDuplicated);
-    }
-
     /**
      * 주어진 ID에 해당하는 유저 정보를 조회합니다.
      *
@@ -36,4 +34,24 @@ public class UserService {
         return userRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("해당 아이디를 가진 유저 정보가 존재하지 않습니다"));
     }
+  
+    public EmailDuplicationResponse isEmailDuplicated(String email) {
+        boolean isDuplicated = userRepository.existsByEmail(email);
+        return new EmailDuplicationResponse(email, isDuplicated);
+    }
+
+//    public UserProfileResponse getUserProfile(Long targetUserId, Long currentUserId) {
+//        User targetUser = userRepository.findById(targetUserId)
+//                .orElseThrow(() -> new CustomApiException(ErrorStatus.USER_NOT_FOUND));
+//
+//        AuthChecker.checkOwnership(targetUser.getId(), currentUserId);
+//
+//        return new UserProfileResponse(
+//                targetUser.getNickname(),
+//                targetUser.getDailyCaffeineLimitMg(),
+//                targetUser.getCoffeeBean(),
+//                challengeRepository.countByUserId(targetUserId)
+//        );
+//    }
+
 }

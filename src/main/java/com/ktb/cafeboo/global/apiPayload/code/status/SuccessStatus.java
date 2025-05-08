@@ -18,7 +18,18 @@ public enum SuccessStatus implements BaseCode {
 
     // 유저 관련 응답
     EMAIL_DUPLICATION_CHECK_SUCCESS(200, "EMAIL_DUPLICATION_CHECK_SUCCESS", "이메일 중복 확인 결과를 반환했습니다."),
+    BASIC_PROFILE_FETCH_SUCCESS(200, "BASIC_PROFILE_FETCH_SUCCESS", "기본 프로필이 성공적으로 조회되었습니다."),
+    
+    //유저 건강 프로필 관련 응답
+    HEALTH_PROFILE_CREATION_SUCCESS(201, "HEALTH_PROFILE_CREATION_SUCCESS", "건강 프로필이 성공적으로 저장되었습니다."),
+    HEALTH_PROFILE_UPDATE_SUCCESS(200, "HEALTH_PROFILE_UPDATE_SUCCESS", "건강 프로필이 성공적으로 수정되었습니다."),
+    HEALTH_PROFILE_FETCH_SUCCESS(200, "HEALTH_PROFILE_FETCH_SUCCESS", "건강 프로필이 성공적으로 조회되었습니다."),
 
+    //유저 카페인 프로필 관련 응답
+    CAFFEINE_PROFILE_CREATION_SUCCESS(201, "CAFFEINE_PROFILE_CREATION_SUCCESS", "카페인 프로필이 성공적으로 저장되었습니다."),
+    CAFFEINE_PROFILE_UPDATE_SUCCESS(200, "CAFFEINE_PROFILE_UPDATE_SUCCESS", "카페인 프로필이 성공적으로 수정되었습니다."),
+    CAFFEINE_PROFILE_FETCH_SUCCESS(200, "CAFFEINE_PROFILE_FETCH_SUCCESS", "카페인 프로필이 성공적으로 조회되었습니다."),
+  
     //카페인 섭취 관련 응답
     CAFFEINE_INTAKE_RECORDED(201, "CAFFEINE_INTAKE_RECORDED", "카페인 섭취 내역이 성공적으로 등록되었습니다."),
     CAFFEINE_INTAKE_UPDATED(200, "CAFFEINE_INTAKE_UPDATED", "카페인 섭취 내역이 성공적으로 갱신되었습니다."),
@@ -29,7 +40,7 @@ public enum SuccessStatus implements BaseCode {
     WEEKLY_CAFFEINE_REPORT_SUCCESS(200, "WEEKLY_CAFFEINE_REPORT_SUCCESS", "주간 카페인 섭취 리포트를 성공적으로 조회했습니다."),
     MONTHLY_CAFFEINE_REPORT_SUCCESS(200, "MONTHLY_CAFFEINE_REPORT_SUCCESS", "월간 카페인 섭취 리포트를 성공적으로 조회했습니다."),
     YEARLY_CAFFEINE_REPORT_SUCCESS(200, "YEARLY_CAFFEINE_REPORT_SUCCESS", "연간 카페인 섭취 리포트를 성공적으로 조회했습니다."),
-
+  
     //카페인 다이어리 조회 관련 응답
     MONTHLY_CAFFEINE_CALENDAR_SUCCESS(200, "MONTHLY_CAFFEINE_CALENDAR_SUCCESS", "다이어리 월간 카페인 섭취 기록이 정상적으로 조회되었습니다."),
     DAILY_CAFFEINE_CALENDAR_SUCCESS(200, "DAILY_CAFFEINE_CALENDAR_SUCCESS", "다이어리 일일 카페인 섭취 기록이 정상적으로 조회되었습니다.");

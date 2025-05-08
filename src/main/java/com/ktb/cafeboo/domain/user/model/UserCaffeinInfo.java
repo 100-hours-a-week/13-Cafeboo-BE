@@ -2,14 +2,16 @@ package com.ktb.cafeboo.domain.user.model;
 
 import com.ktb.cafeboo.global.BaseEntity;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalTime;
 
+@Entity
 @Getter
 @Setter
-@Entity
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "user_caffeine_info")
 public class UserCaffeinInfo extends BaseEntity {
     @OneToOne
@@ -32,7 +34,4 @@ public class UserCaffeinInfo extends BaseEntity {
     @Column(nullable = false)
     private float sleepSensitiveThresholdMg = 400.0f;
 
-    public void update() {
-
-    }
 }

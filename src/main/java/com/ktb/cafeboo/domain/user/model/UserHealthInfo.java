@@ -2,14 +2,13 @@ package com.ktb.cafeboo.domain.user.model;
 
 import com.ktb.cafeboo.global.BaseEntity;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalTime;
 
+@Entity
 @Getter
 @Setter
-@Entity
 @Table(name = "user_health_info")
 public class UserHealthInfo extends BaseEntity {
     @OneToOne
@@ -29,17 +28,17 @@ public class UserHealthInfo extends BaseEntity {
     @Column(nullable = false)
     private float weight;
 
-    @Column(nullable = false)
-    private boolean isPregnant;
+    @Column(name = "is_pregnant", nullable = false)
+    private Boolean pregnant;
+
+    @Column(name = "is_taking_birth_pill", nullable = false)
+    private Boolean takingBirthPill;
+
+    @Column(name = "is_smoking", nullable = false)
+    private Boolean smoking;
 
     @Column(nullable = false)
-    private boolean isTakingBirthPill;
-
-    @Column(nullable = false)
-    private boolean isSmoking;
-
-    @Column(nullable = false)
-    private boolean hasLiverDisease;
+    private Boolean hasLiverDisease;
 
     @Column(nullable = false)
     private LocalTime sleepTime;
@@ -47,7 +46,4 @@ public class UserHealthInfo extends BaseEntity {
     @Column(nullable = false)
     private LocalTime wakeUpTime;
 
-    public void update() {
-
-    }
 }

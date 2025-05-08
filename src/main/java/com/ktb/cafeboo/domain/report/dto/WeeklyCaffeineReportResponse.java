@@ -20,7 +20,7 @@ public class WeeklyCaffeineReportResponse {
     private int overLimitDays;
     private float dailyCaffeineAvg;
     private List<DailyIntakeTotal> dailyIntakeTotals;
-    private String summaryMessage;
+    private String aiMessage;
 
     @Getter
     @AllArgsConstructor

@@ -17,7 +17,6 @@ public class YearlyCaffeineReportResponse {
     private float yearlyCaffeineTotal;
     private float monthlyCaffeineAvg;
     private List<MonthlyIntakeTotal> monthlyIntakeTotals;
-    private String summaryMessage;
 
     @Getter
     @AllArgsConstructor

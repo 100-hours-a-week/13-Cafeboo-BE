@@ -18,7 +18,6 @@ public class MonthlyCaffeineReportResponse {
     private float monthlyCaffeineTotal;
     private float weeklyCaffeineAvg;
     private List<MonthlyCaffeineReportResponse.weeklyIntakeTotal> weeklyIntakeTotals;
-    private String summaryMessage;
 
     @Getter
     @AllArgsConstructor

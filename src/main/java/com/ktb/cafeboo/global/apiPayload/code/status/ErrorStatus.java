@@ -24,7 +24,7 @@ public enum ErrorStatus implements BaseCode {
     REFRESH_TOKEN_MISMATCH(401, "REFRESH_TOKEN_MISMATCH", "리프레시 토큰이 일치하지 않습니다."),
 
     // 유저 관련 오류
-    USER_NOT_FOUND(401, "USER_NOT_FOUND", "사용자를 찾을 수 없습니다."),
+    USER_NOT_FOUND(404, "USER_NOT_FOUND", "사용자를 찾을 수 없습니다."),
     ACCESS_DENIED(403, "ACCESS_DENIED", "해당 요청에 대한 권한이 없습니다."),
 
     HEALTH_PROFILE_ALREADY_EXISTS(409, "HEALTH_PROFILE_ALREADY_EXISTS", "이미 건강 정보가 등록되어 있습니다."),

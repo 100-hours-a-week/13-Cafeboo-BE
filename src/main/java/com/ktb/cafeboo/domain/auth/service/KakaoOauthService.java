@@ -1,10 +1,10 @@
 package com.ktb.cafeboo.domain.auth.service;
 
 import com.ktb.cafeboo.domain.auth.dto.KakaoLoginResponse;
-import com.ktb.cafeboo.domain.auth.dto.KakaoTokenResponse;
-import com.ktb.cafeboo.domain.auth.dto.KakaoUserResponse;
-import com.ktb.cafeboo.domain.auth.infra.KakaoTokenClient;
-import com.ktb.cafeboo.domain.auth.infra.KakaoUserClient;
+import com.ktb.cafeboo.global.infra.kakao.dto.KakaoTokenResponse;
+import com.ktb.cafeboo.global.infra.kakao.dto.KakaoUserResponse;
+import com.ktb.cafeboo.global.infra.kakao.client.KakaoTokenClient;
+import com.ktb.cafeboo.global.infra.kakao.client.KakaoUserClient;
 import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.domain.user.repository.UserRepository;
 import com.ktb.cafeboo.domain.user.service.UserService;

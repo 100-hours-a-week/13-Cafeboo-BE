@@ -1,6 +1,6 @@
 package com.ktb.cafeboo.domain.user.model;
 
-import com.ktb.cafeboo.domain.auth.dto.KakaoUserResponse;
+import com.ktb.cafeboo.global.infra.kakao.dto.KakaoUserResponse;
 import com.ktb.cafeboo.global.BaseEntity;
 import com.ktb.cafeboo.global.enums.LoginType;
 import com.ktb.cafeboo.global.enums.UserRole;

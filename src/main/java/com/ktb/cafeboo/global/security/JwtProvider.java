@@ -30,7 +30,7 @@ public class JwtProvider {
 
     private String createToken(String userId, String loginType, String role, long validityInMillis) {
         return JWT.create()
-                .withSubject(userId)
+                .withSubject(String.valueOf(userId))
                 .withClaim("loginType", loginType)
                 .withClaim("role", role)
                 .withExpiresAt(new Date(System.currentTimeMillis() + validityInMillis))
@@ -39,10 +39,14 @@ public class JwtProvider {
 
     public String validateAccessToken(String token) {
         try {
-            return JWT.require(Algorithm.HMAC256(SECRET_KEY))
+            String subject = JWT.require(Algorithm.HMAC256(SECRET_KEY))
                     .build()
                     .verify(token)
                     .getSubject();
+            if (subject == null) {
+                throw new CustomApiException(ErrorStatus.ACCESS_TOKEN_INVALID);
+            }
+            return subject;
         } catch (TokenExpiredException e) {
             throw new CustomApiException(ErrorStatus.ACCESS_TOKEN_EXPIRED);
         } catch (JWTVerificationException e) {
@@ -52,10 +56,14 @@ public class JwtProvider {
 
     public String validateRefreshToken(String token) {
         try {
-            return JWT.require(Algorithm.HMAC256(SECRET_KEY))
+            String subject = JWT.require(Algorithm.HMAC256(SECRET_KEY))
                     .build()
                     .verify(token)
                     .getSubject();
+            if (subject == null) {
+                throw new CustomApiException(ErrorStatus.REFRESH_TOKEN_INVALID);
+            }
+            return subject;
         } catch (TokenExpiredException e) {
             throw new CustomApiException(ErrorStatus.REFRESH_TOKEN_EXPIRED);
         } catch (JWTVerificationException e) {

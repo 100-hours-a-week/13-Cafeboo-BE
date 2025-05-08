@@ -9,6 +9,9 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Getter
 @Setter
 @Entity
@@ -53,6 +56,9 @@ public class User extends BaseEntity {
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private UserAlarmSetting alarmSetting;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserFavoriteDrinkType> favoriteDrinks = new ArrayList<>();
 
     public static User fromKakao(KakaoUserResponse kakaoUser) {
         User user = new User();

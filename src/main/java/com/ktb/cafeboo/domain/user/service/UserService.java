@@ -6,7 +6,6 @@ import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.domain.user.repository.UserRepository;
 import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
-import com.ktb.cafeboo.global.util.AuthChecker;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -45,8 +44,27 @@ public class UserService {
                 && user.getCaffeinInfo() != null
                 && user.getAlarmSetting() != null;
     }
+  
+    public UserProfileResponse getUserProfile(Long targetUserId, Long currentUserId) {
+        User targetUser = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new CustomApiException(ErrorStatus.USER_NOT_FOUND));
 
-//    public UserProfileResponse getUserProfile(Long targetUserId, Long currentUserId) {
+
+        float dailyCaffeineLimit = targetUser.getCaffeinInfo() != null
+                ? targetUser.getCaffeinInfo().getDailyCaffeineLimitMg()
+                : 400.0f;
+
+        // int challengeCount = challengeRepository.countByUserId(targetUserId); // TODO: 챌린지 추가 이후 실제 구현 필요
+
+        return new UserProfileResponse(
+                targetUser.getNickname(),
+                (int) dailyCaffeineLimit,
+                targetUser.getCoffeeBean(),
+                0
+        );
+    }
+  
+  //    public UserProfileResponse getUserProfile(Long targetUserId, Long currentUserId) {
 //        User targetUser = userRepository.findById(targetUserId)
 //                .orElseThrow(() -> new CustomApiException(ErrorStatus.USER_NOT_FOUND));
 //
@@ -59,5 +77,4 @@ public class UserService {
 //                challengeRepository.countByUserId(targetUserId)
 //        );
 //    }
-
 }

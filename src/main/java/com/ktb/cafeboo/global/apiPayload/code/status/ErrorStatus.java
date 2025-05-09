@@ -43,7 +43,11 @@ public enum ErrorStatus implements BaseCode {
     DRINK_NOT_FOUND(404, "DRINK_NOT_FOUND", "음료 정보를 찾을 수 없습니다."),
 
     // 외부 시스템 관련 오류
-    AI_SERVER_ERROR(502, "AI_SERVER_ERROR", "AI 서버와의 통신 중 오류가 발생했습니다.");
+    AI_SERVER_ERROR(502, "AI_SERVER_ERROR", "AI 서버와의 통신 중 오류가 발생했습니다."),
+
+    //리포트 관련 오류
+    REPORT_NOT_FOUND(404, "REPORT_NOT_FOUND", "리포트 정보를 찾을 수 없습니다.")
+    ;
 
     private final int status;
     private final String code;

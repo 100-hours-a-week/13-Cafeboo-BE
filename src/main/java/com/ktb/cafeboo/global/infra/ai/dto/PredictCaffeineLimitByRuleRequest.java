@@ -8,7 +8,7 @@ import lombok.Getter;
 @Getter
 @Builder
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class PredictCaffeineLimitRequest {
+public class PredictCaffeineLimitByRuleRequest {
     private String userId;
     private String modelHint;
     private String gender;

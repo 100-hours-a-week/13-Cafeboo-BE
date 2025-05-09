@@ -36,12 +36,14 @@ public enum ErrorStatus implements BaseCode {
     ALARM_SETTING_ALREADY_EXISTS(409, "ALARM_SETTING_ALREADY_EXISTS", "이미 알림 설정이 존재합니다."),
     ALARM_SETTING_NOT_FOUND(404, "ALARM_SETTING_NOT_FOUND", "알림 설정 정보를 찾을 수 없습니다."),
 
-    //섭취 내역 관련 오류
+    // 섭취 내역 관련 오류
     INTAKE_INFO_NOT_FOUND(404, "INTAKE_INFO_NOT_FOUND", "섭취 내역을 찾을 수 없습니다."),
 
-    //음료 관련 오류
-    DRINK_NOT_FOUND(404, "DRINK_NOT_FOUND", "음료 정보를 찾을 수 없습니다.")
-    ;
+    // 음료 관련 오류
+    DRINK_NOT_FOUND(404, "DRINK_NOT_FOUND", "음료 정보를 찾을 수 없습니다."),
+
+    // 외부 시스템 관련 오류
+    AI_SERVER_ERROR(502, "AI_SERVER_ERROR", "AI 서버와의 통신 중 오류가 발생했습니다.");
 
     private final int status;
     private final String code;

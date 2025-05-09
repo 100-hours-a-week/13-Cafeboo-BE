@@ -2,6 +2,7 @@ package com.ktb.cafeboo.domain.user.service;
 
 import com.ktb.cafeboo.domain.drink.model.DrinkType;
 import com.ktb.cafeboo.domain.drink.repository.DrinkTypeRepository;
+import com.ktb.cafeboo.domain.recommend.service.CaffeineRecommendationService;
 import com.ktb.cafeboo.domain.user.dto.*;
 import com.ktb.cafeboo.domain.user.mapper.UserCaffeineInfoMapper;
 import com.ktb.cafeboo.domain.user.model.User;
@@ -12,6 +13,7 @@ import com.ktb.cafeboo.domain.user.repository.UserRepository;
 import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -20,7 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserCaffeineInfoService {
@@ -28,6 +30,7 @@ public class UserCaffeineInfoService {
     private final UserRepository userRepository;
     private final UserCaffeineInfoRepository userCaffeineInfoRepository;
     private final DrinkTypeRepository drinkTypeRepository;
+    private final CaffeineRecommendationService caffeineRecommendationService;
 
     @Transactional
     public UserCaffeineInfoCreateResponse create(Long userId, UserCaffeineInfoCreateRequest request) {
@@ -41,10 +44,21 @@ public class UserCaffeineInfoService {
         try {
             UserCaffeinInfo entity = UserCaffeineInfoMapper.toEntity(request, user);
 
+            entity.setSleepSensitiveThresholdMg(100f);  // 기본값
+
+            // AI 서버 호출로 하루 최대 카페인 허용량 예측
+            try {
+                float predictedLimit = caffeineRecommendationService.getPredictedCaffeineLimitByRule(user);
+                entity.setDailyCaffeineLimitMg(predictedLimit);
+            } catch (Exception e) {
+                log.warn("[AI 서버 호출 실패] 기존 카페인 허용량으로 설정합니다. userId: {}", userId);
+                entity.setDailyCaffeineLimitMg(400f);  // 기본값
+            }
+
             List<UserFavoriteDrinkType> favoriteDrinkTypes = Optional.ofNullable(request.getUserFavoriteDrinks())
                     .orElse(Collections.emptyList())
                     .stream()
-                    .filter(StringUtils::hasText) // 빈 문자열 방지 (스프링 유틸)
+                    .filter(StringUtils::hasText)
                     .map(drinkName -> {
                         DrinkType drinkType = drinkTypeRepository.findByName(drinkName)
                                 .orElseGet(() -> drinkTypeRepository.save(new DrinkType(drinkName)));
@@ -79,6 +93,15 @@ public class UserCaffeineInfoService {
 
         try {
             UserCaffeineInfoMapper.updateEntity(entity, request);
+
+            // AI 서버 호출로 하루 최대 카페인 허용량 예측
+            try {
+                float predictedLimit = caffeineRecommendationService.getPredictedCaffeineLimitByRule(user);
+                entity.setDailyCaffeineLimitMg(predictedLimit);
+            } catch (Exception e) {
+                log.warn("[AI 서버 호출 실패] 기존 최대 허용 카페인량 유지. userId: {}", userId);
+                // 값 유지: set 하지 않음
+            }
 
             List<UserFavoriteDrinkType> favoriteDrinkTypes = Optional.ofNullable(request.getUserFavoriteDrinks())
                     .orElse(Collections.emptyList())

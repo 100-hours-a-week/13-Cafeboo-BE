@@ -3,6 +3,7 @@ package com.ktb.cafeboo.domain.user.model;
 import com.ktb.cafeboo.global.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Where;
 
 import java.time.LocalTime;
 
@@ -10,6 +11,7 @@ import java.time.LocalTime;
 @Getter
 @Setter
 @Table(name = "user_health_info")
+@Where(clause = "deleted_at IS NULL")
 public class UserHealthInfo extends BaseEntity {
     @OneToOne
     @MapsId

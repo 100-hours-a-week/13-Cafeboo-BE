@@ -8,6 +8,7 @@ import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @AllArgsConstructor
@@ -63,18 +64,13 @@ public class UserService {
                 0
         );
     }
-  
-  //    public UserProfileResponse getUserProfile(Long targetUserId, Long currentUserId) {
-//        User targetUser = userRepository.findById(targetUserId)
-//                .orElseThrow(() -> new CustomApiException(ErrorStatus.USER_NOT_FOUND));
-//
-//        AuthChecker.checkOwnership(targetUser.getId(), currentUserId);
-//
-//        return new UserProfileResponse(
-//                targetUser.getNickname(),
-//                targetUser.getDailyCaffeineLimitMg(),
-//                targetUser.getCoffeeBean(),
-//                challengeRepository.countByUserId(targetUserId)
-//        );
-//    }
+
+    @Transactional
+    public void deleteUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomApiException(ErrorStatus.USER_NOT_FOUND));
+
+        user.withdraw();
+    }
+
 }

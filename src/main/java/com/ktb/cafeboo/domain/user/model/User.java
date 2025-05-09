@@ -1,5 +1,7 @@
 package com.ktb.cafeboo.domain.user.model;
 
+import com.ktb.cafeboo.domain.caffeinediary.model.*;
+import com.ktb.cafeboo.domain.report.model.*;
 import com.ktb.cafeboo.global.infra.kakao.dto.KakaoUserResponse;
 import com.ktb.cafeboo.global.BaseEntity;
 import com.ktb.cafeboo.global.enums.LoginType;
@@ -8,6 +10,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.Where;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +19,7 @@ import java.util.List;
 @Setter
 @Entity
 @Table(name = "users")
+@Where(clause = "deleted_at IS NULL")
 public class User extends BaseEntity {
     @Column
     private String email;
@@ -60,6 +64,26 @@ public class User extends BaseEntity {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserFavoriteDrinkType> favoriteDrinks = new ArrayList<>();
 
+    // 카페인 다이어리 연관관계
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CaffeineIntake> caffeineIntakes = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CaffeineResidual> caffeineResiduals = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DailyStatistics> dailyStatisticsList = new ArrayList<>();
+
+    // 리포트 연관관계
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MonthlyReport> monthlyReports = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<WeeklyReport> weeklyReports = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<YearlyReport> yearlyReports = new ArrayList<>();
+
     public static User fromKakao(KakaoUserResponse kakaoUser) {
         User user = new User();
         user.setOauthId(kakaoUser.getId());
@@ -82,7 +106,18 @@ public class User extends BaseEntity {
     }
 
     public void withdraw() {
-        // TODO: 유저 기록 삭제 로직
+        if (this.healthInfo != null) {
+            this.healthInfo.delete();
+        }
+        if (this.caffeinInfo != null) {
+            this.caffeinInfo.delete();
+        }
+        if (this.alarmSetting != null) {
+            this.alarmSetting.delete();
+        }
+        if (this.favoriteDrinks != null) {
+            this.favoriteDrinks.clear();
+        }
         this.delete();
     }
 }

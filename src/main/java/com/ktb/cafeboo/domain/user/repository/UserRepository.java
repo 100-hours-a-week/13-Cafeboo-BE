@@ -10,7 +10,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByOauthIdAndLoginType(Long oauthId, LoginType loginType);
 
-   boolean existsByEmail(String email);
+    boolean existsByEmail(String email);
 
 }
 

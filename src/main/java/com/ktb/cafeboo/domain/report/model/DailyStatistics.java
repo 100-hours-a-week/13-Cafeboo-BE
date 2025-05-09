@@ -5,6 +5,8 @@ import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.global.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Where;
+
 import java.time.LocalDate;
 
 @Entity
@@ -14,6 +16,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Where(clause = "deleted_at IS NULL")
 public class DailyStatistics extends BaseEntity {
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)

@@ -6,12 +6,14 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Where;
 
 @Entity
 @Table(name = "user_favorite_drink_types")
 @Getter
 @Setter
 @NoArgsConstructor
+@Where(clause = "deleted_at IS NULL")
 public class UserFavoriteDrinkType {
 
     @Id

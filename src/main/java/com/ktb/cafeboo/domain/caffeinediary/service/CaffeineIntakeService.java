@@ -214,4 +214,10 @@ public class CaffeineIntakeService {
         LocalDateTime end = date.atTime(LocalTime.MAX);
         return intakeRepository.findByUserIdAndIntakeTimeBetween(userId, start, end);
     }
+
+    public List<CaffeineIntake> getDailyCaffeineIntakeForWeek(Long userId, LocalDate dateStart, LocalDate dateEnd){
+        LocalDateTime start = dateStart.atStartOfDay();
+        LocalDateTime end = dateEnd.atTime(LocalTime.MAX);
+        return intakeRepository.findByUserIdAndIntakeTimeBetween(userId, start, end);
+    }
 }

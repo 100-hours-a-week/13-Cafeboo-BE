@@ -163,4 +163,15 @@ public class CaffeineResidualService {
         }
         return result;
     }
+
+    public CaffeineResidual findByUserAndTargetDateAndHour(User user, LocalDateTime now, int hour){
+        Optional<CaffeineResidual> residualOptional = residualRepository.findByUserAndTargetDateAndHour(user, now, hour);
+
+        return residualOptional.orElseGet(() -> CaffeineResidual.builder()
+            .user(user)
+            .targetDate(now)
+            .hour(hour)
+            .residueAmountMg(0.0f)
+            .build());
+    }
 }

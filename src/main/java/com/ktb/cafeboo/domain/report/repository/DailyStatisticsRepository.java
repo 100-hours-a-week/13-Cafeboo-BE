@@ -25,5 +25,6 @@ public interface DailyStatisticsRepository extends JpaRepository<DailyStatistics
     @Query("SELECT ds.totalCaffeineMg FROM DailyStatistics ds WHERE ds.user.id = :userId AND ds.date = :date")
     Optional<Float> findTotalCaffeineByDate(@Param("userId") Long userId, @Param("date") LocalDate date);
 
+
     List<DailyStatistics> findByUserIdAndDateBetween(Long userId, LocalDate startDate, LocalDate endDate);
 }

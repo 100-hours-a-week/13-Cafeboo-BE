@@ -153,4 +153,16 @@ public class UserController {
         UserAlarmSettingResponse response = userAlarmSettingService.get(userId);
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.ALARM_SETTING_FETCH_SUCCESS, response));
     }
+
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<Void> deleteUser(
+            @PathVariable Long userId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        AuthChecker.checkOwnership(userId, userDetails.getUserId());
+
+        userService.deleteUser(userId);
+        return ResponseEntity.noContent().build();  // 204 No Content
+    }
+
 }

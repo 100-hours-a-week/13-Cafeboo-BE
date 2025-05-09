@@ -8,11 +8,13 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.Where;
 
 @Getter
 @Setter
 @Entity
 @Table(name = "users")
+@Where(clause = "deleted_at IS NULL")
 public class User extends BaseEntity {
     @Column
     private String email;
@@ -71,7 +73,15 @@ public class User extends BaseEntity {
     }
 
     public void withdraw() {
-        // TODO: 유저 기록 삭제 로직
+        if (this.healthInfo != null) {
+            this.healthInfo.delete();
+        }
+        if (this.caffeinInfo != null) {
+            this.caffeinInfo.delete();
+        }
+        if (this.alarmSetting != null) {
+            this.alarmSetting.delete();
+        }
         this.delete();
     }
 }

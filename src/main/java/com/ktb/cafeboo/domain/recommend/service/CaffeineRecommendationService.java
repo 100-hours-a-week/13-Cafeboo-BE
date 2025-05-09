@@ -1,7 +1,6 @@
 package com.ktb.cafeboo.domain.recommend.service;
 
 import com.ktb.cafeboo.domain.user.model.User;
-import com.ktb.cafeboo.domain.user.model.UserCaffeinInfo;
 import com.ktb.cafeboo.domain.user.model.UserHealthInfo;
 import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
@@ -24,14 +23,8 @@ public class CaffeineRecommendationService {
     private final UserRepository userRepository;
     private final UserCaffeineInfoRepository userCaffeineInfoRepository;
 
-    @Transactional
-    public float getPredictedCaffeineLimitByRule(User user) {
+    public float getPredictedCaffeineLimitByRule(User user, int caffeineSensitivity) {
         // [RULE 기반] 사용자 상태정보를 바탕으로 하루 최대 카페인 허용량 예측
-        UserCaffeinInfo caffeinInfo = user.getCaffeinInfo();
-        if (caffeinInfo == null) {
-            throw new CustomApiException(ErrorStatus.CAFFEINE_PROFILE_NOT_FOUND);
-        }
-
         UserHealthInfo healthInfo = user.getHealthInfo();
         if (healthInfo == null) {
             throw new CustomApiException(ErrorStatus.HEALTH_PROFILE_NOT_FOUND);
@@ -46,7 +39,7 @@ public class CaffeineRecommendationService {
                 .height((int) healthInfo.getHeight())
                 .isSmoker(healthInfo.getSmoking() ? 1 : 0)
                 .takeHormonalContraceptive(healthInfo.getTakingBirthPill() ? 1 : 0)
-                .caffeineSensitivity(caffeinInfo.getCaffeineSensitivity())
+                .caffeineSensitivity(caffeineSensitivity)
                 .build();
 
         PredictCaffeineLimitByRuleResponse response = aiServerClient.predictCaffeineLimitByRule(request);

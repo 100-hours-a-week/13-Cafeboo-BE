@@ -93,6 +93,9 @@ public class User extends BaseEntity {
         if (this.alarmSetting != null) {
             this.alarmSetting.delete();
         }
+        if (this.favoriteDrinks != null) {
+            this.favoriteDrinks.clear();
+        }
         this.delete();
     }
 }

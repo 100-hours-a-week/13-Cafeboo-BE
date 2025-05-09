@@ -74,7 +74,7 @@ public class UserCaffeineInfoService {
             userCaffeineInfoRepository.save(entity);
 
             return UserCaffeineInfoCreateResponse.builder()
-                    .userId(user.getId())
+                    .userId(user.getId().toString())
                     .createdAt(entity.getCreatedAt())
                     .build();
 
@@ -88,8 +88,10 @@ public class UserCaffeineInfoService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomApiException(ErrorStatus.USER_NOT_FOUND));
 
-        UserCaffeinInfo entity = userCaffeineInfoRepository.findById(userId)
-                .orElseThrow(() -> new CustomApiException(ErrorStatus.CAFFEINE_PROFILE_NOT_FOUND));
+        UserCaffeinInfo entity = user.getCaffeinInfo();
+        if (entity == null) {
+            throw new CustomApiException(ErrorStatus.CAFFEINE_PROFILE_NOT_FOUND);
+        }
 
         try {
             UserCaffeineInfoMapper.updateEntity(entity, request);
@@ -122,7 +124,7 @@ public class UserCaffeineInfoService {
             }
 
             return UserCaffeineInfoUpdateResponse.builder()
-                    .userId(user.getId())
+                    .userId(user.getId().toString())
                     .updatedAt(entity.getUpdatedAt())
                     .build();
         } catch (Exception e) {
@@ -132,11 +134,13 @@ public class UserCaffeineInfoService {
 
     @Transactional(readOnly = true)
     public UserCaffeineInfoResponse getCaffeineInfo(Long userId) {
-        userRepository.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomApiException(ErrorStatus.USER_NOT_FOUND));
 
-        UserCaffeinInfo entity = userCaffeineInfoRepository.findById(userId)
-                .orElseThrow(() -> new CustomApiException(ErrorStatus.CAFFEINE_PROFILE_NOT_FOUND));
+        UserCaffeinInfo entity = user.getCaffeinInfo();
+        if (entity == null) {
+            throw new CustomApiException(ErrorStatus.CAFFEINE_PROFILE_NOT_FOUND);
+        }
 
         return UserCaffeineInfoMapper.toResponse(entity);
     }

@@ -33,7 +33,10 @@ public class AuthService {
                 user.getRole().name()
         );
 
-        return new TokenRefreshResponse(newAccessToken);
+        return TokenRefreshResponse.builder()
+                .userId(userId)
+                .accessToken(newAccessToken)
+                .build();
     }
 
     @Transactional

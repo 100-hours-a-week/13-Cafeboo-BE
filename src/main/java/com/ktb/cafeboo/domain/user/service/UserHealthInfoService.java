@@ -38,7 +38,7 @@ public class UserHealthInfoService {
             userHealthInfoRepository.save(entity);
 
             return UserHealthInfoCreateResponse.builder()
-                    .userId(user.getId())
+                    .userId(user.getId().toString())
                     .createdAt(entity.getCreatedAt())
                     .build();
 
@@ -53,8 +53,10 @@ public class UserHealthInfoService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomApiException(ErrorStatus.USER_NOT_FOUND));
 
-        UserHealthInfo healthInfo = userHealthInfoRepository.findById(userId)
-                .orElseThrow(() -> new CustomApiException(ErrorStatus.HEALTH_PROFILE_NOT_FOUND));
+        UserHealthInfo healthInfo = user.getHealthInfo();
+        if (healthInfo == null) {
+            throw new CustomApiException(ErrorStatus.HEALTH_PROFILE_NOT_FOUND);
+        }
 
         try {
             UserHealthInfoMapper.updateEntity(healthInfo, request);
@@ -76,7 +78,7 @@ public class UserHealthInfoService {
         }
 
         return UserHealthInfoUpdateResponse.builder()
-                .userId(userId)
+                .userId(userId.toString())
                 .updatedAt(healthInfo.getUpdatedAt())
                 .build();
     }
@@ -86,8 +88,10 @@ public class UserHealthInfoService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomApiException(ErrorStatus.USER_NOT_FOUND));
 
-        UserHealthInfo healthInfo = userHealthInfoRepository.findById(userId)
-                .orElseThrow(() -> new CustomApiException(ErrorStatus.HEALTH_PROFILE_NOT_FOUND));
+        UserHealthInfo healthInfo = user.getHealthInfo();
+        if (healthInfo == null) {
+            throw new CustomApiException(ErrorStatus.HEALTH_PROFILE_NOT_FOUND);
+        }
 
         return UserHealthInfoMapper.toResponse(healthInfo);
     }

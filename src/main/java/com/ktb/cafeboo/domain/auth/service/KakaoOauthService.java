@@ -81,6 +81,11 @@ public class KakaoOauthService {
         user.updateRefreshToken(refreshToken);
         userRepository.save(user);
 
-        return new KakaoLoginResponse(accessToken, refreshToken, requiresOnboarding);
+        return KakaoLoginResponse.builder()
+                .userId(user.getId().toString())
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .requiresOnboarding(requiresOnboarding)
+                .build();
     }
 }

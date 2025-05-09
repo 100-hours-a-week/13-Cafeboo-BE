@@ -8,6 +8,6 @@ import java.time.LocalDateTime;
 @Getter
 @Builder
 public class UserHealthInfoUpdateResponse {
-    private Long userId;
+    private String userId;
     private LocalDateTime updatedAt;
 }

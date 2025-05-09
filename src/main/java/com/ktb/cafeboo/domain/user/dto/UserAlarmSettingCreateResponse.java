@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 @Getter
 @Builder
 public class UserAlarmSettingCreateResponse {
-    private Long userId;
+    private String userId;
     private LocalDateTime createdAt;
 }
 

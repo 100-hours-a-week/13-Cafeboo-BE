@@ -32,7 +32,7 @@ public class UserAlarmSettingService {
             UserAlarmSetting entity = UserAlarmSettingMapper.toEntity(request, user);
             userAlarmSettingRepository.save(entity);
             return UserAlarmSettingCreateResponse.builder()
-                    .userId(user.getId())
+                    .userId(user.getId().toString())
                     .createdAt(entity.getCreatedAt())
                     .build();
         } catch (Exception e) {
@@ -42,16 +42,18 @@ public class UserAlarmSettingService {
 
     @Transactional
     public UserAlarmSettingUpdateResponse update(Long userId, UserAlarmSettingUpdateRequest request) {
-        userRepository.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomApiException(ErrorStatus.USER_NOT_FOUND));
 
-        UserAlarmSetting entity = userAlarmSettingRepository.findById(userId)
-                .orElseThrow(() -> new CustomApiException(ErrorStatus.ALARM_SETTING_NOT_FOUND));
+        UserAlarmSetting entity = user.getAlarmSetting();
+        if (entity == null) {
+            throw new CustomApiException(ErrorStatus.ALARM_SETTING_NOT_FOUND);
+        }
 
         try {
             UserAlarmSettingMapper.updateEntity(entity, request);
             return UserAlarmSettingUpdateResponse.builder()
-                    .userId(userId)
+                    .userId(user.getId().toString())
                     .updatedAt(entity.getUpdatedAt())
                     .build();
         } catch (Exception e) {
@@ -61,11 +63,13 @@ public class UserAlarmSettingService {
 
     @Transactional(readOnly = true)
     public UserAlarmSettingResponse get(Long userId) {
-        userRepository.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomApiException(ErrorStatus.USER_NOT_FOUND));
 
-        UserAlarmSetting entity = userAlarmSettingRepository.findById(userId)
-                .orElseThrow(() -> new CustomApiException(ErrorStatus.ALARM_SETTING_NOT_FOUND));
+        UserAlarmSetting entity = user.getAlarmSetting();
+        if (entity == null) {
+            throw new CustomApiException(ErrorStatus.ALARM_SETTING_NOT_FOUND);
+        }
 
         return UserAlarmSettingMapper.toResponse(entity);
     }

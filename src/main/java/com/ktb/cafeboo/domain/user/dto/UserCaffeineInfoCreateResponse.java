@@ -9,7 +9,7 @@ import java.util.List;
 @Getter
 @Builder
 public class UserCaffeineInfoCreateResponse {
-    private Long userId;
+    private String userId;
     private LocalDateTime createdAt;
 }
 

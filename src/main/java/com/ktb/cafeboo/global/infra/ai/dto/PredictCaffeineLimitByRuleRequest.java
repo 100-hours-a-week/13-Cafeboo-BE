@@ -1,11 +1,14 @@
 package com.ktb.cafeboo.global.infra.ai.dto;
 
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.Builder;
 import lombok.Getter;
 
 @Getter
 @Builder
-public class PredictCaffeineLimitRequest {
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
+public class PredictCaffeineLimitByRuleRequest {
     private String userId;
     private String modelHint;
     private String gender;

@@ -19,9 +19,6 @@ public class UserCaffeineInfoMapper {
                 .caffeineSensitivity(dto.getCaffeineSensitivity())
                 .averageDailyCaffeineIntake(dto.getAverageDailyCaffeineIntake())
                 .frequentDrinkTime(LocalTime.parse(dto.getFrequentDrinkTime()))
-                // TODO: 인공지능 서버로 하루 임계치 계산 필요
-                .dailyCaffeineLimitMg(400)
-                .sleepSensitiveThresholdMg(100)
                 .build();
     }
 

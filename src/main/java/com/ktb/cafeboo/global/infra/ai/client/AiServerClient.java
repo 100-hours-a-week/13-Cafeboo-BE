@@ -1,5 +1,9 @@
 package com.ktb.cafeboo.global.infra.ai.client;
 
+import com.ktb.cafeboo.global.infra.ai.dto.CreateWeeklyReportRequest;
+import com.ktb.cafeboo.global.infra.ai.dto.CreateWeeklyReportResponse;
+import com.ktb.cafeboo.global.infra.ai.dto.PredictCaffeineLimitByRuleRequest;
+import com.ktb.cafeboo.global.infra.ai.dto.PredictCaffeineLimitByRuleResponse;
 import com.ktb.cafeboo.global.infra.ai.dto.PredictCaffeineLimitByRuleRequest;
 import com.ktb.cafeboo.global.infra.ai.dto.PredictCaffeineLimitByRuleResponse;
 import com.ktb.cafeboo.global.infra.ai.dto.PredictCanIntakeCaffeineRequest;
@@ -15,7 +19,8 @@ public class AiServerClient {
 
     private final WebClient aiServerWebClient;
 
-    public PredictCaffeineLimitByRuleResponse predictCaffeineLimitByRule(PredictCaffeineLimitByRuleRequest request) {
+    public PredictCaffeineLimitByRuleResponse predictCaffeineLimitByRule(
+        PredictCaffeineLimitByRuleRequest request) {
         return aiServerWebClient.post()
                 .uri("/internal/ai/predict_limit")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -33,6 +38,15 @@ public class AiServerClient {
                 .retrieve()
                 .bodyToMono(PredictCanIntakeCaffeineResponse.class)
                 .block();
+    }
+
+    public CreateWeeklyReportResponse createWeeklyReportAnalysis(CreateWeeklyReportRequest request){
+        return aiServerWebClient.post()
+            .uri("/internal/ai/caffeine_weekly_report")
+            .bodyValue(request)
+            .retrieve()
+            .bodyToMono(CreateWeeklyReportResponse.class)
+            .block();
     }
 }
 

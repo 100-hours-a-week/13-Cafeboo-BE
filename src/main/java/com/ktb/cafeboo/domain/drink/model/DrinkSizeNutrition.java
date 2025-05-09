@@ -2,7 +2,11 @@ package com.ktb.cafeboo.domain.drink.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.ktb.cafeboo.global.BaseEntity;
+import com.ktb.cafeboo.global.enums.DrinkSize;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -25,7 +29,9 @@ public class DrinkSizeNutrition extends BaseEntity {
     @JsonBackReference
     private Drink drink;
 
-    private String size;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private DrinkSize size;
 
     private Integer capacity_ml;
 

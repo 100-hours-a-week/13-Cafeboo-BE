@@ -24,4 +24,7 @@ public class CaffeineIntakeRequest {
 
     @JsonProperty("caffeineAmount")
     private Float caffeineAmount;
+
+    @JsonProperty("drinkSize")
+    private String drinkSize;
 }

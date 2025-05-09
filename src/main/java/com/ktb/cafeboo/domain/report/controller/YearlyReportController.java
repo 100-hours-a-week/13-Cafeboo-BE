@@ -28,12 +28,12 @@ public class YearlyReportController {
     @GetMapping
     ResponseEntity<ApiResponse<YearlyCaffeineReportResponse>> getYearlyCaffeineReport(
         @AuthenticationPrincipal CustomUserDetails userDetails,
-        @RequestParam(required = false) Year targetYear) {
+        @RequestParam(required = false, name = "year") String targetYear) {
 
         Long userId = userDetails.getId();
+        Year year = Year.of(Integer.parseInt(targetYear));
 
-        int year = targetYear != null ? targetYear.getValue() : Year.now().getValue();
-        List<MonthlyReport> monthlyReports = monthReportService.getMonthlyReportForYear(userId, targetYear);
+        List<MonthlyReport> monthlyReports = monthReportService.getMonthlyReportForYear(userId, year);
 
         List<YearlyCaffeineReportResponse.MonthlyIntakeTotal> monthlyIntakeTotals = monthlyReports.stream()
             .map(report -> YearlyCaffeineReportResponse.MonthlyIntakeTotal.builder()
@@ -59,7 +59,6 @@ public class YearlyReportController {
             .yearlyCaffeineTotal(yearlyCaffeineTotal)
             .monthlyCaffeineAvg(monthlyCaffeineAvg)
             .monthlyIntakeTotals(monthlyIntakeTotals)
-            .summaryMessage("")
             .build();
 
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.YEARLY_CAFFEINE_REPORT_SUCCESS, response));

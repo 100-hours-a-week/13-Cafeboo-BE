@@ -7,6 +7,8 @@ import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.domain.user.model.UserCaffeinInfo;
 
 import java.time.LocalTime;
+import java.util.List;
+import java.util.Optional;
 
 public class UserCaffeineInfoMapper {
 
@@ -20,7 +22,6 @@ public class UserCaffeineInfoMapper {
                 // TODO: 인공지능 서버로 하루 임계치 계산 필요
                 .dailyCaffeineLimitMg(400)
                 .sleepSensitiveThresholdMg(100)
-                // TODO: 유저 선호 카페정보 저장로직 구현
                 .build();
     }
 
@@ -34,12 +35,19 @@ public class UserCaffeineInfoMapper {
     }
 
     public static UserCaffeineInfoResponse toResponse(UserCaffeinInfo entity) {
+        List<String> favoriteDrinks = Optional.ofNullable(entity.getUser().getFavoriteDrinks())
+                .orElse(List.of())
+                .stream()
+                .map(fav -> fav.getDrinkType().getName())
+                .toList();
+
         return UserCaffeineInfoResponse.builder()
                 .caffeineSensitivity(entity.getCaffeineSensitivity())
                 .averageDailyCaffeineIntake(entity.getAverageDailyCaffeineIntake())
                 .frequentDrinkTime(entity.getFrequentDrinkTime().toString())
                 .dailyCaffeineLimitMg(entity.getDailyCaffeineLimitMg())
                 .sleepSensitiveThresholdMg(entity.getSleepSensitiveThresholdMg())
+                .userFavoriteDrinks(favoriteDrinks)
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();

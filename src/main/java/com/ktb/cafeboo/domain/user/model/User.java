@@ -1,6 +1,6 @@
 package com.ktb.cafeboo.domain.user.model;
 
-import com.ktb.cafeboo.domain.auth.dto.KakaoUserResponse;
+import com.ktb.cafeboo.global.infra.kakao.dto.KakaoUserResponse;
 import com.ktb.cafeboo.global.BaseEntity;
 import com.ktb.cafeboo.global.enums.LoginType;
 import com.ktb.cafeboo.global.enums.UserRole;
@@ -9,6 +9,9 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Where;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -56,6 +59,9 @@ public class User extends BaseEntity {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private UserAlarmSetting alarmSetting;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserFavoriteDrinkType> favoriteDrinks = new ArrayList<>();
+
     public static User fromKakao(KakaoUserResponse kakaoUser) {
         User user = new User();
         user.setOauthId(kakaoUser.getId());
@@ -70,6 +76,11 @@ public class User extends BaseEntity {
 
     public void updateRefreshToken(String newToken) {
         this.refreshToken = newToken;
+    }
+
+    public void setFavoriteDrinks(List<UserFavoriteDrinkType> favorites) {
+        this.favoriteDrinks.clear(); // 기존 관계 제거
+        this.favoriteDrinks.addAll(favorites);
     }
 
     public void withdraw() {

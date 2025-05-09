@@ -1,5 +1,7 @@
 package com.ktb.cafeboo.domain.user.model;
 
+import com.ktb.cafeboo.domain.caffeinediary.model.*;
+import com.ktb.cafeboo.domain.report.model.*;
 import com.ktb.cafeboo.global.infra.kakao.dto.KakaoUserResponse;
 import com.ktb.cafeboo.global.BaseEntity;
 import com.ktb.cafeboo.global.enums.LoginType;
@@ -61,6 +63,26 @@ public class User extends BaseEntity {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserFavoriteDrinkType> favoriteDrinks = new ArrayList<>();
+
+    // 카페인 다이어리 연관관계
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CaffeineIntake> caffeineIntakes = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CaffeineResidual> caffeineResiduals = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DailyStatistics> dailyStatisticsList = new ArrayList<>();
+
+    // 리포트 연관관계
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MonthlyReport> monthlyReports = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<WeeklyReport> weeklyReports = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<YearlyReport> yearlyReports = new ArrayList<>();
 
     public static User fromKakao(KakaoUserResponse kakaoUser) {
         User user = new User();

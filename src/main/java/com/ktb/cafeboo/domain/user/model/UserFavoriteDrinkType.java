@@ -13,7 +13,6 @@ import org.hibernate.annotations.Where;
 @Getter
 @Setter
 @NoArgsConstructor
-@Where(clause = "deleted_at IS NULL")
 public class UserFavoriteDrinkType {
 
     @Id

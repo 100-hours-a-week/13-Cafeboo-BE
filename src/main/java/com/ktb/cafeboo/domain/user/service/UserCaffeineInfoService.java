@@ -48,7 +48,7 @@ public class UserCaffeineInfoService {
 
             // AI 서버 호출로 하루 최대 카페인 허용량 예측
             try {
-                float predictedLimit = caffeineRecommendationService.getPredictedCaffeineLimitByRule(user);
+                float predictedLimit = caffeineRecommendationService.getPredictedCaffeineLimitByRule(user, entity.getCaffeineSensitivity());
                 entity.setDailyCaffeineLimitMg(predictedLimit);
             } catch (Exception e) {
                 log.warn("[AI 서버 호출 실패] 기존 카페인 허용량으로 설정합니다. userId: {}", userId);
@@ -79,6 +79,7 @@ public class UserCaffeineInfoService {
                     .build();
 
         } catch (Exception e) {
+            log.error(e.getMessage(), e);
             throw new CustomApiException(ErrorStatus.BAD_REQUEST);
         }
     }
@@ -98,7 +99,7 @@ public class UserCaffeineInfoService {
 
             // AI 서버 호출로 하루 최대 카페인 허용량 예측
             try {
-                float predictedLimit = caffeineRecommendationService.getPredictedCaffeineLimitByRule(user);
+                float predictedLimit = caffeineRecommendationService.getPredictedCaffeineLimitByRule(user, entity.getCaffeineSensitivity());
                 entity.setDailyCaffeineLimitMg(predictedLimit);
             } catch (Exception e) {
                 log.warn("[AI 서버 호출 실패] 기존 최대 허용 카페인량 유지. userId: {}", userId);

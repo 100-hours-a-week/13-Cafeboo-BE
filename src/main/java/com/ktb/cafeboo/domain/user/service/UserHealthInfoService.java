@@ -65,7 +65,7 @@ public class UserHealthInfoService {
             try {
                 UserCaffeinInfo caffeinInfo = user.getCaffeinInfo();
                 if (caffeinInfo != null) {
-                    float predictedLimit = caffeineRecommendationService.getPredictedCaffeineLimitByRule(user);
+                    float predictedLimit = caffeineRecommendationService.getPredictedCaffeineLimitByRule(user, caffeinInfo.getCaffeineSensitivity());
                     caffeinInfo.setDailyCaffeineLimitMg(predictedLimit);
                 }
             } catch (Exception e) {

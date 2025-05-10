@@ -42,6 +42,7 @@ public class WeeklyReport extends BaseEntity {
     @Column(name = "over_intake_days", nullable = false)
     private Integer overIntakeDays;
 
-    @Column(name = "ai_message")
+    @Lob
+    @Column(name = "ai_message", columnDefinition = "TEXT")
     private String aiMessage;
 }

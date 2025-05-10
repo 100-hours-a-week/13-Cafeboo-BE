@@ -2,6 +2,7 @@ package com.ktb.cafeboo.global.infra.ai.dto;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 @Getter
@@ -14,7 +15,9 @@ public class PredictCanIntakeCaffeineResponse {
     @Getter
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public static class Data {
+        @JsonProperty("user_id")
         private String userId;
-        private String caffeineStatus;  // "Y" or "N"
+        @JsonProperty("caffeine_status")
+        private String caffeineStatus;
     }
 }

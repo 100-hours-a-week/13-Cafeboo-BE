@@ -36,7 +36,6 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 public class CaffeineIntakeController {
     private final CaffeineIntakeService caffeineIntakeService;
-    private final UserService userService;
 
     @PostMapping
     public ResponseEntity<ApiResponse<CaffeineIntakeResponse>> recordCaffeineIntake(
@@ -60,8 +59,7 @@ public class CaffeineIntakeController {
 
         // 1. 서비스 메서드 호출
         Long userId = userDetails.getId();
-        AuthChecker.checkOwnership(userId, id);
-        CaffeineIntakeResponse response = caffeineIntakeService.updateCaffeineIntake(userId, request);
+        CaffeineIntakeResponse response = caffeineIntakeService.updateCaffeineIntake(id, request);
 
         // 2. 응답 반환
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.CAFFEINE_INTAKE_UPDATED, response));
@@ -74,8 +72,7 @@ public class CaffeineIntakeController {
 
         // 1. 서비스 메서드 호출
         Long userId = userDetails.getId();
-        AuthChecker.checkOwnership(userId, id);
-        caffeineIntakeService.deleteCaffeineIntake(userId);
+        caffeineIntakeService.deleteCaffeineIntake(id);
 
         // 2. 응답 반환
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.CAFFEINE_INTAKE_DELETED, null));

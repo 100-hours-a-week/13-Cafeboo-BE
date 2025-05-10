@@ -32,7 +32,7 @@ public class AiServerClient {
 
     public PredictCanIntakeCaffeineResponse predictCanIntakeCaffeine(PredictCanIntakeCaffeineRequest request) {
         return aiServerWebClient.post()
-                .uri("/internal/ai/can_intake_caffeine")
+                .uri("https://jeff-cloud.com/internal/ai/can_intake_caffeine")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(request)
                 .retrieve()
@@ -42,7 +42,7 @@ public class AiServerClient {
 
     public CreateWeeklyReportResponse createWeeklyReportAnalysis(CreateWeeklyReportRequest request){
         return aiServerWebClient.post()
-            .uri("/internal/ai/caffeine_weekly_report")
+            .uri("https://jeff-cloud.com/internal/ai/caffeine_weekly_report")
             .bodyValue(request)
             .retrieve()
             .bodyToMono(CreateWeeklyReportResponse.class)

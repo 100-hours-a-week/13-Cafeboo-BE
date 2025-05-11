@@ -57,7 +57,7 @@ public class CaffeineIntakeService {
         // 0. 데이터 유효성 겁사. 사용자 정보, 음료 정보가 유효하지 않을 시 IllegalArgumentException 발생
         User user = userService.findUserById(userId);
         
-        Drink drink = drinkService.findDrinkById(request.getDrinkId());
+        Drink drink = drinkService.findDrinkById(Long.parseLong(request.getDrinkId()));
 
         DrinkSize drinkSize = DrinkSize.valueOf(request.getDrinkSize());
 
@@ -81,7 +81,7 @@ public class CaffeineIntakeService {
 
         // 4. 응답 DTO 생성 및 반환
         return CaffeineIntakeResponse.builder()
-            .id(intake.getId())
+            .id(intake.getId().toString())
             .drinkId(request.getDrinkId())
             .drinkName(drink.getName())
             .intakeTime(request.getIntakeTime())
@@ -119,7 +119,7 @@ public class CaffeineIntakeService {
         // 2. 수정할 필드 적용
         if (request.getDrinkId() != null) {
             //더미 데이터
-            Drink drink = drinkService.findDrinkById(request.getDrinkId());
+            Drink drink = drinkService.findDrinkById(Long.parseLong(request.getDrinkId()));
             intake.setDrink(drink);
         }
         if (request.getIntakeTime() != null) {
@@ -134,7 +134,7 @@ public class CaffeineIntakeService {
         if (request.getDrinkSize() != null){
             DrinkSize drinkSize = DrinkSize.valueOf(request.getDrinkSize());
             DrinkSizeNutrition drinkSizeNutrition = drinkService.findDrinkSizeNutritionByIdAndSize(
-                request.getDrinkId(), drinkSize);
+                Long.parseLong(request.getDrinkId()), drinkSize);
             intake.setDrinkSizeNutrition(drinkSizeNutrition);
         }
 
@@ -152,8 +152,8 @@ public class CaffeineIntakeService {
         dailyStatisticsService.updateDailyStatistics(user, LocalDate.from(request.getIntakeTime()), request.getCaffeineAmount());
 
         return CaffeineIntakeResponse.builder()
-            .id(intakeId)
-            .drinkId(intake.getDrink().getId())
+            .id(intakeId.toString())
+            .drinkId(intake.getDrink().getId().toString())
             .drinkName(intake.getDrink().getName())
             .intakeTime(intake.getIntakeTime())
             .drinkCount(intake.getDrinkCount())

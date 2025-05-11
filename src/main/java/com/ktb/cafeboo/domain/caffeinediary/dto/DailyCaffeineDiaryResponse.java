@@ -28,7 +28,8 @@ public class DailyCaffeineDiaryResponse {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class IntakeDetail {
-        private Long intakeId;
+        private String intakeId;
+        private String drinkId;
         private String drinkName;
         private int drinkCount;
         private float caffeineMg;

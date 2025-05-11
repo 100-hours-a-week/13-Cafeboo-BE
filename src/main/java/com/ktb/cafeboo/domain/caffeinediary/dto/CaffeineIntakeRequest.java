@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class CaffeineIntakeRequest {
     @JsonProperty("drinkId")
-    private Long drinkId;
+    private String drinkId;
 
     @JsonProperty("intakeTime")
     private LocalDateTime intakeTime;

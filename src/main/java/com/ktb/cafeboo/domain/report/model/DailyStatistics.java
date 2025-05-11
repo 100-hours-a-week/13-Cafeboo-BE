@@ -32,6 +32,7 @@ public class DailyStatistics extends BaseEntity {
     @Column(name = "total_caffeine_mg", nullable = false)
     private Float totalCaffeineMg;
 
-    @Column(name = "ai_message")
+    @Lob
+    @Column(name = "ai_message", columnDefinition = "TEXT")
     private String aiMessage;
 }

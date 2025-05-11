@@ -53,19 +53,30 @@ public class DailyStatisticsService {
     public void updateDailyStatistics(User user, LocalDate date, float additionalCaffeine) {
         //우선은 동기적으로 구현 진행
         YearlyReport yearlyReport = yearlyReportService.getOrCreateYearlyReport(user.getId(), date);
-        yearlyReportService.updateYearlyReport(user.getId(), yearlyReport, additionalCaffeine);
 
         MonthlyReport monthlyReport = monthlyReportService.getOrCreateMonthlyReport(user.getId(), yearlyReport, date);
-        monthlyReportService.updateMonthlyReport(user.getId(), monthlyReport, additionalCaffeine);
 
         WeeklyReport weeklyReport = weeklyReportService.getOrCreateWeeklyReport(user.getId(), monthlyReport, date);
-        weeklyReportService.updateWeeklyReport(user.getId(), weeklyReport, additionalCaffeine);
 
         DailyStatistics statistics = dailyStatisticsRepository
             .findByUserIdAndDate(user.getId(), date)
             .orElseGet(() -> createDailyStatistics(user, weeklyReport, date));
 
         CaffeineResidual residualAtSleep = caffeineResidualService.findByUserAndTargetDateAndHour(user, date.atStartOfDay(), user.getHealthInfo().getSleepTime().getHour());
+
+        //Todo : 현재 카페인 양이 < limit이고 addtionalCaffeine을 더한 값이 limit 보다 크다면 weeklyReport의 overIntakeDays + 1
+        //Todo : 현재 카페인 양이 > limit이고 addtionalCaffeine을 뺀 값이 limit 보다 크다면 weeklyReport의 overIntakeDays - 1
+        float userDailyLimit = user.getCaffeinInfo().getDailyCaffeineLimitMg();
+        float currentCaffeine = statistics.getTotalCaffeineMg();
+
+        if(currentCaffeine < userDailyLimit && currentCaffeine + additionalCaffeine >= userDailyLimit){
+            weeklyReport.setOverIntakeDays(weeklyReport.getOverIntakeDays() + 1);
+        }
+        else if(currentCaffeine >= userDailyLimit && currentCaffeine + additionalCaffeine < userDailyLimit){
+            weeklyReport.setOverIntakeDays(weeklyReport.getOverIntakeDays() - 1);
+        }
+
+        statistics.setTotalCaffeineMg(statistics.getTotalCaffeineMg() + additionalCaffeine);
 
         PredictCanIntakeCaffeineRequest request = PredictCanIntakeCaffeineRequest.builder()
             .userId(user.getId().toString())
@@ -86,15 +97,13 @@ public class DailyStatisticsService {
 
         PredictCanIntakeCaffeineResponse response = aiServerClient.predictCanIntakeCaffeine(request);
 
-        statistics.setTotalCaffeineMg(statistics.getTotalCaffeineMg() + additionalCaffeine);
-
         String message = "권장량의 " + (statistics.getTotalCaffeineMg() / user.getCaffeinInfo().getDailyCaffeineLimitMg()) * 100 + "%를 섭취 중이에요.";
 
         if(Objects.equals(response.getStatus(), "success")){
             if(Objects.equals(response.getData().getCaffeineStatus(), "N")){
                 message += " 지금 카페인을 추가로 섭취하면 수면에 영향을 줄 수 있어요.";
             }
-            else{
+            else if (Objects.equals(response.getData().getCaffeineStatus(), "Y")){
                 message += " 카페인을 추가로 섭취해도 수면에 영향이 없어요.";
             }
         }
@@ -102,6 +111,10 @@ public class DailyStatisticsService {
         statistics.setAiMessage(message);
 
         DailyStatistics savedStatistics = dailyStatisticsRepository.save(statistics);
+
+        weeklyReportService.updateWeeklyReport(user.getId(), weeklyReport, additionalCaffeine);
+        monthlyReportService.updateMonthlyReport(user.getId(), monthlyReport, additionalCaffeine);
+        yearlyReportService.updateYearlyReport(user.getId(), yearlyReport, additionalCaffeine);
     }
 
     /**

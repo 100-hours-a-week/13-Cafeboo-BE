@@ -13,6 +13,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.Where;
+import org.w3c.dom.Text;
 
 @Entity
 @Table(name = "MonthlyReports")
@@ -43,7 +44,4 @@ public class MonthlyReport extends BaseEntity {
 
     @Column(name = "weekly_caffeine_avg_mg", nullable = false)
     private float weeklyCaffeineAvgMg;
-
-    @Column(name = "ai_message")
-    private String aiMessage;
 }

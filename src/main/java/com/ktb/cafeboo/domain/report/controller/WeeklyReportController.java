@@ -5,6 +5,7 @@ import com.ktb.cafeboo.domain.caffeinediary.service.CaffeineIntakeService;
 import com.ktb.cafeboo.domain.report.dto.WeeklyCaffeineReportResponse;
 import com.ktb.cafeboo.domain.report.model.DailyStatistics;
 import com.ktb.cafeboo.domain.report.service.DailyStatisticsService;
+import com.ktb.cafeboo.domain.report.service.WeeklyReportScheduler;
 import com.ktb.cafeboo.domain.report.service.WeeklyReportService;
 import com.ktb.cafeboo.global.apiPayload.ApiResponse;
 import com.ktb.cafeboo.global.apiPayload.code.status.SuccessStatus;
@@ -28,6 +29,7 @@ public class WeeklyReportController {
     private final WeeklyReportService weeklyReportService;
     private final DailyStatisticsService dailyStatisticsService;
     private final CaffeineIntakeService intakeService;
+    private final WeeklyReportScheduler weeklyReportScheduler;
     /**
      * 사용자의 일일 카페인 섭취 현황 데이터를 조회합니다.
      * 상세 스펙은 @see <a href="https://freckle-pipe-840.notion.site/1ddb43be904c80ccbb02c746ff16a3ba">주간 섭취 현황 조회 API 스펙 문서</a>
@@ -67,5 +69,11 @@ public class WeeklyReportController {
         WeeklyCaffeineReportResponse response = weeklyReportService.getWeeklyReport(userId, targetYear, targetMonth, targetWeek, dailyStats, intakes);
 
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.WEEKLY_CAFFEINE_REPORT_SUCCESS, response));
+    }
+
+    @GetMapping("/test")
+    public void getWeeklyCaffeineReport(
+        @AuthenticationPrincipal CustomUserDetails userDetails){
+        weeklyReportScheduler.generateWeeklyReports();
     }
 }

@@ -45,32 +45,32 @@ public class WeeklyReportScheduler {
 
     @Scheduled(cron = "0 0 0 * * SUN") // 매주 일요일 0시
     public void generateWeeklyReports() {
-//        LocalDate endDate = LocalDate.now().minusDays(1); // 지난 주 토요일
-//        LocalDate startDate = endDate.minusDays(6);       // 지난 주 일요일
+        LocalDate endDate = LocalDate.now().minusDays(1); // 지난 주 토요일
+        LocalDate startDate = endDate.minusDays(6);       // 지난 주 일요일
 
-        int targetYear = 2024;
-        int targetWeekNum = 19;
-
-        // ISO 8601 표준 (월요일 시작, 한 주의 최소 4일 포함)을 따르는 WeekFields 객체 생성
-        WeekFields isoWeekFields = WeekFields.of(Locale.getDefault());
-
-        // 해당 년도의 첫 번째 날짜
-        LocalDate firstDayOfYear = LocalDate.of(targetYear, 1, 1);
-
-        // 첫 번째 주(week 1)의 첫 번째 날 (월요일) 찾기
-        LocalDate firstMonday = firstDayOfYear;
-        if (firstMonday.getDayOfWeek() != DayOfWeek.MONDAY) {
-            firstMonday = firstMonday.with(WeekFields.ISO.dayOfWeek(), 1); // 해당 주의 월요일로 이동
-            if (firstMonday.getYear() > targetYear) {
-                firstMonday = firstDayOfYear.plusWeeks(1).with(WeekFields.ISO.dayOfWeek(), 1);
-            }
-        }
-
-        // targetWeekNum 주의 시작 날짜 계산
-        LocalDate startDate = firstMonday.plusWeeks(targetWeekNum - 1);
-
-        // targetWeekNum 주의 마지막 날짜 계산 (일요일)
-        LocalDate endDate = startDate.plusDays(6);
+//        int targetYear = 2024;
+//        int targetWeekNum = 19;
+//
+//        // ISO 8601 표준 (월요일 시작, 한 주의 최소 4일 포함)을 따르는 WeekFields 객체 생성
+//        WeekFields isoWeekFields = WeekFields.of(Locale.getDefault());
+//
+//        // 해당 년도의 첫 번째 날짜
+//        LocalDate firstDayOfYear = LocalDate.of(targetYear, 1, 1);
+//
+//        // 첫 번째 주(week 1)의 첫 번째 날 (월요일) 찾기
+//        LocalDate firstMonday = firstDayOfYear;
+//        if (firstMonday.getDayOfWeek() != DayOfWeek.MONDAY) {
+//            firstMonday = firstMonday.with(WeekFields.ISO.dayOfWeek(), 1); // 해당 주의 월요일로 이동
+//            if (firstMonday.getYear() > targetYear) {
+//                firstMonday = firstDayOfYear.plusWeeks(1).with(WeekFields.ISO.dayOfWeek(), 1);
+//            }
+//        }
+//
+//        // targetWeekNum 주의 시작 날짜 계산
+//        LocalDate startDate = firstMonday.plusWeeks(targetWeekNum - 1);
+//
+//        // targetWeekNum 주의 마지막 날짜 계산 (일요일)
+//        LocalDate endDate = startDate.plusDays(6);
 
         int weeknum = startDate.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
         int year = startDate.getYear();

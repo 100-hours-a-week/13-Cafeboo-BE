@@ -46,17 +46,13 @@ public class MonthlyReportController {
         Long userId = userDetails.getId();
         YearMonth targetMonth;
 
-        // year와 month 파라미터가 제공되지 않은 경우 현재 달을 기본값으로 사용
-        if (year == null || month == null) {
-            targetMonth = YearMonth.now(ZoneId.systemDefault()); // 또는 ZoneId.systemDefault()
-        } else {
-            try {
-                targetMonth = YearMonth.of(Integer.parseInt(year), Integer.parseInt(month));
-            } catch (DateTimeException e) {
-                return ResponseEntity.badRequest().body(ApiResponse.of(
-                    ErrorStatus.BAD_REQUEST, null));
-            }
+        //TODO: Controller와 Service 로직 분리
+        try {
+            targetMonth = YearMonth.of(Integer.parseInt(year), Integer.parseInt(month));
+        } catch (DateTimeException e) {
+            throw new CustomApiException(ErrorStatus.BAD_REQUEST);
         }
+
 
         List<WeeklyReport> weeklyStats = weeklyReportService.getWeeklyStatisticsForMonth(userId, targetMonth);
         int resolvedYear = targetMonth.getYear();

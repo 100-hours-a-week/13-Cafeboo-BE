@@ -10,6 +10,8 @@ import com.ktb.cafeboo.domain.report.model.YearlyReport;
 import com.ktb.cafeboo.domain.report.repository.DailyStatisticsRepository;
 import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.domain.user.service.UserService;
+import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
+import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import com.ktb.cafeboo.global.infra.ai.client.AiServerClient;
 import com.ktb.cafeboo.global.infra.ai.dto.PredictCanIntakeCaffeineRequest;
 import com.ktb.cafeboo.global.infra.ai.dto.PredictCanIntakeCaffeineResponse;
@@ -18,6 +20,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -64,8 +67,8 @@ public class DailyStatisticsService {
 
         CaffeineResidual residualAtSleep = caffeineResidualService.findByUserAndTargetDateAndHour(user, date.atStartOfDay(), user.getHealthInfo().getSleepTime().getHour());
 
-        //Todo : 현재 카페인 양이 < limit이고 addtionalCaffeine을 더한 값이 limit 보다 크다면 weeklyReport의 overIntakeDays + 1
-        //Todo : 현재 카페인 양이 > limit이고 addtionalCaffeine을 뺀 값이 limit 보다 크다면 weeklyReport의 overIntakeDays - 1
+        //현재 카페인 양이 < limit이고 addtionalCaffeine을 더한 값이 limit 보다 크다면 weeklyReport의 overIntakeDays + 1
+        //현재 카페인 양이 > limit이고 addtionalCaffeine을 뺀 값이 limit 보다 크다면 weeklyReport의 overIntakeDays - 1
         float userDailyLimit = user.getCaffeinInfo().getDailyCaffeineLimitMg();
         float currentCaffeine = statistics.getTotalCaffeineMg();
 
@@ -159,8 +162,33 @@ public class DailyStatisticsService {
             });
     }
 
-    public List<DailyStatistics> getDailyStatisticsForWeek(Long userId, LocalDate targetDate){
-        LocalDate startOfWeek = targetDate.with(DayOfWeek.MONDAY);
+    public List<DailyStatistics> getDailyStatisticsForWeek(Long userId, String targetYear, String targetMonth, String targetWeek){
+
+        if(targetYear == null || targetMonth == null || targetWeek == null
+            || targetYear.isEmpty() || targetMonth.isEmpty() || targetWeek.isEmpty())
+        {
+            throw new CustomApiException(ErrorStatus.BAD_REQUEST);
+        }
+
+        int year = Integer.parseInt(targetYear);
+        int month = Integer.parseInt(targetMonth);
+        int week = Integer.parseInt(targetWeek);
+
+        // 주어진 year와 month로 해당 달의 첫 번째 날짜를 얻습니다.
+        LocalDate firstDayOfMonth = LocalDate.of(year, month, 1);
+
+        // 해당 달의 첫 번째 주 월요일을 찾습니다.
+        LocalDate firstMondayOfMonth = firstDayOfMonth.with(TemporalAdjusters.firstInMonth(DayOfWeek.MONDAY));
+
+        // 만약 첫 번째 날짜가 월요일보다 앞선다면, 그 주는 이전 달의 마지막 주에 해당할 수 있습니다.
+        // 이를 보정하기 위해 첫 번째 월요일이 없다면 해당 달의 1일로 시작하는 주를 기준으로 합니다.
+        LocalDate firstWeekStart = firstMondayOfMonth.getMonthValue() != month ?
+            firstDayOfMonth : firstMondayOfMonth;
+
+        // 첫 번째 주 시작 날짜에 (weekOfMonth - 1) 주를 더하여 해당 월의 weekOfMonth 번째 주의 시작 날짜를 얻습니다.
+        LocalDate startDate = firstWeekStart.plusWeeks(week - 1);
+
+        LocalDate startOfWeek = startDate.with(DayOfWeek.MONDAY);
         LocalDate endOfWeek = startOfWeek.plusDays(6);
 
         List<DailyStatistics> stats = dailyStatisticsRepository.findByUserIdAndDateBetween(userId, startOfWeek, endOfWeek);

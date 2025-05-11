@@ -2,6 +2,7 @@ package com.ktb.cafeboo.domain.caffeinediary.service;
 
 import com.ktb.cafeboo.domain.caffeinediary.dto.CaffeineIntakeRequest;
 import com.ktb.cafeboo.domain.caffeinediary.dto.CaffeineIntakeResponse;
+import com.ktb.cafeboo.domain.caffeinediary.dto.DailyCaffeineDiaryResponse;
 import com.ktb.cafeboo.domain.caffeinediary.dto.MonthlyCaffeineDiaryResponse;
 import com.ktb.cafeboo.domain.caffeinediary.model.CaffeineIntake;
 import com.ktb.cafeboo.domain.drink.model.Cafe;
@@ -17,10 +18,12 @@ import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import com.ktb.cafeboo.global.enums.DrinkSize;
 import jakarta.transaction.Transactional;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +59,12 @@ public class CaffeineIntakeService {
     public CaffeineIntakeResponse recordCaffeineIntake(Long userId, CaffeineIntakeRequest request) {
         // 0. 데이터 유효성 겁사. 사용자 정보, 음료 정보가 유효하지 않을 시 IllegalArgumentException 발생
         User user = userService.findUserById(userId);
-        
+
+        //request dto에 required field 값 누락 시 exception 발생
+        if(request.getDrinkId() == null || request.getDrinkSize() == null || request.getIntakeTime() == null || request.getDrinkCount() == null || request.getCaffeineAmount() == null){
+            throw new CustomApiException(ErrorStatus.BAD_REQUEST);
+        }
+
         Drink drink = drinkService.findDrinkById(Long.parseLong(request.getDrinkId()));
 
         DrinkSize drinkSize = DrinkSize.valueOf(request.getDrinkSize());
@@ -177,14 +185,39 @@ public class CaffeineIntakeService {
         intakeRepository.deleteById(intakeId);
     }
 
-    public List<CaffeineIntake> getCaffeineIntakeDiary(Long userId, int year, int month){
+    public MonthlyCaffeineDiaryResponse getCaffeineIntakeDiary(Long userId, String targetYear, String targetMonth){
+        if(targetYear == null || targetMonth == null || targetYear.isEmpty() || targetMonth.isEmpty()){
+            throw new CustomApiException(ErrorStatus.BAD_REQUEST);
+        }
+
+        int year = Integer.parseInt(targetYear);
+        int month = Integer.parseInt(targetMonth);
+
         LocalDateTime start = LocalDate.of(year, month, 1).atStartOfDay();
         LocalDateTime end = start.plusMonths(1).minusNanos(1);
-        return intakeRepository.findByUserIdAndIntakeTimeBetween(userId, start, end);
+        List<CaffeineIntake> intakes =  intakeRepository.findByUserIdAndIntakeTimeBetween(userId, start, end);
+
+        List<MonthlyCaffeineDiaryResponse.DailyIntake> dailyIntakeList =
+            getDailyIntakeListForMonth(intakes, targetYear, targetMonth);
+
+        return MonthlyCaffeineDiaryResponse.builder()
+            .filter(MonthlyCaffeineDiaryResponse.Filter.builder()
+                .year(targetYear)
+                .month(String.valueOf(targetMonth))
+                .build())
+            .dailyIntakeList(dailyIntakeList)
+            .build();
+
     }
 
-    public List<MonthlyCaffeineDiaryResponse.DailyIntake> getDailyIntakeListForMonth(List<CaffeineIntake> intakes, int year, int month) {
+    public List<MonthlyCaffeineDiaryResponse.DailyIntake> getDailyIntakeListForMonth(List<CaffeineIntake> intakes, String targetYear, String targetMonth) {
         // 1. 일별 합계 Map 생성
+        if(targetYear == null || targetMonth == null || targetYear.isEmpty() || targetMonth.isEmpty()){
+            throw new CustomApiException(ErrorStatus.BAD_REQUEST);
+        }
+
+        int year = Integer.parseInt(targetYear);
+        int month = Integer.parseInt(targetMonth);
         Map<LocalDate, Float> dailySumMap = intakes.stream()
             .collect(Collectors.groupingBy(
                 intake -> intake.getIntakeTime().toLocalDate(),
@@ -209,15 +242,73 @@ public class CaffeineIntakeService {
         return dailyIntakeList;
     }
 
-    public List<CaffeineIntake> getDailyCaffeineIntake(Long userId, LocalDate date){
+    public DailyCaffeineDiaryResponse getDailyCaffeineIntake(Long userId, String targetDate){
+        if(targetDate == null || targetDate.isEmpty()){
+            throw new CustomApiException(ErrorStatus.BAD_REQUEST);
+        }
+
+        LocalDate date = LocalDate.parse(targetDate);
+
         LocalDateTime start = date.atStartOfDay();
         LocalDateTime end = date.atTime(LocalTime.MAX);
-        return intakeRepository.findByUserIdAndIntakeTimeBetween(userId, start, end);
+
+        List<CaffeineIntake> intakes = intakeRepository.findByUserIdAndIntakeTimeBetween(userId, start, end);
+
+        // 총 카페인 섭취량 계산
+        float totalCaffeineMg = (float) intakes.stream()
+            .mapToDouble(CaffeineIntake::getCaffeineAmountMg)
+            .sum();
+
+        // intakeList 생성
+        List<DailyCaffeineDiaryResponse.IntakeDetail> intakeList = intakes.stream()
+            .map(intake -> DailyCaffeineDiaryResponse.IntakeDetail.builder()
+                .intakeId(intake.getId().toString())
+                .drinkId(intake.getDrink().getId().toString())
+                .drinkName(intake.getDrink().getName())
+                .drinkCount(intake.getDrinkCount())
+                .caffeineMg(intake.getCaffeineAmountMg())
+                .intakeTime(intake.getIntakeTime().toString()) // ISO 8601
+                .build())
+            .collect(Collectors.toList());
+
+        return DailyCaffeineDiaryResponse.builder()
+            .filter(DailyCaffeineDiaryResponse.Filter.builder()
+                .date(targetDate)
+                .build())
+            .totalCaffeineMg(totalCaffeineMg)
+            .intakeList(intakeList)
+            .build();
     }
 
-    public List<CaffeineIntake> getDailyCaffeineIntakeForWeek(Long userId, LocalDate dateStart, LocalDate dateEnd){
-        LocalDateTime start = dateStart.atStartOfDay();
-        LocalDateTime end = dateEnd.atTime(LocalTime.MAX);
+    public List<CaffeineIntake> getDailyCaffeineIntakeForWeek(Long userId, String targetYear, String targetMonth, String targetWeek){
+        if(targetYear == null || targetMonth == null || targetWeek == null
+            || targetYear.isEmpty() || targetMonth.isEmpty() || targetWeek.isEmpty())
+        {
+            throw new CustomApiException(ErrorStatus.BAD_REQUEST);
+        }
+
+        int year = Integer.parseInt(targetYear);
+        int month = Integer.parseInt(targetMonth);
+        int week = Integer.parseInt(targetWeek);
+
+        // 주어진 year와 month로 해당 달의 첫 번째 날짜를 얻습니다.
+        LocalDate firstDayOfMonth = LocalDate.of(year, month, 1);
+
+        // 해당 달의 첫 번째 주 월요일을 찾습니다.
+        LocalDate firstMondayOfMonth = firstDayOfMonth.with(
+            TemporalAdjusters.firstInMonth(DayOfWeek.MONDAY));
+
+        // 만약 첫 번째 날짜가 월요일보다 앞선다면, 그 주는 이전 달의 마지막 주에 해당할 수 있습니다.
+        // 이를 보정하기 위해 첫 번째 월요일이 없다면 해당 달의 1일로 시작하는 주를 기준으로 합니다.
+        LocalDate firstWeekStart = firstMondayOfMonth.getMonthValue() != month ?
+            firstDayOfMonth : firstMondayOfMonth;
+
+        // 첫 번째 주 시작 날짜에 (weekOfMonth - 1) 주를 더하여 해당 월의 weekOfMonth 번째 주의 시작 날짜를 얻습니다.
+        LocalDate startDate = firstWeekStart.plusWeeks(week - 1);
+        LocalDate endDate = startDate.plusDays(6);
+
+        LocalDateTime start = startDate.atStartOfDay();
+        LocalDateTime end = endDate.atTime(LocalTime.MAX);
         return intakeRepository.findByUserIdAndIntakeTimeBetween(userId, start, end);
     }
 }

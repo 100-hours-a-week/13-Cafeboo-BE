@@ -58,7 +58,6 @@ public class CaffeineIntakeController {
         @RequestBody CaffeineIntakeRequest request) {
 
         // 1. 서비스 메서드 호출
-        Long userId = userDetails.getId();
         CaffeineIntakeResponse response = caffeineIntakeService.updateCaffeineIntake(id, request);
 
         // 2. 응답 반환
@@ -71,7 +70,6 @@ public class CaffeineIntakeController {
         @PathVariable Long id) {
 
         // 1. 서비스 메서드 호출
-        Long userId = userDetails.getId();
         caffeineIntakeService.deleteCaffeineIntake(id);
 
         // 2. 응답 반환
@@ -86,20 +84,8 @@ public class CaffeineIntakeController {
         @RequestParam("month") String targetMonth){
 
         Long userId = userDetails.getId();
-        int year = Integer.parseInt(targetYear);
-        int month = Integer.parseInt(targetMonth);
 
-        List<CaffeineIntake> intakes = caffeineIntakeService.getCaffeineIntakeDiary(userId, year, month);
-        List<MonthlyCaffeineDiaryResponse.DailyIntake> dailyIntakeList =
-            caffeineIntakeService.getDailyIntakeListForMonth(intakes, year, month);
-
-        MonthlyCaffeineDiaryResponse response = MonthlyCaffeineDiaryResponse.builder()
-            .filter(MonthlyCaffeineDiaryResponse.Filter.builder()
-                .year(String.valueOf(year))
-                .month(String.valueOf(month))
-                .build())
-            .dailyIntakeList(dailyIntakeList)
-            .build();
+        MonthlyCaffeineDiaryResponse response = caffeineIntakeService.getCaffeineIntakeDiary(userId, targetYear, targetMonth);
 
         return ResponseEntity.ok(ApiResponse.of(
             SuccessStatus.MONTHLY_CAFFEINE_CALENDAR_SUCCESS, response));
@@ -112,33 +98,7 @@ public class CaffeineIntakeController {
         @RequestParam("date") String date) {
 
         Long userId = userDetails.getId();
-        LocalDate localDate = LocalDate.parse(date);
-        List<CaffeineIntake> intakes = caffeineIntakeService.getDailyCaffeineIntake(userId, localDate);
-
-        // 총 카페인 섭취량 계산
-        float totalCaffeineMg = (float) intakes.stream()
-            .mapToDouble(CaffeineIntake::getCaffeineAmountMg)
-            .sum();
-
-        // intakeList 생성
-        List<DailyCaffeineDiaryResponse.IntakeDetail> intakeList = intakes.stream()
-            .map(intake -> DailyCaffeineDiaryResponse.IntakeDetail.builder()
-                .intakeId(intake.getId().toString())
-                .drinkId(intake.getDrink().getId().toString())
-                .drinkName(intake.getDrink().getName())
-                .drinkCount(intake.getDrinkCount())
-                .caffeineMg(intake.getCaffeineAmountMg())
-                .intakeTime(intake.getIntakeTime().toString()) // ISO 8601
-                .build())
-            .collect(Collectors.toList());
-
-        DailyCaffeineDiaryResponse response = DailyCaffeineDiaryResponse.builder()
-            .filter(DailyCaffeineDiaryResponse.Filter.builder()
-                .date(date.toString())
-                .build())
-            .totalCaffeineMg(totalCaffeineMg)
-            .intakeList(intakeList)
-            .build();
+        DailyCaffeineDiaryResponse response = caffeineIntakeService.getDailyCaffeineIntake(userId, date);
 
         return ResponseEntity.ok(ApiResponse.of(
             SuccessStatus.DAILY_CAFFEINE_CALENDAR_SUCCESS, response));

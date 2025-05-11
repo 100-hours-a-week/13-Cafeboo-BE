@@ -1,5 +1,6 @@
 package com.ktb.cafeboo.domain.report.service;
 
+import com.ktb.cafeboo.domain.report.dto.YearlyCaffeineReportResponse;
 import com.ktb.cafeboo.domain.report.model.MonthlyReport;
 import com.ktb.cafeboo.domain.report.model.YearlyReport;
 import com.ktb.cafeboo.domain.report.repository.MonthlyReportRepository;
@@ -46,7 +47,7 @@ public class MonthlyReportService {
             });
     }
 
-    public List<MonthlyReport> getMonthlyReportForYear(Long userId, Year targetYear) {
+    public YearlyCaffeineReportResponse getMonthlyReportForYear(Long userId, Year targetYear) {
         int year = targetYear != null ? targetYear.getValue() : Year.now().getValue();
         List<MonthlyReport> monthlyReports = monthlyReportRepository.findByUserIdAndYear(userId, year);
 
@@ -69,7 +70,33 @@ public class MonthlyReportService {
                     .build());
             }
         }
-        return result;
+
+        List<YearlyCaffeineReportResponse.MonthlyIntakeTotal> monthlyIntakeTotals = result.stream()
+            .map(report -> YearlyCaffeineReportResponse.MonthlyIntakeTotal.builder()
+                .month(report.getMonth())
+                .totalCaffeineMg(report.getTotalCaffeineMg())
+                .build())
+            .collect(Collectors.toList());
+
+        float yearlyCaffeineTotal = (float) monthlyIntakeTotals.stream()
+            .mapToDouble(YearlyCaffeineReportResponse.MonthlyIntakeTotal::getTotalCaffeineMg)
+            .sum();
+
+        float monthlyCaffeineAvg = monthlyIntakeTotals.isEmpty() ? 0f :
+            yearlyCaffeineTotal / monthlyIntakeTotals.size();
+
+        String startDate = year + "-01-01";
+        String endDate = year + "-12-31";
+
+        return YearlyCaffeineReportResponse.builder()
+            .filter(YearlyCaffeineReportResponse.Filter.builder().year(String.valueOf(year)).build())
+            .startDate(startDate)
+            .endDate(endDate)
+            .yearlyCaffeineTotal(yearlyCaffeineTotal)
+            .monthlyCaffeineAvg(monthlyCaffeineAvg)
+            .monthlyIntakeTotals(monthlyIntakeTotals)
+            .build();
+
     }
 
     public void updateMonthlyReport(Long userId, MonthlyReport monthlyReport, Float additionalCaffeine) {

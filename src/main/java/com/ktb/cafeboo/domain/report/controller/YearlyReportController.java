@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/reports/yearly")
 public class YearlyReportController {
-    private final MonthlyReportService monthReportService;
+    private final MonthlyReportService monthlyReportService;
 
     @GetMapping
     ResponseEntity<ApiResponse<YearlyCaffeineReportResponse>> getYearlyCaffeineReport(
@@ -33,33 +33,9 @@ public class YearlyReportController {
         Long userId = userDetails.getId();
         Year year = Year.of(Integer.parseInt(targetYear));
 
-        List<MonthlyReport> monthlyReports = monthReportService.getMonthlyReportForYear(userId, year);
 
-        List<YearlyCaffeineReportResponse.MonthlyIntakeTotal> monthlyIntakeTotals = monthlyReports.stream()
-            .map(report -> YearlyCaffeineReportResponse.MonthlyIntakeTotal.builder()
-                .month(report.getMonth())
-                .totalCaffeineMg(report.getTotalCaffeineMg())
-                .build())
-            .collect(Collectors.toList());
-
-        float yearlyCaffeineTotal = (float) monthlyIntakeTotals.stream()
-            .mapToDouble(YearlyCaffeineReportResponse.MonthlyIntakeTotal::getTotalCaffeineMg)
-            .sum();
-
-        float monthlyCaffeineAvg = monthlyIntakeTotals.isEmpty() ? 0f :
-            yearlyCaffeineTotal / monthlyIntakeTotals.size();
-
-        String startDate = year + "-01-01";
-        String endDate = year + "-12-31";
-
-        YearlyCaffeineReportResponse response =  YearlyCaffeineReportResponse.builder()
-            .filter(YearlyCaffeineReportResponse.Filter.builder().year(String.valueOf(year)).build())
-            .startDate(startDate)
-            .endDate(endDate)
-            .yearlyCaffeineTotal(yearlyCaffeineTotal)
-            .monthlyCaffeineAvg(monthlyCaffeineAvg)
-            .monthlyIntakeTotals(monthlyIntakeTotals)
-            .build();
+        YearlyCaffeineReportResponse response = monthlyReportService.getMonthlyReportForYear(userId, year);
+        //List<MonthlyReport> monthlyReports = monthlyReportService.getMonthlyReportForYear(userId, year);
 
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.YEARLY_CAFFEINE_REPORT_SUCCESS, response));
     }

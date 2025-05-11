@@ -8,7 +8,9 @@ import com.ktb.cafeboo.domain.report.service.DailyStatisticsService;
 import com.ktb.cafeboo.domain.report.service.WeeklyReportScheduler;
 import com.ktb.cafeboo.domain.report.service.WeeklyReportService;
 import com.ktb.cafeboo.global.apiPayload.ApiResponse;
+import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.code.status.SuccessStatus;
+import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import com.ktb.cafeboo.global.security.userdetails.CustomUserDetails;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -46,25 +48,9 @@ public class WeeklyReportController {
         @RequestParam(name = "week",required = false) String targetWeek) {
 
         Long userId = userDetails.getId();
-        int year = Integer.parseInt(targetYear);
-        int month = Integer.parseInt(targetMonth);
-        int week = Integer.parseInt(targetWeek);
 
-        // 주어진 year와 month로 해당 달의 첫 번째 날짜를 얻습니다.
-        LocalDate firstDayOfMonth = LocalDate.of(year, month, 1);
-
-        // 해당 달의 첫 번째 주 월요일을 찾습니다.
-        LocalDate firstMondayOfMonth = firstDayOfMonth.with(TemporalAdjusters.firstInMonth(DayOfWeek.MONDAY));
-
-        // 만약 첫 번째 날짜가 월요일보다 앞선다면, 그 주는 이전 달의 마지막 주에 해당할 수 있습니다.
-        // 이를 보정하기 위해 첫 번째 월요일이 없다면 해당 달의 1일로 시작하는 주를 기준으로 합니다.
-        LocalDate firstWeekStart = firstMondayOfMonth.getMonthValue() != month ?
-            firstDayOfMonth : firstMondayOfMonth;
-
-        // 첫 번째 주 시작 날짜에 (weekOfMonth - 1) 주를 더하여 해당 월의 weekOfMonth 번째 주의 시작 날짜를 얻습니다.
-        LocalDate startDate = firstWeekStart.plusWeeks(week - 1);
-        List<DailyStatistics> dailyStats = dailyStatisticsService.getDailyStatisticsForWeek(userId, startDate);
-        List<CaffeineIntake> intakes = intakeService.getDailyCaffeineIntakeForWeek(userId, startDate, startDate.plusDays(6));
+        List<DailyStatistics> dailyStats = dailyStatisticsService.getDailyStatisticsForWeek(userId, targetYear, targetMonth, targetWeek);
+        List<CaffeineIntake> intakes = intakeService.getDailyCaffeineIntakeForWeek(userId, targetYear, targetMonth, targetWeek);
 
         WeeklyCaffeineReportResponse response = weeklyReportService.getWeeklyReport(userId, targetYear, targetMonth, targetWeek, dailyStats, intakes);
 
@@ -72,8 +58,7 @@ public class WeeklyReportController {
     }
 
     @GetMapping("/test")
-    public void getWeeklyCaffeineReport(
-        @AuthenticationPrincipal CustomUserDetails userDetails){
+    public void getWeeklyCaffeineReport(){
         weeklyReportScheduler.generateWeeklyReports();
     }
 }

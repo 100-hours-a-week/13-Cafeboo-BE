@@ -64,6 +64,7 @@ public class WeeklyReportService {
                     .totalCaffeineMg(0f)
                     .dailyCaffeineAvgMg(0f)
                     .overIntakeDays(0)
+                    .aiMessage("주간 카페인 섭취 리포트 생성을 위해 1주간 섭취 내역을 등록해주세요!")
                     .build();
 
                 // 새로 생성한 WeeklyReport를 데이터베이스에 저장
@@ -97,7 +98,7 @@ public class WeeklyReportService {
         int isoWeekNum = startDate.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
         String isoWeek = String.format("%d-W%02d", year, isoWeekNum);
 
-        WeeklyReport weeklyReport = weeklyReportRepository.findByUserIdAndYearAndWeekNum(userId, year, week)
+        WeeklyReport weeklyReport = weeklyReportRepository.findByUserIdAndYearAndWeekNum(userId, year, isoWeekNum)
             .orElseGet(() -> WeeklyReport.builder()
                 .user(userService.findUserById(userId))
                 .year(year)
@@ -134,60 +135,6 @@ public class WeeklyReportService {
                 );
             }
         }
-
-//        String period = startDate.toString() + " ~ " + endDate.toString();
-//
-//        // highlight_day_high 계산
-//        Map<DayOfWeek, Double> dailyCaffeine = intakes.stream()
-//            .collect(Collectors.groupingBy(record -> record.getIntakeTime().getDayOfWeek(),
-//                Collectors.summingDouble(CaffeineIntake::getCaffeineAmountMg)));
-//        DayOfWeek highlightDayHigh = dailyCaffeine.entrySet().stream()
-//            .max(Map.Entry.comparingByValue())
-//            .map(Map.Entry::getKey)
-//            .orElse(null);
-//
-//        // hightlight_day_low 계산
-//        DayOfWeek highlightDayLow = dailyCaffeine.entrySet().stream()
-//            .min(Map.Entry.comparingByValue())
-//            .map(Map.Entry::getKey)
-//            .orElse(null);
-//        String highlightDayHighStr = (highlightDayHigh != null) ? highlightDayHigh.toString().substring(0, 3) : null;
-//        String highlightDayLowStr = (highlightDayLow != null) ? highlightDayLow.toString().substring(0, 3) : null;
-//
-//        CoffeeTimeStats coffee_time_stats = calculate(intakes);
-//        LocalTime firstAvg = coffee_time_stats.firstAvg;
-//        LocalTime lastAvg = coffee_time_stats.lastAvg;
-//        int lateNightDays = coffee_time_stats.lateNightDays;
-//
-//        CreateWeeklyReportRequest request = CreateWeeklyReportRequest.builder()
-//            .userId(userId.toString())
-//            .period(period)
-//            .avgCaffeinePerDay((int)dailyAvg)
-//            .recommendedDailyLimit((int)userCaffeinInfo.getDailyCaffeineLimitMg())
-//            .percentageOfLimit((int)dailyAvg / (int)userCaffeinInfo.getDailyCaffeineLimitMg())
-//            .highlightDayHigh(highlightDayHighStr)
-//            .highlightDayLow(highlightDayLowStr)
-//            .firstCoffeeAvg(firstAvg.toString())
-//            .lastCoffeeAvg(lastAvg.toString())
-//            .lateNightCaffeineDays(lateNightDays)
-//            .over100mgBeforeSleepDays(0)
-//            .build();
-//
-//        System.out.println("userId: " + request.getUserId());
-//        System.out.println("period: " + request.getPeriod());
-//        System.out.println("avgCaffeinePerDay: " + request.getAvgCaffeinePerDay());
-//        System.out.println("recommendedDailyLimit: " + request.getRecommendedDailyLimit());
-//        System.out.println("percentageOfLimit: " + request.getPercentageOfLimit());
-//        System.out.println("highlightDayHigh: " + request.getHighlightDayHigh());
-//        System.out.println("highlightDayLow: " + request.getHighlightDayLow());
-//        System.out.println("firstCoffeeAvg: " + request.getFirstCoffeeAvg());
-//        System.out.println("lastCoffeeAvg: " + request.getLastCoffeeAvg());
-//        System.out.println("lateNightCaffeineDays: " + request.getLateNightCaffeineDays());
-//        System.out.println("over100mgBeforeSleepDays: " + request.getOver100mgBeforeSleepDays());
-//
-//        CreateWeeklyReportResponse response = aiServerClient.createWeeklyReportAnalysis(request);
-//
-//        String summaryMessage = "이번 주 평균 섭취량은 권장량의 " + (dailyAvg * 100 / 400) + "% 수준입니다.";
 
         return WeeklyCaffeineReportResponse.builder()
             .filter(WeeklyCaffeineReportResponse.Filter.builder()
@@ -283,53 +230,5 @@ public class WeeklyReportService {
             cursor = cursor.plusWeeks(1);
         }
         return result;
-    }
-
-    private static CoffeeTimeStats calculate(List<CaffeineIntake> intakes) {
-        // 1. 날짜별로 그룹핑
-        Map<LocalDate, List<CaffeineIntake>> byDate = intakes.stream()
-            .collect(Collectors.groupingBy(i -> i.getIntakeTime().toLocalDate()));
-
-        List<LocalTime> firstTimes = new ArrayList<>();
-        List<LocalTime> lastTimes = new ArrayList<>();
-        int lateNightDays = 0;
-
-        for (Map.Entry<LocalDate, List<CaffeineIntake>> entry : byDate.entrySet()) {
-            List<CaffeineIntake> dayIntakes = entry.getValue();
-
-            // intakeTime 기준 정렬
-            List<LocalTime> times = dayIntakes.stream()
-                .map(i -> i.getIntakeTime().toLocalTime())
-                .sorted()
-                .collect(Collectors.toList());
-
-            // 첫/마지막 커피 시간
-            firstTimes.add(times.get(0));
-            lastTimes.add(times.get(times.size() - 1));
-
-            // 22시 이후 섭취가 있는지 체크
-            boolean hasLateNight = times.stream()
-                .anyMatch(t -> t.isAfter(LocalTime.of(22, 0)) || t.equals(LocalTime.of(22, 0)));
-            if (hasLateNight)
-                lateNightDays++;
-        }
-
-        // 평균 시간 계산 (초 단위로 변환 후 평균)
-        LocalTime firstAvg = averageLocalTimes(firstTimes);
-        LocalTime lastAvg = averageLocalTimes(lastTimes);
-        return new CoffeeTimeStats(firstAvg, lastAvg, lateNightDays);
-    }
-
-    private static LocalTime averageLocalTimes(List<LocalTime> times) {
-        if (times.isEmpty()) return null;
-        double avgSeconds = times.stream()
-            .mapToLong(t -> t.toSecondOfDay())
-            .average()
-            .orElse(0);
-
-        int avgMinutes = (int) Math.round(avgSeconds / 60.0); // 반올림해서 분 단위로
-        int hour = avgMinutes / 60;
-        int minute = avgMinutes % 60;
-        return LocalTime.of(hour, minute);
     }
 }

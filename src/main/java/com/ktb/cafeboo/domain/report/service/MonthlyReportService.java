@@ -41,7 +41,6 @@ public class MonthlyReportService {
                     .yearlyStatisticsId(yearlyReport)
                     .totalCaffeineMg(0f)
                     .weeklyCaffeineAvgMg(0f)
-                    .aiMessage("")
                     .build();
                 return monthlyReportRepository.save(newReport);
             });

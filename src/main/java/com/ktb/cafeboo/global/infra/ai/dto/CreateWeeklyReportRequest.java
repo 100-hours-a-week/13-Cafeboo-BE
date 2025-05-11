@@ -42,4 +42,7 @@ public class CreateWeeklyReportRequest {
 
     @JsonProperty("over_100mg_before_sleep_days")
     private Integer over100mgBeforeSleepDays;
+
+    @JsonProperty("average_sleep_quality")
+    private String averageSleepQuality;
 }

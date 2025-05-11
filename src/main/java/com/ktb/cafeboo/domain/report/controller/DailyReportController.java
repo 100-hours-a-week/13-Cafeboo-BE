@@ -42,12 +42,17 @@ public class DailyReportController {
     @GetMapping
     public ResponseEntity<ApiResponse<DailyCaffeineReportResponse>> getDailyCaffeineReport(
         @AuthenticationPrincipal CustomUserDetails userDetails,
-        @RequestParam(required = false) LocalDate targetDate) {
+        @RequestParam(required = false, name = "date") String targetDate) {
 
         Long userId = userDetails.getId();
+        LocalDate date;
 
+        if(targetDate == null)
+            date = LocalDate.now();
+        else
+            date = LocalDate.parse(targetDate);
         // 일일 리포트 생성
-        DailyCaffeineReportResponse response = dailyReportService.createDailyReport(userId, targetDate, LocalTime.now());
+        DailyCaffeineReportResponse response = dailyReportService.createDailyReport(userId, date, LocalTime.now());
 
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.DAILY_CAFFEINE_REPORT_SUCCESS, response));
     }

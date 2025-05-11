@@ -13,8 +13,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class CaffeineIntakeResponse {
-    private Long id;
-    private Long drinkId;
+    private String id;
+    private String drinkId;
     private String drinkName;
     private LocalDateTime intakeTime;
     private Integer drinkCount;

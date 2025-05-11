@@ -123,7 +123,8 @@ public class CaffeineIntakeController {
         // intakeList 생성
         List<DailyCaffeineDiaryResponse.IntakeDetail> intakeList = intakes.stream()
             .map(intake -> DailyCaffeineDiaryResponse.IntakeDetail.builder()
-                .intakeId(intake.getId())
+                .intakeId(intake.getId().toString())
+                .drinkId(intake.getDrink().getId().toString())
                 .drinkName(intake.getDrink().getName())
                 .drinkCount(intake.getDrinkCount())
                 .caffeineMg(intake.getCaffeineAmountMg())

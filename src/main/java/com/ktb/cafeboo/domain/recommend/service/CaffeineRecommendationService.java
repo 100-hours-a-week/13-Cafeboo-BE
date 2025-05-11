@@ -7,12 +7,10 @@ import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import com.ktb.cafeboo.global.infra.ai.client.AiServerClient;
 import com.ktb.cafeboo.global.infra.ai.dto.PredictCaffeineLimitByRuleRequest;
 import com.ktb.cafeboo.global.infra.ai.dto.PredictCaffeineLimitByRuleResponse;
-import com.ktb.cafeboo.domain.user.repository.UserRepository;
-import com.ktb.cafeboo.domain.user.repository.UserCaffeineInfoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+
 
 @Slf4j
 @Service
@@ -20,8 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class CaffeineRecommendationService {
 
     private final AiServerClient aiServerClient;
-    private final UserRepository userRepository;
-    private final UserCaffeineInfoRepository userCaffeineInfoRepository;
 
     public float getPredictedCaffeineLimitByRule(User user, int caffeineSensitivity) {
         // [RULE 기반] 사용자 상태정보를 바탕으로 하루 최대 카페인 허용량 예측
@@ -32,11 +28,10 @@ public class CaffeineRecommendationService {
 
         PredictCaffeineLimitByRuleRequest request = PredictCaffeineLimitByRuleRequest.builder()
                 .userId(user.getId().toString())
-                .modelHint("rule")  // 명시적으로 rule 기반임을 전달
                 .gender(healthInfo.getGender())
                 .age(healthInfo.getAge())
                 .weight(healthInfo.getWeight())
-                .height((int) healthInfo.getHeight())
+                .height(healthInfo.getHeight())
                 .isSmoker(healthInfo.getSmoking() ? 1 : 0)
                 .takeHormonalContraceptive(healthInfo.getTakingBirthPill() ? 1 : 0)
                 .caffeineSensitivity(caffeineSensitivity)
@@ -52,6 +47,10 @@ public class CaffeineRecommendationService {
             throw new CustomApiException(ErrorStatus.AI_SERVER_ERROR);
         }
 
-        return response.getData().getMaxCaffeineMg();
+        float result = response.getData().getMaxCaffeineMg();
+        log.info("[AI 서버 호출 성공] 최대 허용 카페인량을 성공적으로 예측하였습니다.");
+        log.info("예측 최대 허용 카페인량: {}", result);
+
+        return result;
     }
 }

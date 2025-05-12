@@ -1,6 +1,6 @@
 package com.ktb.cafeboo.domain.auth.service;
 
-import com.ktb.cafeboo.domain.auth.dto.KakaoLoginResponse;
+import com.ktb.cafeboo.domain.auth.dto.LoginResponse;
 import com.ktb.cafeboo.domain.user.dto.UserAlarmSettingCreateRequest;
 import com.ktb.cafeboo.domain.user.service.UserAlarmSettingService;
 import com.ktb.cafeboo.global.infra.kakao.dto.KakaoTokenResponse;
@@ -55,7 +55,7 @@ public class KakaoOauthService {
                 .toUriString();
     }
 
-    public KakaoLoginResponse login(String code) {
+    public LoginResponse login(String code) {
         KakaoTokenResponse kakaoToken = kakaoTokenClient.getToken(code, clientId, redirectUri, grantType);
         KakaoUserResponse kakaoUser = kakaoUserClient.getUserInfo(kakaoToken.getAccessToken());
 
@@ -93,7 +93,7 @@ public class KakaoOauthService {
         user.updateRefreshToken(refreshToken);
         userRepository.save(user);
 
-        return KakaoLoginResponse.builder()
+        return LoginResponse.builder()
                 .userId(user.getId().toString())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)

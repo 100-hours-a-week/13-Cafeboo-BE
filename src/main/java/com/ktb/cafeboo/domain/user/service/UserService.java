@@ -42,8 +42,7 @@ public class UserService {
 
     public boolean hasCompletedOnboarding(User user) {
         return user.getHealthInfo() != null
-                && user.getCaffeinInfo() != null
-                && user.getAlarmSetting() != null;
+                && user.getCaffeinInfo() != null;
     }
   
     public UserProfileResponse getUserProfile(Long targetUserId, Long currentUserId) {

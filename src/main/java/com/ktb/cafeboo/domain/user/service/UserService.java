@@ -69,7 +69,21 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomApiException(ErrorStatus.USER_NOT_FOUND));
 
-        user.withdraw();
+        if (user.getHealthInfo() != null) {
+            user.getHealthInfo().delete();
+        }
+        if (user.getCaffeinInfo() != null) {
+            user.getCaffeinInfo().delete();
+        }
+        if (user.getAlarmSetting() != null) {
+            user.getAlarmSetting().delete();
+        }
+        if (user.getFavoriteDrinks() != null) {
+            user.getFavoriteDrinks().clear();
+        }
+        user.setRefreshToken(null);
+        user.delete();
+        userRepository.save(user);
     }
 
 }

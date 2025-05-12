@@ -52,13 +52,13 @@ public class User extends BaseEntity {
     @ColumnDefault("0")
     private int coffeeBean;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private UserHealthInfo healthInfo;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private UserCaffeinInfo caffeinInfo;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private UserAlarmSetting alarmSetting;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -103,21 +103,5 @@ public class User extends BaseEntity {
     public void setFavoriteDrinks(List<UserFavoriteDrinkType> favorites) {
         this.favoriteDrinks.clear(); // 기존 관계 제거
         this.favoriteDrinks.addAll(favorites);
-    }
-
-    public void withdraw() {
-        if (this.healthInfo != null) {
-            this.healthInfo.delete();
-        }
-        if (this.caffeinInfo != null) {
-            this.caffeinInfo.delete();
-        }
-        if (this.alarmSetting != null) {
-            this.alarmSetting.delete();
-        }
-        if (this.favoriteDrinks != null) {
-            this.favoriteDrinks.clear();
-        }
-        this.delete();
     }
 }

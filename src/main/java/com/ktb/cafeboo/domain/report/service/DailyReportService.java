@@ -16,6 +16,8 @@ import jakarta.transaction.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -40,9 +42,15 @@ public class DailyReportService {
      */
     public DailyCaffeineReportResponse createDailyReport(Long userId, LocalDate targetDate,
         LocalTime targetTime) {
-        LocalDateTime currentDateTime = (targetDate != null && targetTime != null) ?
-            LocalDateTime.of(targetDate, targetTime) :
-            LocalDateTime.now();
+        ZoneId krTimeZone = ZoneId.of("Asia/Seoul");
+        LocalDateTime currentDateTime;
+
+        if (targetDate != null && targetTime != null) {
+            ZonedDateTime zonedDateTime = ZonedDateTime.of(targetDate, targetTime, ZoneId.systemDefault()).withZoneSameInstant(krTimeZone);
+            currentDateTime = zonedDateTime.toLocalDateTime();
+        } else {
+            currentDateTime = LocalDateTime.now(krTimeZone);
+        }
 
         User user = userService.findUserById(userId);
 

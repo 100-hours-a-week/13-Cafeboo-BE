@@ -1,6 +1,8 @@
 package com.ktb.cafeboo.domain.auth.service;
 
 import com.ktb.cafeboo.domain.auth.dto.KakaoLoginResponse;
+import com.ktb.cafeboo.domain.user.model.UserAlarmSetting;
+import com.ktb.cafeboo.domain.user.service.UserAlarmSettingService;
 import com.ktb.cafeboo.global.infra.kakao.dto.KakaoTokenResponse;
 import com.ktb.cafeboo.global.infra.kakao.dto.KakaoUserResponse;
 import com.ktb.cafeboo.global.infra.kakao.client.KakaoTokenClient;
@@ -27,6 +29,7 @@ public class KakaoOauthService {
     private final UserRepository userRepository;
     private final JwtProvider jwtProvider;
     private final UserService userService;
+    private final UserAlarmSettingService userAlarmSettingService;
 
     @Value("${spring.security.oauth2.client.registration.kakao.client-id}")
     private String clientId;
@@ -64,7 +67,17 @@ public class KakaoOauthService {
             user = userOpt.get();
             requiresOnboarding = !userService.hasCompletedOnboarding(user);
         } else {
-            user = userRepository.save(User.fromKakao(kakaoUser));
+            user = User.fromKakao(kakaoUser);
+            // 기본 알람 설정
+            UserAlarmSetting userAlarmSetting = UserAlarmSetting.builder()
+                    .alarmBeforeSleep(false)
+                    .alarmWhenExceedIntake(false)
+                    .alarmForChat(false)
+                    .build();
+            user.setAlarmSetting(userAlarmSetting);
+
+            userRepository.save(user);
+
             requiresOnboarding = true;
         }
 

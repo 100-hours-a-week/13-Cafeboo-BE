@@ -120,6 +120,54 @@ public class DailyStatisticsService {
         yearlyReportService.updateYearlyReport(user.getId(), yearlyReport, additionalCaffeine);
     }
 
+    public void updateDailyStatisticsAfterUpdateUserInfo(User user, LocalDate date){
+        YearlyReport yearlyReport = yearlyReportService.getOrCreateYearlyReport(user.getId(), date);
+
+        MonthlyReport monthlyReport = monthlyReportService.getOrCreateMonthlyReport(user.getId(), yearlyReport, date);
+
+        WeeklyReport weeklyReport = weeklyReportService.getOrCreateWeeklyReport(user.getId(), monthlyReport, date);
+
+        DailyStatistics statistics = dailyStatisticsRepository
+            .findByUserIdAndDate(user.getId(), date)
+            .orElseGet(() -> createDailyStatistics(user, weeklyReport, date));
+
+        CaffeineResidual residualAtSleep = caffeineResidualService.findByUserAndTargetDateAndHour(user, date.atStartOfDay(), user.getHealthInfo().getSleepTime().getHour());
+
+        PredictCanIntakeCaffeineRequest request = PredictCanIntakeCaffeineRequest.builder()
+            .userId(user.getId().toString())
+            .currentTime(convertTimeToFloat(LocalTime.now()))
+            .sleepTime(convertTimeToFloat(user.getHealthInfo().getSleepTime()))
+            .caffeineLimit(Math.round(user.getCaffeinInfo().getDailyCaffeineLimitMg()))
+            .currentCaffeine(Math.round(statistics.getTotalCaffeineMg()))
+            .caffeineSensitivity(user.getCaffeinInfo().getCaffeineSensitivity())
+            .targetResidualAtSleep(50f)
+            .residualAtSleep(residualAtSleep.getResidueAmountMg())
+            .gender(user.getHealthInfo().getGender())
+            .age(user.getHealthInfo().getAge())
+            .weight(user.getHealthInfo().getWeight())
+            .height(user.getHealthInfo().getHeight())
+            .isSmoker(user.getHealthInfo().getSmoking() ? 1 : 0)
+            .takeHormonalContraceptive(user.getHealthInfo().getTakingBirthPill() ? 1 : 0)
+            .build();
+
+        PredictCanIntakeCaffeineResponse response = aiServerClient.predictCanIntakeCaffeine(request);
+
+        String message = "권장량의 " + (int)((statistics.getTotalCaffeineMg() / user.getCaffeinInfo().getDailyCaffeineLimitMg()) * 100) + "%를 섭취 중이에요.";
+
+        if(Objects.equals(response.getStatus(), "success")){
+            if(Objects.equals(response.getData().getCaffeineStatus(), "N")){
+                message += " 카페인을 추가로 섭취하면 수면에 영향을 줄 수 있어요.";
+            }
+            else if (Objects.equals(response.getData().getCaffeineStatus(), "Y")){
+                message += " 카페인을 추가로 섭취해도 수면에 영향이 없어요.";
+            }
+        }
+
+        statistics.setAiMessage(message);
+
+        DailyStatistics savedStatistics = dailyStatisticsRepository.save(statistics);
+    }
+
     /**
      * 일일 통계 데이터를 생성합니다.
      * @param user 일일 통계를 기록할 유저 정보

@@ -1,6 +1,7 @@
 package com.ktb.cafeboo.domain.user.service;
 
 import com.ktb.cafeboo.domain.recommend.service.CaffeineRecommendationService;
+import com.ktb.cafeboo.domain.report.service.DailyStatisticsService;
 import com.ktb.cafeboo.domain.user.dto.*;
 import com.ktb.cafeboo.domain.user.mapper.UserHealthInfoMapper;
 import com.ktb.cafeboo.domain.user.model.User;
@@ -10,6 +11,7 @@ import com.ktb.cafeboo.domain.user.repository.UserHealthInfoRepository;
 import com.ktb.cafeboo.domain.user.repository.UserRepository;
 import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
+import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,7 +25,8 @@ public class UserHealthInfoService {
     private final UserRepository userRepository;
     private final UserHealthInfoRepository userHealthInfoRepository;
     private final CaffeineRecommendationService caffeineRecommendationService;
-
+    private final DailyStatisticsService dailyStatisticsService;
+    
     @Transactional
     public UserHealthInfoCreateResponse create(Long userId, UserHealthInfoCreateRequest request) {
         User user = userRepository.findById(userId)
@@ -67,6 +70,9 @@ public class UserHealthInfoService {
                 if (caffeinInfo != null) {
                     float predictedLimit = caffeineRecommendationService.getPredictedCaffeineLimitByRule(user, caffeinInfo.getCaffeineSensitivity());
                     caffeinInfo.setDailyCaffeineLimitMg(predictedLimit);
+
+                    // 유저 카페인 관련 내용 수정 후, 바뀐 카페인 한계치에 따른 내용 일일 통계 데이터에 반영
+                    dailyStatisticsService.updateDailyStatisticsAfterUpdateUserInfo(user, LocalDate.now());
                 }
             } catch (Exception e) {
                 log.warn("[AI 서버 호출 실패] 기존 최대 허용 카페인량 유지. userId: {}", userId);

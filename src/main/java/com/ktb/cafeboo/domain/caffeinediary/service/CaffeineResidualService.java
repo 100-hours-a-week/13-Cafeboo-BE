@@ -48,8 +48,7 @@ public class CaffeineResidualService {
             // 해당 시점이 이전 섭취 시간과 새로운 섭취 시간 사이에 있는 경우에만 처리
             if (residualDateTime.isAfter(previousIntakeTime) || residualDateTime.isEqual(previousIntakeTime)) {
                 // 이전 섭취로 인한 잔존량 계산
-                double hoursSincePreviousIntake = ChronoUnit.HOURS.between(previousIntakeTime,
-                    residualDateTime);
+                double hoursSincePreviousIntake = 0;
                 double previousResidualAmount =
                     previousCaffeineAmount * Math.exp(-k * hoursSincePreviousIntake);
 
@@ -61,6 +60,8 @@ public class CaffeineResidualService {
                 updatedAmount = Math.max(0, updatedAmount);
 
                 residual.setResidueAmountMg(updatedAmount);
+
+                hoursSincePreviousIntake += 1;
             }
         }
 
@@ -137,7 +138,8 @@ public class CaffeineResidualService {
         Map<String, CaffeineResidual> residualMap = residuals.stream()
             .collect(Collectors.toMap(
                 r -> r.getTargetDate().toLocalDate().toString() + "-" + r.getHour(),
-                Function.identity()
+                Function.identity(),
+                (r1, r2) -> r2  // 중복된 경우 나중 값으로 덮어쓰기
             ));
 
         // 3. 35시간 구간의 모든 시간 포인트 생성 및 매핑

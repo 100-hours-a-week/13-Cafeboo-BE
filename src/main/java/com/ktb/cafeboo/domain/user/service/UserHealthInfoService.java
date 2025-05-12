@@ -26,7 +26,7 @@ public class UserHealthInfoService {
     private final UserHealthInfoRepository userHealthInfoRepository;
     private final CaffeineRecommendationService caffeineRecommendationService;
     private final DailyStatisticsService dailyStatisticsService;
-    
+
     @Transactional
     public UserHealthInfoCreateResponse create(Long userId, UserHealthInfoCreateRequest request) {
         User user = userRepository.findById(userId)

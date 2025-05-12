@@ -1,7 +1,7 @@
 package com.ktb.cafeboo.domain.auth.service;
 
 import com.ktb.cafeboo.domain.auth.dto.KakaoLoginResponse;
-import com.ktb.cafeboo.domain.user.model.UserAlarmSetting;
+import com.ktb.cafeboo.domain.user.dto.UserAlarmSettingCreateRequest;
 import com.ktb.cafeboo.domain.user.service.UserAlarmSettingService;
 import com.ktb.cafeboo.global.infra.kakao.dto.KakaoTokenResponse;
 import com.ktb.cafeboo.global.infra.kakao.dto.KakaoUserResponse;
@@ -67,16 +67,15 @@ public class KakaoOauthService {
             user = userOpt.get();
             requiresOnboarding = !userService.hasCompletedOnboarding(user);
         } else {
-            user = User.fromKakao(kakaoUser);
+            user = userRepository.save(User.fromKakao(kakaoUser));
+
             // 기본 알람 설정
-            UserAlarmSetting userAlarmSetting = UserAlarmSetting.builder()
+            UserAlarmSettingCreateRequest userAlarmSetting = UserAlarmSettingCreateRequest.builder()
                     .alarmBeforeSleep(false)
                     .alarmWhenExceedIntake(false)
                     .alarmForChat(false)
                     .build();
-            user.setAlarmSetting(userAlarmSetting);
-
-            userRepository.save(user);
+            userAlarmSettingService.create(user.getId(), userAlarmSetting);
 
             requiresOnboarding = true;
         }

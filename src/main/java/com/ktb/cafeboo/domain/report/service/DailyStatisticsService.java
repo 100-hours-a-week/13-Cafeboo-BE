@@ -100,11 +100,11 @@ public class DailyStatisticsService {
 
         PredictCanIntakeCaffeineResponse response = aiServerClient.predictCanIntakeCaffeine(request);
 
-        String message = "권장량의 " + (statistics.getTotalCaffeineMg() / user.getCaffeinInfo().getDailyCaffeineLimitMg()) * 100 + "%를 섭취 중이에요.";
+        String message = "권장량의 " + (int)((statistics.getTotalCaffeineMg() / user.getCaffeinInfo().getDailyCaffeineLimitMg()) * 100) + "%를 섭취 중이에요.";
 
         if(Objects.equals(response.getStatus(), "success")){
             if(Objects.equals(response.getData().getCaffeineStatus(), "N")){
-                message += " 지금 카페인을 추가로 섭취하면 수면에 영향을 줄 수 있어요.";
+                message += " 카페인을 추가로 섭취하면 수면에 영향을 줄 수 있어요.";
             }
             else if (Objects.equals(response.getData().getCaffeineStatus(), "Y")){
                 message += " 카페인을 추가로 섭취해도 수면에 영향이 없어요.";

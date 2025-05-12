@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -75,96 +76,83 @@ public class WeeklyReportScheduler {
         int weeknum = startDate.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
         int year = startDate.getYear();
 
-        Mono.fromCallable(userRepository::findAll)
-            .flatMapMany(Flux::fromIterable)
-            .flatMap(user -> createWeeklyReportRequest(user, startDate, endDate)
-                .flatMap(request -> Mono.fromCallable(() -> aiServerClient.createWeeklyReportAnalysis(request))
-                    .flatMap(response -> saveWeeklyReport(user, year, weeknum, request, response))
-                    .onErrorResume(e -> {
-                        log.error("유저 {} 주간 보고서 생성 실패: {}", user.getId(), e.getMessage());
-                        return Mono.empty();
-                    })
-                )
-            )
-            .subscribeOn(Schedulers.boundedElastic())
-            .subscribe(
-                report -> log.info("유저 {} 주간 보고서 생성 완료: {}", report.getUser().getId(), report.getWeekNum()),
-                error -> log.error("주간 보고서 생성 중 에러 발생: {}", error.getMessage()),
-                () -> log.info("주간 보고서 생성 작업 완료")
-            );
+        List<User> users = userRepository.findAll();
+        List<CreateWeeklyReportRequest> requests = users.stream()
+            .map(user -> createWeeklyReportRequest(user, startDate, endDate))
+            .collect(Collectors.toList());
+
+        if (!requests.isEmpty()) {
+            CreateWeeklyReportResponse response = aiServerClient.createWeeklyReportAnalysis(requests);
+
+            if (response.getStatus().equals(HttpStatus.OK.toString())) {
+                log.info("AI 서버에 주간 보고서 생성 요청 성공. 콜백을 기다립니다.");
+            } else {
+                log.error("AI 서버 주간 보고서 생성 요청 실패: {}", response.getStatus());
+            }
+        } else {
+            log.info("생성할 주간 보고서 요청 데이터가 없습니다.");
+        }
     }
 
 
 
-    private Mono<CreateWeeklyReportRequest> createWeeklyReportRequest(User user, LocalDate startDate, LocalDate endDate) {
-        return Mono.fromCallable(() -> intakeRepository.findByUserIdAndIntakeTimeBetween(user.getId(), startDate.atStartOfDay(), endDate.atTime(LocalTime.MAX)))
-            .flatMap(intakes -> {
-                // 2. 통계 계산
-                Map<DayOfWeek, Double> dailyCaffeine = intakes.stream()
-                    .collect(Collectors.groupingBy(
-                        record -> record.getIntakeTime().getDayOfWeek(),
-                        Collectors.summingDouble(CaffeineIntake::getCaffeineAmountMg)
-                    ));
-                DayOfWeek highlightDayHigh = dailyCaffeine.entrySet().stream()
-                    .max(Map.Entry.comparingByValue())
-                    .map(Map.Entry::getKey)
-                    .orElse(null);
-                DayOfWeek highlightDayLow = dailyCaffeine.entrySet().stream()
-                    .min(Map.Entry.comparingByValue())
-                    .map(Map.Entry::getKey)
-                    .orElse(null);
-                String highlightDayHighStr = (highlightDayHigh != null) ? highlightDayHigh.toString().substring(0, 3) : "Mon";
-                String highlightDayLowStr = (highlightDayLow != null) ? highlightDayLow.toString().substring(0, 3) : "Mon";
+    private CreateWeeklyReportRequest createWeeklyReportRequest(User user, LocalDate startDate, LocalDate endDate) {
+        List<CaffeineIntake> intakes = intakeRepository.findByUserIdAndIntakeTimeBetween(user.getId(), startDate.atStartOfDay(), endDate.atTime(LocalTime.MAX));
 
-                CoffeeTimeStats coffeeTimeStats = calculate(user, intakes);
-                LocalTime firstAvg = coffeeTimeStats.firstAvg;
-                LocalTime lastAvg = coffeeTimeStats.lastAvg;
-                int lateNightDays = coffeeTimeStats.lateNightDays;
+        Map<DayOfWeek, Double> dailyCaffeine = intakes.stream()
+            .collect(Collectors.groupingBy(
+                record -> record.getIntakeTime().getDayOfWeek(),
+                Collectors.summingDouble(CaffeineIntake::getCaffeineAmountMg)
+            ));
+        DayOfWeek highlightDayHigh = dailyCaffeine.entrySet().stream()
+            .max(Map.Entry.comparingByValue())
+            .map(Map.Entry::getKey)
+            .orElse(null);
+        DayOfWeek highlightDayLow = dailyCaffeine.entrySet().stream()
+            .min(Map.Entry.comparingByValue())
+            .map(Map.Entry::getKey)
+            .orElse(null);
+        String highlightDayHighStr = (highlightDayHigh != null) ? highlightDayHigh.toString().substring(0, 3) : "Mon";
+        String highlightDayLowStr = (highlightDayLow != null) ? highlightDayLow.toString().substring(0, 3) : "Mon";
 
-                // 예시: 하루 평균, 권장량 등은 실제 데이터로 계산
-                double totalCaffeine = intakes.stream()
-                    .mapToDouble(CaffeineIntake::getCaffeineAmountMg)
-                    .sum();
-                double dailyAvg = totalCaffeine / 7.0;
-                double recommendedLimit = user.getCaffeinInfo().getDailyCaffeineLimitMg(); // user에서 가져오기
+        CoffeeTimeStats coffeeTimeStats = calculate(user, intakes);
+        LocalTime firstAvg = coffeeTimeStats.firstAvg;
+        LocalTime lastAvg = coffeeTimeStats.lastAvg;
+        int lateNightDays = coffeeTimeStats.lateNightDays;
 
-                String period = startDate.toString() + " ~ " + endDate.toString();
+        double totalCaffeine = intakes.stream()
+            .mapToDouble(CaffeineIntake::getCaffeineAmountMg)
+            .sum();
+        double dailyAvg = totalCaffeine / 7.0;
+        double recommendedLimit = user.getCaffeinInfo().getDailyCaffeineLimitMg();
 
-                int over100mgBeforeSleepDays = 0;
+        String period = startDate.toString() + " ~ " + endDate.toString();
 
-                for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
-                    // CaffeineResidualService에서 해당 날짜, 해당 시간의 잔여 카페인(mg) 조회
-                    CaffeineResidual residual = caffeineResidualService.findByUserAndTargetDateAndHour(user, date.atStartOfDay(), user.getHealthInfo().getSleepTime().getHour());
-                    if (residual.getResidueAmountMg() > 100.0) {
-                        over100mgBeforeSleepDays++;
-                    }
-                }
+        int over100mgBeforeSleepDays = 0;
+        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+            CaffeineResidual residual = caffeineResidualService.findByUserAndTargetDateAndHour(user, date.atStartOfDay(), user.getHealthInfo().getSleepTime().getHour());
+            if (residual != null && residual.getResidueAmountMg() > 100.0) {
+                over100mgBeforeSleepDays++;
+            }
+        }
 
-                // 3. CreateWeeklyReportRequest 빌드
-                CreateWeeklyReportRequest request = CreateWeeklyReportRequest.builder()
-                    .userId(user.getId().toString())
-                    .period(period)
-                    .avgCaffeinePerDay((int) dailyAvg)
-                    .recommendedDailyLimit((int) recommendedLimit)
-                    .percentageOfLimit((int) (dailyAvg * 100 / recommendedLimit))
-                    .highlightDayHigh(highlightDayHighStr)
-                    .highlightDayLow(highlightDayLowStr)
-                    .firstCoffeeAvg(firstAvg != null ? firstAvg.toString() : null)
-                    .lastCoffeeAvg(lastAvg != null ? lastAvg.toString() : null)
-                    .lateNightCaffeineDays(lateNightDays)
-                    .over100mgBeforeSleepDays(over100mgBeforeSleepDays)
-                    .averageSleepQuality("good")
-                    .build();
-
-                // null 체크
-                if (highlightDayHighStr == null || highlightDayLowStr == null
-                    || firstAvg == null || lastAvg == null) {
-                    // 필수 값이 하나라도 null이면 Mono.empty() 반환
-                    return Mono.empty();
-                }
-
-                return Mono.just(request);
-            });
+        return CreateWeeklyReportRequest.builder()
+            .userId(user.getId().toString())
+            .data(CreateWeeklyReportRequest.Data.builder() // Data 객체 빌더 시작
+                .period(period)
+                .avgCaffeinePerDay((int) dailyAvg)
+                .recommendedDailyLimit((int) recommendedLimit)
+                .percentageOfLimit((int) (dailyAvg * 100 / recommendedLimit))
+                .highlightDayHigh(highlightDayHighStr)
+                .highlightDayLow(highlightDayLowStr)
+                .firstCoffeeAvg(firstAvg != null ? firstAvg.toString() : null)
+                .lastCoffeeAvg(lastAvg != null ? lastAvg.toString() : null)
+                .lateNightCaffeineDays(lateNightDays)
+                .over100mgBeforeSleepDays(over100mgBeforeSleepDays)
+                .averageSleepQuality("good") // averageSleepQuality 설정 (실제 값으로 대체)
+                .build()) // Data 객체 빌더 종료
+            .callbackUrl("/") // callbackUrl 설정 (필요한 경우)
+            .build();
 
 //        String period = startDate.toString() + " ~ " + endDate.toString();
 //
@@ -219,17 +207,6 @@ public class WeeklyReportScheduler {
 //        CreateWeeklyReportResponse response = aiServerClient.createWeeklyReportAnalysis(request);
 //
 //        String summaryMessage = "이번 주 평균 섭취량은 권장량의 " + (dailyAvg * 100 / 400) + "% 수준입니다."
-    }
-
-    private Mono<WeeklyReport> saveWeeklyReport(User user, int year, int weeknum, CreateWeeklyReportRequest request, CreateWeeklyReportResponse response) {
-        WeeklyReport weeklyReport = weeklyReportRepository.findByUserIdAndYearAndWeekNum(user.getId(), year, weeknum)
-            .orElse(null);
-
-        if(weeklyReport == null)
-            return Mono.empty();
-
-        weeklyReport.setAiMessage(response.getData().getReport());
-        return Mono.fromCallable(() -> weeklyReportRepository.save(weeklyReport));
     }
 
     private static CoffeeTimeStats calculate(User user, List<CaffeineIntake> intakes) {

@@ -8,6 +8,7 @@ import com.ktb.cafeboo.global.infra.ai.dto.PredictCaffeineLimitByRuleRequest;
 import com.ktb.cafeboo.global.infra.ai.dto.PredictCaffeineLimitByRuleResponse;
 import com.ktb.cafeboo.global.infra.ai.dto.PredictCanIntakeCaffeineRequest;
 import com.ktb.cafeboo.global.infra.ai.dto.PredictCanIntakeCaffeineResponse;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -40,10 +41,10 @@ public class AiServerClient {
                 .block();
     }
 
-    public CreateWeeklyReportResponse createWeeklyReportAnalysis(CreateWeeklyReportRequest request){
+    public CreateWeeklyReportResponse createWeeklyReportAnalysis(List<CreateWeeklyReportRequest> requests){
         return aiServerWebClient.post()
             .uri("/internal/ai/caffeine_weekly_report")
-            .bodyValue(request)
+            .bodyValue(requests)
             .retrieve()
             .bodyToMono(CreateWeeklyReportResponse.class)
             .block();

@@ -13,36 +13,47 @@ public class CreateWeeklyReportRequest {
     @JsonProperty("user_id")
     private String userId;
 
-    @JsonProperty("period")
-    private String period;
+    @JsonProperty("data")
+    private Data data;
 
-    @JsonProperty("avg_caffeine_per_day")
-    private Integer avgCaffeinePerDay;
+    @JsonProperty("callback_url")
+    private String callbackUrl;
 
-    @JsonProperty("recommended_daily_limit")
-    private Integer recommendedDailyLimit;
+    @Getter
+    @Setter
+    @Builder
+    public static class Data {
+        @JsonProperty("period")
+        private String period;
 
-    @JsonProperty("percentage_of_limit")
-    private Integer percentageOfLimit;
+        @JsonProperty("avg_caffeine_per_day")
+        private Integer avgCaffeinePerDay;
 
-    @JsonProperty("highlight_day_high")
-    private String highlightDayHigh;
+        @JsonProperty("recommended_daily_limit")
+        private Integer recommendedDailyLimit;
 
-    @JsonProperty("highlight_day_low")
-    private String highlightDayLow;
+        @JsonProperty("percentage_of_limit")
+        private Integer percentageOfLimit;
 
-    @JsonProperty("first_coffee_avg")
-    private String firstCoffeeAvg;
+        @JsonProperty("highlight_day_high")
+        private String highlightDayHigh;
 
-    @JsonProperty("last_coffee_avg")
-    private String lastCoffeeAvg;
+        @JsonProperty("highlight_day_low")
+        private String highlightDayLow;
 
-    @JsonProperty("late_night_caffeine_days")
-    private Integer lateNightCaffeineDays;
+        @JsonProperty("first_coffee_avg")
+        private String firstCoffeeAvg;
 
-    @JsonProperty("over_100mg_before_sleep_days")
-    private Integer over100mgBeforeSleepDays;
+        @JsonProperty("last_coffee_avg")
+        private String lastCoffeeAvg;
 
-    @JsonProperty("average_sleep_quality")
-    private String averageSleepQuality;
+        @JsonProperty("late_night_caffeine_days")
+        private Integer lateNightCaffeineDays;
+
+        @JsonProperty("over_100mg_before_sleep_days")
+        private Integer over100mgBeforeSleepDays;
+
+        @JsonProperty("average_sleep_quality")
+        private String averageSleepQuality;
+    }
 }

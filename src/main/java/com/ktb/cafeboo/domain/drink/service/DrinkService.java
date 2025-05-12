@@ -16,9 +16,9 @@ public class DrinkService {
     private final DrinkRepository drinkRepository;
     private final DrinkSizeNutritionRepository drinkSizeNutritionRepository;
 
-    public DrinkSizeNutrition findDrinkSizeNutritionByIdAndSize(Long drinkSizeNutritionId, DrinkSize size){
-        DrinkSizeNutrition target = drinkSizeNutritionRepository.findByIdAndSize(drinkSizeNutritionId, size)
-            .orElseThrow(() -> new CustomApiException(ErrorStatus.DRINK_SIZE_NOT_FOUND));
+    public DrinkSizeNutrition findDrinkSizeNutritionByIdAndSize(Long drinkId, DrinkSize size){
+        DrinkSizeNutrition target = drinkSizeNutritionRepository.findByDrinkIdAndSize(drinkId, size)
+            .orElseThrow(() -> new CustomApiException(ErrorStatus.DRINK_NOT_FOUND));
 
         return target;
     }

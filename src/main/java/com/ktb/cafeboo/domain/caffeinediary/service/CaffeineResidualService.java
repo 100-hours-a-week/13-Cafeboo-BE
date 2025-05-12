@@ -47,6 +47,7 @@ public class CaffeineResidualService {
 
             // 해당 시점이 이전 섭취 시간과 새로운 섭취 시간 사이에 있는 경우에만 처리
             if (residualDateTime.isAfter(previousIntakeTime) || residualDateTime.isEqual(previousIntakeTime)) {
+                log.info("residualDateTime: {}, residualDateTime.isAfter(previousIntakeTime): {}, residualDateTime.isEqual(previousIntakeTime): {}", residualDateTime, residualDateTime.isAfter(previousIntakeTime), residualDateTime.isEqual(previousIntakeTime));
                 // 이전 섭취로 인한 잔존량 계산
                 double hoursSincePreviousIntake = 0;
                 double previousResidualAmount =

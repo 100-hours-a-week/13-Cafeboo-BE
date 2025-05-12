@@ -36,6 +36,7 @@ public class CaffeineResidualService {
         final LocalDateTime previousEndTime = previousIntakeTime.plusHours(24);
 
         User user = userService.findUserById(userId);
+        LocalDateTime previousIntakeHour = previousIntakeTime.truncatedTo(ChronoUnit.HOURS);
 
         // 1. 섭취 내역 수정으로 인해 영향을 받는 잔존량 데이터 조회 (24hour)
         List<CaffeineResidual> residualsToModify = residualRepository.findByUserAndTargetDateBetween(user, previousTargetTime, previousEndTime);
@@ -46,8 +47,7 @@ public class CaffeineResidualService {
                 LocalDate.from(residual.getTargetDate()), LocalTime.of(residual.getHour(), 0));
 
             // 해당 시점이 이전 섭취 시간과 새로운 섭취 시간 사이에 있는 경우에만 처리
-            if (residualDateTime.isAfter(previousIntakeTime) || residualDateTime.isEqual(previousIntakeTime)) {
-                log.info("residualDateTime: {}, residualDateTime.isAfter(previousIntakeTime): {}, residualDateTime.isEqual(previousIntakeTime): {}", residualDateTime, residualDateTime.isAfter(previousIntakeTime), residualDateTime.isEqual(previousIntakeTime));
+            if (residualDateTime.isAfter(previousIntakeHour) || residualDateTime.isEqual(previousIntakeHour)) {
                 // 이전 섭취로 인한 잔존량 계산
                 double hoursSincePreviousIntake = 0;
                 double previousResidualAmount =

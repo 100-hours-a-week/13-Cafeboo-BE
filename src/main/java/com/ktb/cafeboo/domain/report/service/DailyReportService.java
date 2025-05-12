@@ -64,17 +64,17 @@ public class DailyReportService {
 
         return DailyCaffeineReportResponse.builder()
             .nickname(user.getNickname())
-            .dailyCaffeineLimit(400F)
+            .dailyCaffeineLimit(user.getCaffeinInfo().getDailyCaffeineLimitMg())
             .dailyCaffeineIntakeMg(dailyStatistics.getTotalCaffeineMg())
-            .dailyCaffeineIntakeRate(calculateIntakeRate(dailyStatistics.getTotalCaffeineMg()))
+            .dailyCaffeineIntakeRate(calculateIntakeRate(dailyStatistics.getTotalCaffeineMg(), user.getCaffeinInfo().getDailyCaffeineLimitMg()))
             .intakeGuide(dailyStatistics.getAiMessage())
             .sleepSensitiveThreshold(100F)
             .caffeineByHour(createHourlyCaffeineInfo(residuals, currentDateTime))
             .build();
     }
 
-    private int calculateIntakeRate(float dailyTotal) {
-        return (int) ((dailyTotal / 400) * 100);
+    private int calculateIntakeRate(float dailyTotal, float userDailyLimit) {
+        return (int) ((dailyTotal / userDailyLimit) * 100);
     }
 
     private List<HourlyCaffeineInfo> createHourlyCaffeineInfo(

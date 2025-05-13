@@ -1,5 +1,6 @@
 package com.ktb.cafeboo.domain.user.service;
 
+import com.ktb.cafeboo.domain.auth.repository.OauthTokenRepository;
 import com.ktb.cafeboo.domain.user.dto.EmailDuplicationResponse;
 import com.ktb.cafeboo.domain.user.dto.UserProfileResponse;
 import com.ktb.cafeboo.domain.user.model.User;
@@ -14,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 @AllArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
+    private final OauthTokenRepository oauthTokenRepository;
+
     /**
      * 새로운 유저를 저장합니다.
      *
@@ -82,8 +85,9 @@ public class UserService {
             user.getFavoriteDrinks().clear();
         }
         user.setRefreshToken(null);
+        oauthTokenRepository.deleteByUserId(userId);
+
         user.delete();
         userRepository.save(user);
     }
-
 }

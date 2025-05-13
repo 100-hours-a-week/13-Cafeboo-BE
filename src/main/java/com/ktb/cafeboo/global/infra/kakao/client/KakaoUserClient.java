@@ -20,4 +20,14 @@ public class KakaoUserClient {
                 .bodyToMono(KakaoUserResponse.class)
                 .block();
     }
+
+    public void unlinkUser(String accessToken) {
+        kakaoApiWebClient.post()
+                .uri("/v1/user/unlink")
+                .header("Authorization", "Bearer " + accessToken)
+                .header("Content-Type", "application/x-www-form-urlencoded;charset=utf-8")
+                .retrieve()
+                .bodyToMono(Void.class)
+                .block();
+    }
 }

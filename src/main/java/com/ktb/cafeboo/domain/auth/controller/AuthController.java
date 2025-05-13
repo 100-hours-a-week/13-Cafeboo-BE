@@ -20,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.net.URI;
 
 @Slf4j
@@ -78,9 +79,9 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(
+    public void logout(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            HttpServletResponse response) {
+            HttpServletResponse response) throws IOException {
 
         Long userId = userDetails.getUserId();
         authService.logout(userId);
@@ -95,6 +96,9 @@ public class AuthController {
 
         response.addHeader("Set-Cookie", deleteCookie.toString());
 
-        return ResponseEntity.noContent().build(); // 204 No Content
+        String kakaoLogoutUrl = kakaoOauthService.buildKakaoLogoutUrl();
+        response.sendRedirect(kakaoLogoutUrl);
+
+        //return ResponseEntity.noContent().build(); // 204 No Content
     }
 }

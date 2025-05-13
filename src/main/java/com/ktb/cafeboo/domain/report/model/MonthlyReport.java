@@ -34,7 +34,7 @@ public class MonthlyReport extends BaseEntity {
     private YearlyReport yearlyStatisticsId;
 
     @OneToMany(mappedBy = "monthlyStatisticsId", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<DailyStatistics> weeklyReports = new ArrayList<>();
+    private List<WeeklyReport> weeklyReports = new ArrayList<>();
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)

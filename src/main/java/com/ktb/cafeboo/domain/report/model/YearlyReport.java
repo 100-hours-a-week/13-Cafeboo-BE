@@ -32,8 +32,8 @@ public class YearlyReport extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @OneToMany(mappedBy = "monthlyStatisticsId", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<DailyStatistics> monthlyStatistics = new ArrayList<>();
+    @OneToMany(mappedBy = "yearlyStatisticsId", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MonthlyReport> monthlyStatistics = new ArrayList<>();
 
     @Column(name = "year", nullable = false)
     private Integer year;

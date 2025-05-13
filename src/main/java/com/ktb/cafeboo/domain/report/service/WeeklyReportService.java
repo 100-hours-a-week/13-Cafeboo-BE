@@ -57,7 +57,7 @@ public class WeeklyReportService {
                 User user = userService.findUserById(userId);
                 WeeklyReport weeklyReport = WeeklyReport.builder()
                     .user(user)
-                    .monthlyReport(monthlyReport)
+                    .monthlyStatisticsId(monthlyReport)
                     .year(year)
                     .month(month)
                     .weekNum(weekNum)
@@ -108,7 +108,7 @@ public class WeeklyReportService {
                 .dailyCaffeineAvgMg(0f)
                 .overIntakeDays(0)
                 .aiMessage("주간 카페인 섭취 리포트 생성을 위해 1주간 섭취 내역을 등록해주세요!")
-                .monthlyReport(null) // 필요시 null 또는 적절한 값
+                .monthlyStatisticsId(null) // 필요시 null 또는 적절한 값
                 .build());
 
         float weeklyTotal = weeklyReport.getTotalCaffeineMg();
@@ -165,13 +165,16 @@ public class WeeklyReportService {
         float dailyAverage = newTotalCaffeine / 7.0f;
         weeklyReport.setDailyCaffeineAvgMg(dailyAverage);
 
-        // 4. 허용치 초과 여부 판단 및 overIntakeDays 증가
-        Float caffeineLimit = 400F; //
-        if (dailyAverage > caffeineLimit) {
-            // 기존 overIntakeDays 값이 null일 수 있으니 0으로 처리
-            int overIntakeDays = weeklyReport.getOverIntakeDays() != null ? weeklyReport.getOverIntakeDays() : 0;
-            weeklyReport.setOverIntakeDays(overIntakeDays + 1);
+        // 4. overLimitDays 구하기
+        List<DailyStatistics> dailyStatistics = weeklyReport.getDailyStatistics();
+        int overIntakeDays = 0;
+        float userCaffeineLimit = user.getCaffeinInfo().getDailyCaffeineLimitMg();
+
+        for(DailyStatistics dailyStatistic : dailyStatistics){
+            if(dailyStatistic.getTotalCaffeineMg() >= userCaffeineLimit)
+                overIntakeDays++;
         }
+        weeklyReport.setOverIntakeDays(overIntakeDays);
 
         weeklyReportRepository.save(weeklyReport);
     }
@@ -230,5 +233,26 @@ public class WeeklyReportService {
             cursor = cursor.plusWeeks(1);
         }
         return result;
+    }
+
+    public void saveReport(WeeklyReport weeklyReport){
+        weeklyReportRepository.save(weeklyReport);
+    }
+
+    public void updateWeeklyReportAfterUpdate(Long userId, WeeklyReport weeklyReport){
+        User user = userService.findUserById(userId);
+
+        // 1. 바뀐 개인별 카페인 권장량을 바탕으로 overLimitDays 구하기
+        List<DailyStatistics> dailyStatistics = weeklyReport.getDailyStatistics();
+        int overIntakeDays = 0;
+        float userCaffeineLimit = user.getCaffeinInfo().getDailyCaffeineLimitMg();
+
+        for(DailyStatistics dailyStatistic : dailyStatistics){
+            if(dailyStatistic.getTotalCaffeineMg() >= userCaffeineLimit)
+                overIntakeDays++;
+        }
+        weeklyReport.setOverIntakeDays(overIntakeDays);
+
+        weeklyReportRepository.save(weeklyReport);
     }
 }

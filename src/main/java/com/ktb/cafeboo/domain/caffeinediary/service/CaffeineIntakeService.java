@@ -158,14 +158,16 @@ public class CaffeineIntakeService {
         // 새로운 시간 기준으로 update -> 수정 후의 잔존량 계산 및 저장
         caffeineResidualService.updateResidualAmounts(user.getId(), newIntakeTime, newCaffeineAmount);
         dailyStatisticsService.updateDailyStatistics(user, LocalDate.from(newIntakeTime), newCaffeineAmount);
+        
+        intakeRepository.save(intake);
 
         return CaffeineIntakeResponse.builder()
             .id(intakeId.toString())
             .drinkId(intake.getDrink().getId().toString())
             .drinkName(intake.getDrink().getName())
-            .intakeTime(intake.getIntakeTime())
-            .drinkCount(intake.getDrinkCount())
-            .caffeineAmount(intake.getCaffeineAmountMg())
+            .intakeTime(newIntakeTime)
+            .drinkCount(newDrinkCount)
+            .caffeineAmount(newCaffeineAmount)
             .build();
     }
 

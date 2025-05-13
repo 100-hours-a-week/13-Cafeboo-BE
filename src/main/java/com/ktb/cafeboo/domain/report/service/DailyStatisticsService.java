@@ -100,7 +100,7 @@ public class DailyStatisticsService {
 
         PredictCanIntakeCaffeineResponse response = aiServerClient.predictCanIntakeCaffeine(request);
 
-        String message = "권장량의 " + (int)((statistics.getTotalCaffeineMg() / user.getCaffeinInfo().getDailyCaffeineLimitMg()) * 100) + "%를 섭취 중이에요.";
+        String message = "";
 
         if(Objects.equals(response.getStatus(), "success")){
             if(Objects.equals(response.getData().getCaffeineStatus(), "N")){

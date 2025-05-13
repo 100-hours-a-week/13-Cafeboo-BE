@@ -40,7 +40,7 @@ public class CaffeineResidualService {
 
         // 1. 섭취 내역 수정으로 인해 영향을 받는 잔존량 데이터 조회 (24hour)
         List<CaffeineResidual> residualsToModify = residualRepository.findByUserAndTargetDateBetween(user, previousTargetTime, previousEndTime);
-
+        int hoursSincePreviousIntake = 0;
         // 2. 섭취 내역 수정으로 인해 영향을 받는 잔존량 데이터에 대해 이전 카페인 섭취량의 영향 제거
         for (CaffeineResidual residual : residualsToModify) {
             LocalDateTime residualDateTime = LocalDateTime.of(
@@ -49,7 +49,6 @@ public class CaffeineResidualService {
             // 해당 시점이 이전 섭취 시간과 새로운 섭취 시간 사이에 있는 경우에만 처리
             if (residualDateTime.isAfter(previousIntakeHour) || residualDateTime.isEqual(previousIntakeHour)) {
                 // 이전 섭취로 인한 잔존량 계산
-                double hoursSincePreviousIntake = 0;
                 double previousResidualAmount =
                     previousCaffeineAmount * Math.exp(-k * hoursSincePreviousIntake);
 
@@ -62,7 +61,7 @@ public class CaffeineResidualService {
 
                 residual.setResidueAmountMg(updatedAmount);
 
-                hoursSincePreviousIntake += 1;
+                hoursSincePreviousIntake++;
             }
         }
 

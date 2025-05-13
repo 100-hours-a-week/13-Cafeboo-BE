@@ -1,5 +1,6 @@
 package com.ktb.cafeboo.domain.user.controller;
 
+import com.ktb.cafeboo.domain.auth.service.KakaoOauthService;
 import com.ktb.cafeboo.domain.user.dto.*;
 import com.ktb.cafeboo.domain.user.service.UserAlarmSettingService;
 import com.ktb.cafeboo.domain.user.service.UserCaffeineInfoService;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
+    private final KakaoOauthService kakaoOauthService;
     private final UserHealthInfoService userHealthInfoService;
     private final UserCaffeineInfoService userCaffeineInfoService;
     private final UserAlarmSettingService userAlarmSettingService;
@@ -164,6 +166,7 @@ public class UserController {
     ) {
         AuthChecker.checkOwnership(userId, userDetails.getUserId());
 
+        kakaoOauthService.disconnectKakaoAccount(userId);
         userService.deleteUser(userId);
 
         // refreshToken 쿠키 삭제

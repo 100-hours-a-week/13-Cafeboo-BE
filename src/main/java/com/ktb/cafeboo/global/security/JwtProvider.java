@@ -6,11 +6,13 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
 
+@Slf4j
 @Component
 public class JwtProvider {
 
@@ -29,11 +31,13 @@ public class JwtProvider {
     }
 
     private String createToken(String userId, String loginType, String role, long validityInMillis) {
+        Date now = new Date();
         return JWT.create()
-                .withSubject(String.valueOf(userId))
+                .withSubject(userId)
                 .withClaim("loginType", loginType)
                 .withClaim("role", role)
-                .withExpiresAt(new Date(System.currentTimeMillis() + validityInMillis))
+                .withIssuedAt(now)
+                .withExpiresAt(new Date(now.getTime() + validityInMillis))
                 .sign(Algorithm.HMAC256(SECRET_KEY));
     }
 

@@ -80,19 +80,37 @@ public class WeeklyReportService {
         UserHealthInfo userHealthInfo = user.getHealthInfo();
         UserCaffeinInfo userCaffeinInfo = user.getCaffeinInfo();
 
-        // 주어진 year와 month로 해당 달의 첫 번째 날짜를 얻습니다.
-        LocalDate firstDayOfMonth = LocalDate.of(year, month, 1);
+        LocalDate startOfMonth = LocalDate.of(year, month, 1);;
+        DayOfWeek dayOfWeek = startOfMonth.getDayOfWeek();
 
-        // 해당 달의 첫 번째 주 월요일을 찾습니다.
-        LocalDate firstMondayOfMonth = firstDayOfMonth.with(TemporalAdjusters.firstInMonth(DayOfWeek.MONDAY));
+        //ISO 8601 기준은 월요일 기준. 월 ~ 일요일 까지 날짜 중, 과반 수 이상이 포함된 주차로 속하게 됨
+        if (dayOfWeek == DayOfWeek.FRIDAY ||
+            dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
+            startOfMonth = startOfMonth.plusWeeks(1);
+        }
 
-        // 만약 첫 번째 날짜가 월요일보다 앞선다면, 그 주는 이전 달의 마지막 주에 해당할 수 있습니다.
-        // 이를 보정하기 위해 첫 번째 월요일이 없다면 해당 달의 1일로 시작하는 주를 기준으로 합니다.
-        LocalDate firstWeekStart = firstMondayOfMonth.getMonthValue() != month ?
-            firstDayOfMonth : firstMondayOfMonth;
+        LocalDate endOfMonth = LocalDate.of(year, month, 1);
+        dayOfWeek = endOfMonth.getDayOfWeek();
 
-        // 첫 번째 주 시작 날짜에 (weekOfMonth - 1) 주를 더하여 해당 월의 weekOfMonth 번째 주의 시작 날짜를 얻습니다.
-        LocalDate startDate = firstWeekStart.plusWeeks(week - 1);
+        //ISO 8601 기준은 월요일 기준. 월 ~ 일요일 까지 날짜 중, 과반 수 이상이 포함된 주차로 속하게 됨
+        if (dayOfWeek == DayOfWeek.MONDAY ||
+            dayOfWeek == DayOfWeek.TUESDAY || dayOfWeek == DayOfWeek.WEDNESDAY) {
+            endOfMonth = endOfMonth.minusWeeks(1);
+        }
+
+//        // 주어진 year와 month로 해당 달의 첫 번째 날짜를 얻습니다.
+//        LocalDate startOfMonth = LocalDate.of(year, month, 1);
+//
+//        // 해당 달의 첫 번째 주 월요일을 찾습니다.
+//        LocalDate firstMondayOfMonth = firstDayOfMonth.with(TemporalAdjusters.firstInMonth(DayOfWeek.MONDAY));
+//
+//        // 만약 첫 번째 날짜가 월요일보다 앞선다면, 그 주는 이전 달의 마지막 주에 해당할 수 있습니다.
+//        // 이를 보정하기 위해 첫 번째 월요일이 없다면 해당 달의 1일로 시작하는 주를 기준으로 합니다.
+//        LocalDate firstWeekStart = firstMondayOfMonth.getMonthValue() != month ?
+//            firstDayOfMonth : firstMondayOfMonth;
+//
+//        // 첫 번째 주 시작 날짜에 (weekOfMonth - 1) 주를 더하여 해당 월의 weekOfMonth 번째 주의 시작 날짜를 얻습니다.
+        LocalDate startDate = startOfMonth.plusWeeks(week - 1).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         LocalDate endDate = startDate.plusDays(6);
 
         int isoWeekNum = startDate.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);

@@ -1,6 +1,8 @@
 package com.ktb.cafeboo.domain.auth.service;
 
 import com.ktb.cafeboo.domain.auth.dto.LoginResponse;
+import com.ktb.cafeboo.domain.auth.model.OauthToken;
+import com.ktb.cafeboo.domain.auth.repository.OauthTokenRepository;
 import com.ktb.cafeboo.domain.user.dto.UserAlarmSettingCreateRequest;
 import com.ktb.cafeboo.domain.user.service.UserAlarmSettingService;
 import com.ktb.cafeboo.global.infra.kakao.dto.KakaoTokenResponse;
@@ -27,6 +29,7 @@ public class KakaoOauthService {
     private final KakaoTokenClient kakaoTokenClient;
     private final KakaoUserClient kakaoUserClient;
     private final UserRepository userRepository;
+    private final OauthTokenRepository oauthTokenRepository;
     private final JwtProvider jwtProvider;
     private final UserService userService;
     private final UserAlarmSettingService userAlarmSettingService;
@@ -93,11 +96,48 @@ public class KakaoOauthService {
         user.updateRefreshToken(refreshToken);
         userRepository.save(user);
 
+        // 카카오 Oauth 토큰 저장
+        oauthTokenRepository.findByUserId(user.getId())
+                .ifPresentOrElse(
+                        existingToken -> {
+                            existingToken.update(
+                                    kakaoToken.getAccessToken(),
+                                    kakaoToken.getRefreshToken(),
+                                    kakaoToken.getExpiresIn()
+                            );
+                        },
+                        () -> {
+                            OauthToken newToken = OauthToken.of(
+                                    user,
+                                    kakaoToken.getAccessToken(),
+                                    kakaoToken.getRefreshToken(),
+                                    LoginType.KAKAO,
+                                    kakaoToken.getExpiresIn()
+                            );
+                            oauthTokenRepository.save(newToken);
+                        }
+                );
+
         return LoginResponse.builder()
                 .userId(user.getId().toString())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .requiresOnboarding(requiresOnboarding)
                 .build();
+    }
+
+    public String buildKakaoLogoutUrl() {
+        return UriComponentsBuilder.fromHttpUrl("https://kauth.kakao.com/oauth/logout")
+                .queryParam("client_id", clientId)
+                .queryParam("logout_redirect_uri", redirectUri)
+                .build()
+                .toUriString();
+    }
+
+    public void disconnectKakaoAccount(Long userId) {
+        oauthTokenRepository.findByUserId(userId)
+                .ifPresent(oauthToken -> {
+                    kakaoUserClient.unlinkUser(oauthToken.getAccessToken());
+                });
     }
 }

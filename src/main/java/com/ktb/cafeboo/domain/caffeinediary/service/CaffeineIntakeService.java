@@ -157,7 +157,7 @@ public class CaffeineIntakeService {
 
         // 새로운 시간 기준으로 update -> 수정 후의 잔존량 계산 및 저장
         caffeineResidualService.updateResidualAmounts(user.getId(), newIntakeTime, newCaffeineAmount);
-        dailyStatisticsService.updateDailyStatistics(user, LocalDate.from(request.getIntakeTime()), request.getCaffeineAmount());
+        dailyStatisticsService.updateDailyStatistics(user, LocalDate.from(newIntakeTime), newCaffeineAmount);
 
         return CaffeineIntakeResponse.builder()
             .id(intakeId.toString())

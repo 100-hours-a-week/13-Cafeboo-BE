@@ -39,7 +39,6 @@ import org.springframework.stereotype.Service;
 public class DailyStatisticsService {
 
     private final DailyStatisticsRepository dailyStatisticsRepository;
-
     private final WeeklyReportService weeklyReportService;
     private final MonthlyReportService monthlyReportService;
     private final YearlyReportService yearlyReportService;
@@ -72,12 +71,14 @@ public class DailyStatisticsService {
         float userDailyLimit = user.getCaffeinInfo().getDailyCaffeineLimitMg();
         float currentCaffeine = statistics.getTotalCaffeineMg();
 
-        if(currentCaffeine < userDailyLimit && currentCaffeine + additionalCaffeine >= userDailyLimit){
-            weeklyReport.setOverIntakeDays(weeklyReport.getOverIntakeDays() + 1);
-        }
-        else if(currentCaffeine >= userDailyLimit && currentCaffeine + additionalCaffeine < userDailyLimit){
-            weeklyReport.setOverIntakeDays(weeklyReport.getOverIntakeDays() - 1);
-        }
+//        if(currentCaffeine < userDailyLimit && currentCaffeine + additionalCaffeine >= userDailyLimit){
+//            weeklyReport.setOverIntakeDays(weeklyReport.getOverIntakeDays() + 1);
+//        }
+//        else if(currentCaffeine >= userDailyLimit && currentCaffeine + additionalCaffeine < userDailyLimit){
+//            weeklyReport.setOverIntakeDays(weeklyReport.getOverIntakeDays() - 1);
+//        }
+//
+//        weeklyReportService.saveReport(weeklyReport);
 
         statistics.setTotalCaffeineMg(statistics.getTotalCaffeineMg() + additionalCaffeine);
 
@@ -152,20 +153,21 @@ public class DailyStatisticsService {
 
         PredictCanIntakeCaffeineResponse response = aiServerClient.predictCanIntakeCaffeine(request);
 
-        String message = "권장량의 " + (int)((statistics.getTotalCaffeineMg() / user.getCaffeinInfo().getDailyCaffeineLimitMg()) * 100) + "%를 섭취 중이에요.";
+        String message = "";
 
         if(Objects.equals(response.getStatus(), "success")){
             if(Objects.equals(response.getData().getCaffeineStatus(), "N")){
-                message += " 카페인을 추가로 섭취하면 수면에 영향을 줄 수 있어요.";
+                message += "카페인을 추가로 섭취하면 수면에 영향을 줄 수 있어요.";
             }
             else if (Objects.equals(response.getData().getCaffeineStatus(), "Y")){
-                message += " 카페인을 추가로 섭취해도 수면에 영향이 없어요.";
+                message += "카페인을 추가로 섭취해도 수면에 영향이 없어요.";
             }
         }
 
         statistics.setAiMessage(message);
 
         DailyStatistics savedStatistics = dailyStatisticsRepository.save(statistics);
+        weeklyReportService.updateWeeklyReportAfterUpdate(user.getId(), weeklyReport);
     }
 
     /**
@@ -181,7 +183,7 @@ public class DailyStatisticsService {
             .date(date)
             .totalCaffeineMg(0f)
             .weeklyStatisticsId(weeklyReport)
-            .aiMessage("아직 카페인 섭취 내역이 없어요. 카페인을 섭취해도 문제 없을 거 같네요")
+            .aiMessage("카페인을 추가로 섭취해도 수면에 영향이 없어요.")
             .build();
     }
 
@@ -205,7 +207,7 @@ public class DailyStatisticsService {
                     .weeklyStatisticsId(null)
                     .date(targetDate)
                     .totalCaffeineMg(0.0f)
-                    .aiMessage("아직 카페인 섭취 내역이 없네요. 카페인을 섭취해도 수면에 영향이 없어요.")
+                    .aiMessage("카페인을 추가로 섭취해도 수면에 영향이 없어요.")
                     .build();
             });
     }

@@ -3,6 +3,8 @@ package com.ktb.cafeboo.domain.report.model;
 import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.global.BaseEntity;
 import jakarta.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.*;
 import org.hibernate.annotations.Where;
 
@@ -18,7 +20,10 @@ public class WeeklyReport extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "monthly_statistics_id", nullable = false)
-    private MonthlyReport monthlyReport;
+    private MonthlyReport monthlyStatisticsId;
+
+    @OneToMany(mappedBy = "weeklyStatisticsId", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DailyStatistics> dailyStatistics = new ArrayList<>();
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)

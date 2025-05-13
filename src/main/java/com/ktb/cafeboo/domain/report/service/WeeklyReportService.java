@@ -170,9 +170,11 @@ public class WeeklyReportService {
         int overIntakeDays = 0;
         float userCaffeineLimit = user.getCaffeinInfo().getDailyCaffeineLimitMg();
 
-        for(DailyStatistics dailyStatistic : dailyStatistics){
-            if(dailyStatistic.getTotalCaffeineMg() >= userCaffeineLimit)
-                overIntakeDays++;
+        if(dailyStatistics != null){
+            for(DailyStatistics dailyStatistic : dailyStatistics){
+                if(dailyStatistic.getTotalCaffeineMg() >= userCaffeineLimit)
+                    overIntakeDays++;
+            }
         }
         weeklyReport.setOverIntakeDays(overIntakeDays);
 
@@ -247,9 +249,11 @@ public class WeeklyReportService {
         int overIntakeDays = 0;
         float userCaffeineLimit = user.getCaffeinInfo().getDailyCaffeineLimitMg();
 
-        for(DailyStatistics dailyStatistic : dailyStatistics){
-            if(dailyStatistic.getTotalCaffeineMg() >= userCaffeineLimit)
-                overIntakeDays++;
+        if(dailyStatistics != null){
+            for(DailyStatistics dailyStatistic : dailyStatistics){
+                if(dailyStatistic.getTotalCaffeineMg() >= userCaffeineLimit)
+                    overIntakeDays++;
+            }
         }
         weeklyReport.setOverIntakeDays(overIntakeDays);
 

@@ -29,10 +29,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 @Transactional
 public class CaffeineIntakeService {
 
@@ -118,55 +120,75 @@ public class CaffeineIntakeService {
      */
     public CaffeineIntakeResponse updateCaffeineIntake(Long intakeId, CaffeineIntakeRequest request) {
         // 1. 수정할 섭취 기록 조회
-        CaffeineIntake intake = getCaffeineIntakeById(intakeId);
-        User user = intake.getUser();
-        LocalDateTime previousIntakeTime = intake.getIntakeTime();
-        float previousCaffeineAmount = intake.getCaffeineAmountMg();
-        int previousDrinkCount = intake.getDrinkCount();
+        try {
+            CaffeineIntake intake = getCaffeineIntakeById(intakeId);
 
-        // 2. 수정할 필드 적용
-        if (request.getDrinkId() != null) {
-            //더미 데이터
-            Drink drink = drinkService.findDrinkById(Long.parseLong(request.getDrinkId()));
-            intake.setDrink(drink);
-        }
-        if (request.getIntakeTime() != null) {
-            intake.setIntakeTime(request.getIntakeTime());
-        }
-        if (request.getDrinkCount() != null) {
-            intake.setDrinkCount(request.getDrinkCount());
-        }
-        if (request.getCaffeineAmount() != null) {
-            intake.setCaffeineAmountMg(request.getCaffeineAmount());
-        }
-        if (request.getDrinkSize() != null){
-            DrinkSize drinkSize = DrinkSize.valueOf(request.getDrinkSize());
-            DrinkSizeNutrition drinkSizeNutrition = drinkService.findDrinkSizeNutritionByIdAndSize(
-                Long.parseLong(request.getDrinkId()), drinkSize);
-            intake.setDrinkSizeNutrition(drinkSizeNutrition);
-        }
+            User user = intake.getUser();
+            LocalDateTime previousIntakeTime = intake.getIntakeTime();
+            float previousCaffeineAmount = intake.getCaffeineAmountMg();
+            int previousDrinkCount = intake.getDrinkCount();
 
-        // 3. 연관된 잔존량 정보 수정. 수정된 섭취 시간, 음료 잔 수에 따라 잔존량 정보를 다시 계산해야 함
-        float newCaffeineAmount = request.getCaffeineAmount() != null ? request.getCaffeineAmount() : intake.getCaffeineAmountMg();
-        int newDrinkCount = request.getDrinkCount() != null ? request.getDrinkCount() : intake.getDrinkCount();
-        LocalDateTime newIntakeTime = request.getIntakeTime() != null ? request.getIntakeTime() : intake.getIntakeTime();
+            // 2. 수정할 필드 적용
+            if (request.getDrinkId() != null) {
+                //더미 데이터
+                Drink drink = drinkService.findDrinkById(Long.parseLong(request.getDrinkId()));
+                intake.setDrink(drink);
+            }
+            if (request.getIntakeTime() != null) {
+                intake.setIntakeTime(request.getIntakeTime());
+            }
+            if (request.getDrinkCount() != null) {
+                intake.setDrinkCount(request.getDrinkCount());
+            }
+            if (request.getCaffeineAmount() != null) {
+                intake.setCaffeineAmountMg(request.getCaffeineAmount());
+            }
+            if (request.getDrinkSize() != null) {
+                DrinkSize drinkSize = DrinkSize.valueOf(request.getDrinkSize());
+                DrinkSizeNutrition drinkSizeNutrition = drinkService.findDrinkSizeNutritionByIdAndSize(
+                    Long.parseLong(request.getDrinkId()), drinkSize);
+                intake.setDrinkSizeNutrition(drinkSizeNutrition);
+            }
 
-        // 기존 시간 기준 삭제 ->  수정 이전의 잔존량 삭제
-        caffeineResidualService.modifyResidualAmounts(user.getId(), previousIntakeTime, previousCaffeineAmount);
-        dailyStatisticsService.updateDailyStatistics(user, LocalDate.from(previousIntakeTime), previousCaffeineAmount * -1);
+            // 3. 연관된 잔존량 정보 수정. 수정된 섭취 시간, 음료 잔 수에 따라 잔존량 정보를 다시 계산해야 함
+            float newCaffeineAmount =
+                request.getCaffeineAmount() != null ? request.getCaffeineAmount()
+                    : intake.getCaffeineAmountMg();
+            int newDrinkCount =
+                request.getDrinkCount() != null ? request.getDrinkCount() : intake.getDrinkCount();
+            LocalDateTime newIntakeTime =
+                request.getIntakeTime() != null ? request.getIntakeTime() : intake.getIntakeTime();
 
-        // 새로운 시간 기준으로 update -> 수정 후의 잔존량 계산 및 저장
-        caffeineResidualService.updateResidualAmounts(user.getId(), newIntakeTime, newCaffeineAmount);
-        dailyStatisticsService.updateDailyStatistics(user, LocalDate.from(newIntakeTime), newCaffeineAmount);
+            // 기존 시간 기준 삭제 ->  수정 이전의 잔존량 삭제
+            caffeineResidualService.modifyResidualAmounts(user.getId(), previousIntakeTime,
+                previousCaffeineAmount);
+            dailyStatisticsService.updateDailyStatistics(user, LocalDate.from(previousIntakeTime),
+                previousCaffeineAmount * -1);
 
-        return CaffeineIntakeResponse.builder()
-            .id(intakeId.toString())
-            .drinkId(intake.getDrink().getId().toString())
-            .drinkName(intake.getDrink().getName())
-            .intakeTime(intake.getIntakeTime())
-            .drinkCount(intake.getDrinkCount())
-            .caffeineAmount(intake.getCaffeineAmountMg())
-            .build();
+            // 새로운 시간 기준으로 update -> 수정 후의 잔존량 계산 및 저장
+            caffeineResidualService.updateResidualAmounts(user.getId(), newIntakeTime,
+                newCaffeineAmount);
+            dailyStatisticsService.updateDailyStatistics(user, LocalDate.from(newIntakeTime),
+                newCaffeineAmount);
+
+            intakeRepository.save(intake);
+
+            return CaffeineIntakeResponse.builder()
+                .id(intakeId.toString())
+                .drinkId(intake.getDrink().getId().toString())
+                .drinkName(intake.getDrink().getName())
+                .intakeTime(newIntakeTime)
+                .drinkCount(newDrinkCount)
+                .caffeineAmount(newCaffeineAmount)
+                .build();
+        }
+        catch(Exception e){ // Error 대신 Exception으로 catch 하는 것이 더 일반적입니다.
+            log.error("카페인 섭취 수정 중 오류 발생 - intakeId: {}, request: {}", intakeId, request, e);
+            // 필요하다면 여기서 예외를 다시 던지거나, 특정 예외 유형에 따라 다른 처리를 할 수 있습니다.
+            throw new RuntimeException("카페인 섭취 수정 실패", e);
+            // 또는 특정 에러 코드나 메시지를 담은 응답을 클라이언트에게 반환할 수도 있습니다.
+            // return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("카페인 섭취 수정에 실패했습니다.");
+        }
     }
 
     public void deleteCaffeineIntake(Long intakeId) {

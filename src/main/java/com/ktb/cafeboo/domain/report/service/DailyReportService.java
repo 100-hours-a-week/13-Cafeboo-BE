@@ -100,16 +100,10 @@ public class DailyReportService {
         int count = 0;
 
         LocalDateTime residualTime = residual.getTargetDate().plusHours(residual.getHour());
-        log.info("residualTime : {}, timePoint : {}\n", residualTime, timePoint);
         // 시간 비교를 단순화: 년, 월, 일, 시간 비교
         if (residualTime.isEqual(timePoint)) {
-            log.info("Matching residual: timePoint={}, residualTime={}, amount={}", timePoint,
-                residualTime, residual.getResidueAmountMg());
             totalCaffeine += residual.getResidueAmountMg();
             count++;
-        } else {
-            log.info("Not Matching residual: timePoint={}, residualTime={}, amount={}", timePoint,
-                residualTime, residual.getResidueAmountMg());
         }
         return count > 0 ? totalCaffeine / count : 0f;
     }

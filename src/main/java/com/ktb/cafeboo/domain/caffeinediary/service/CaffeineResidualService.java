@@ -127,8 +127,6 @@ public class CaffeineResidualService {
         LocalDateTime startTime = currentDateTime.minusHours(17);
         LocalDateTime endTime = currentDateTime.plusHours(17);
 
-        log.info("startHour: {}, startTime: {}, endTime : {}", currentDateTime.getHour(), startTime, endTime);
-
         List<CaffeineResidual> residuals = residualRepository.findResidualsByTimeRange(
             user,
             startTime.toLocalDate().atStartOfDay(),

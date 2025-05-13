@@ -148,8 +148,8 @@ public class CaffeineIntakeService {
 
                 DrinkSizeNutrition drinkSizeNutrition = request.getDrinkId() != null ? drinkService.findDrinkSizeNutritionByIdAndSize(
                     Long.parseLong(request.getDrinkId()), drinkSize) : drinkService.findDrinkSizeNutritionByIdAndSize(
-                    intake.getId(), drinkSize);
-                
+                    intake.getDrink().getId(), drinkSize);
+
                 intake.setDrinkSizeNutrition(drinkSizeNutrition);
             }
 

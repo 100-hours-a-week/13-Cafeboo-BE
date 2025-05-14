@@ -332,7 +332,7 @@ public class CaffeineIntakeService {
 //        LocalDate startDate = firstWeekStart.plusWeeks(week - 1);
 //        LocalDate endDate = startDate.plusDays(6);
 
-        LocalDate startOfMonth = LocalDate.of(year, month, 1);
+        LocalDate startOfMonth = LocalDate.of(year, month, 1);;
         DayOfWeek dayOfWeek = startOfMonth.getDayOfWeek();
 
         //ISO 8601 기준은 월요일 기준. 월 ~ 일요일 까지 날짜 중, 과반 수 이상이 포함된 주차로 속하게 됨

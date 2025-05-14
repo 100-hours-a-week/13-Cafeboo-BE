@@ -43,9 +43,7 @@ public class AuthController {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setLocation(URI.create(redirectUrl));
-
-        // 303 -> 204 변경
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).headers(headers).build();
+        return ResponseEntity.status(HttpStatus.SEE_OTHER).headers(headers).build();
     }
 
     @PostMapping("/kakao")

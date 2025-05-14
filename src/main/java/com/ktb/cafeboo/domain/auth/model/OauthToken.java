@@ -24,10 +24,10 @@ public class OauthToken extends BaseEntity {
     @Column(nullable = false)
     private LoginType provider; // KAKAO, GOOGLE 등
 
-    @Column(name = "access_token", nullable = false, length = 2000)
+    @Column(name = "access_token", nullable = false, length = 128)
     private String accessToken;
 
-    @Column(name = "refresh_token", length = 2000)
+    @Column(name = "refresh_token", length = 128)
     private String refreshToken;
 
     @Column(name = "expires_at")

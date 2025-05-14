@@ -21,6 +21,16 @@ public class KakaoUserClient {
                 .block();
     }
 
+    public void logout(String accessToken) {
+        kakaoApiWebClient.post()
+                .uri("/v1/user/logout")
+                .header("Authorization", "Bearer " + accessToken)
+                .header("Content-Type", "application/x-www-form-urlencoded;charset=utf-8")
+                .retrieve()
+                .bodyToMono(Void.class)
+                .block();
+    }
+
     public void unlinkUser(String accessToken) {
         kakaoApiWebClient.post()
                 .uri("/v1/user/unlink")

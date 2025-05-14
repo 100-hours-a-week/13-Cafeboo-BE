@@ -126,12 +126,11 @@ public class KakaoOauthService {
                 .build();
     }
 
-    public String buildKakaoLogoutUrl() {
-        return UriComponentsBuilder.fromHttpUrl("https://kauth.kakao.com/oauth/logout")
-                .queryParam("client_id", clientId)
-                .queryParam("logout_redirect_uri", redirectUri)
-                .build()
-                .toUriString();
+    public void logoutFromKakao(Long userId) {
+        oauthTokenRepository.findByUserId(userId)
+                .ifPresent(oauthToken -> {
+                    kakaoUserClient.logout(oauthToken.getAccessToken());
+                });
     }
 
     public void disconnectKakaoAccount(Long userId) {

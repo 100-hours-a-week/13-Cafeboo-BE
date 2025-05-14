@@ -79,11 +79,12 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public void logout(
+    public ResponseEntity<ApiResponse<Void>> logout(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            HttpServletResponse response) throws IOException {
+            HttpServletResponse response) {
 
         Long userId = userDetails.getUserId();
+        // kakaoOauthService.logoutFromKakao(userId);
         authService.logout(userId);
 
         ResponseCookie deleteCookie = ResponseCookie.from("refreshToken", "")
@@ -96,9 +97,6 @@ public class AuthController {
 
         response.addHeader("Set-Cookie", deleteCookie.toString());
 
-        String kakaoLogoutUrl = kakaoOauthService.buildKakaoLogoutUrl();
-        response.sendRedirect(kakaoLogoutUrl);
-
-        //return ResponseEntity.noContent().build(); // 204 No Content
+        return ResponseEntity.noContent().build(); // 204 No Content
     }
 }

@@ -5,6 +5,8 @@ import com.ktb.cafeboo.domain.auth.model.OauthToken;
 import com.ktb.cafeboo.domain.auth.repository.OauthTokenRepository;
 import com.ktb.cafeboo.domain.user.dto.UserAlarmSettingCreateRequest;
 import com.ktb.cafeboo.domain.user.service.UserAlarmSettingService;
+import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
+import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import com.ktb.cafeboo.global.infra.kakao.dto.KakaoTokenResponse;
 import com.ktb.cafeboo.global.infra.kakao.dto.KakaoUserResponse;
 import com.ktb.cafeboo.global.infra.kakao.client.KakaoTokenClient;
@@ -18,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Optional;
@@ -58,6 +61,7 @@ public class KakaoOauthService {
                 .toUriString();
     }
 
+    @Transactional
     public LoginResponse login(String code) {
         KakaoTokenResponse kakaoToken = kakaoTokenClient.getToken(code, clientId, redirectUri, grantType);
         KakaoUserResponse kakaoUser = kakaoUserClient.getUserInfo(kakaoToken.getAccessToken());
@@ -127,16 +131,50 @@ public class KakaoOauthService {
     }
 
     public void logoutFromKakao(Long userId) {
-        oauthTokenRepository.findByUserId(userId)
-                .ifPresent(oauthToken -> {
-                    kakaoUserClient.logout(oauthToken.getAccessToken());
-                });
+        tryWithTokenRefresh(userId, kakaoUserClient::logout);
     }
 
     public void disconnectKakaoAccount(Long userId) {
-        oauthTokenRepository.findByUserId(userId)
-                .ifPresent(oauthToken -> {
-                    kakaoUserClient.unlinkUser(oauthToken.getAccessToken());
-                });
+        tryWithTokenRefresh(userId, kakaoUserClient::unlinkUser);
+    }
+
+    public String refreshAccessTokenIfExpired(Long userId) {
+        OauthToken oauthToken = oauthTokenRepository.findByUserId(userId)
+                .orElseThrow(() -> new CustomApiException(ErrorStatus.OAUTH_TOKEN_NOT_FOUND));
+
+        try {
+            KakaoTokenResponse response = kakaoTokenClient.refreshAccessToken(
+                    oauthToken.getRefreshToken(),
+                    clientId
+            );
+
+            oauthToken.update(
+                    response.getAccessToken(),
+                    response.getRefreshToken(),
+                    response.getExpiresIn()
+            );
+            oauthTokenRepository.save(oauthToken);
+
+            return response.getAccessToken();
+        } catch (CustomApiException e) {
+            log.warn("[카카오 토큰 갱신 실패 - 커스텀 예외] userId: {}, status: {}", userId, e.getErrorCode().getStatus());
+            throw e;
+        } catch (Exception e) {
+            log.error("[카카오 토큰 갱신 실패 - 시스템 예외] userId: {}, message: {}", userId, e.getMessage());
+            throw new CustomApiException(ErrorStatus.KAKAO_TOKEN_REFRESH_FAILED);
+        }
+    }
+
+    private void tryWithTokenRefresh(Long userId, java.util.function.Consumer<String> action) {
+        OauthToken oauthToken = oauthTokenRepository.findByUserId(userId)
+                .orElseThrow(() -> new CustomApiException(ErrorStatus.OAUTH_TOKEN_NOT_FOUND));
+
+        try {
+            action.accept(oauthToken.getAccessToken());
+        } catch (Exception e) {
+            log.warn("[OauthTokenRefresh] accessToken이 만료되어 재발급 후 재시도합니다. userId: {}", userId);
+            String newAccessToken = refreshAccessTokenIfExpired(userId);
+            action.accept(newAccessToken);
+        }
     }
 }

@@ -15,13 +15,17 @@ public enum ErrorStatus implements BaseCode {
     NOT_FOUND(404, "NOT_FOUND", "요청한 리소스를 찾을 수 없습니다."),
     INTERNAL_SERVER_ERROR(500, "INTERNAL_ERROR", "요청을 처리하는 도중 서버에서 문제가 발생했습니다."),
 
-    // 인증 관련 오류
+    // 인증 관련 오류 (서버 자체)
     UNSUPPORTED_SOCIAL_LOGIN_TYPE(400, "UNSUPPORTED_SOCIAL_LOGIN_TYPE", "지원하지 않는 소셜 로그인 타입입니다."),
     ACCESS_TOKEN_INVALID(401, "ACCESS_TOKEN_INVALID", "유효한 인증 정보가 필요합니다. 토큰을 확인해주세요."),
     ACCESS_TOKEN_EXPIRED(401, "ACCESS_TOKEN_EXPIRED", "인증 토큰이 만료되었습니다. 토큰을 재발급 받아주세요."),
     REFRESH_TOKEN_INVALID(401, "REFRESH_TOKEN_INVALID", "리프레시 토큰이 유효하지 않습니다."),
     REFRESH_TOKEN_EXPIRED(401, "REFRESH_TOKEN_EXPIRED", "리프레시 토큰이 만료되었습니다."),
     REFRESH_TOKEN_MISMATCH(401, "REFRESH_TOKEN_MISMATCH", "리프레시 토큰이 일치하지 않습니다."),
+
+    // 인증 관련 오류 (OAuth)
+    OAUTH_TOKEN_NOT_FOUND(404, "OAUTH_TOKEN_NOT_FOUND", "해당 유저의 OAuth 토큰 정보가 존재하지 않습니다."),
+    KAKAO_TOKEN_REFRESH_FAILED(500, "KAKAO_TOKEN_REFRESH_FAILED", "카카오 토큰 갱신에 실패했습니다. 다시 로그인해주세요."),
 
     // 유저 관련 오류
     USER_NOT_FOUND(404, "USER_NOT_FOUND", "사용자를 찾을 수 없습니다."),

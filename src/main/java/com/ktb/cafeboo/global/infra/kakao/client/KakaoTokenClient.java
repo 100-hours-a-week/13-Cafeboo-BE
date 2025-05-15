@@ -24,4 +24,16 @@ public class KakaoTokenClient {
                 .bodyToMono(KakaoTokenResponse.class)
                 .block();
     }
+
+    public KakaoTokenResponse refreshAccessToken(String refreshToken, String clientId) {
+        return kakaoWebClient.post()
+                .uri("/oauth/token")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .bodyValue("grant_type=refresh_token"
+                        + "&client_id=" + clientId
+                        + "&refresh_token=" + refreshToken)
+                .retrieve()
+                .bodyToMono(KakaoTokenResponse.class)
+                .block();
+    }
 }

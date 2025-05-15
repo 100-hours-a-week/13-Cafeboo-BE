@@ -84,7 +84,7 @@ public class AuthController {
             HttpServletResponse response) {
 
         Long userId = userDetails.getUserId();
-        // kakaoOauthService.logoutFromKakao(userId);
+        kakaoOauthService.logoutFromKakao(userId);
         authService.logout(userId);
 
         ResponseCookie deleteCookie = ResponseCookie.from("refreshToken", "")

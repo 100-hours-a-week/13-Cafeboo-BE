@@ -45,9 +45,14 @@ public class OauthToken extends BaseEntity {
         this.expiresAt = expiresAt;
     }
 
-    public void update(String accessToken, String refreshToken, long expiresInSec) {
+    public void update(String accessToken, String refreshToken, Long expiresInSec) {
         this.accessToken = accessToken;
-        this.refreshToken = refreshToken;
-        this.expiresAt = LocalDateTime.now().plusSeconds(expiresInSec);
+        if (refreshToken != null) {
+            this.refreshToken = refreshToken;
+        }
+
+        if (expiresInSec != null) {
+            this.expiresAt = LocalDateTime.now().plusSeconds(expiresInSec);
+        }
     }
 }

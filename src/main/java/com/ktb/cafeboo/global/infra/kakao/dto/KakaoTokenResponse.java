@@ -12,7 +12,7 @@ public class KakaoTokenResponse {
     private String refreshToken;
 
     @JsonProperty("expires_in")
-    private int expiresIn;
+    private Long expiresIn;
 
     @JsonProperty("token_type")
     private String tokenType;

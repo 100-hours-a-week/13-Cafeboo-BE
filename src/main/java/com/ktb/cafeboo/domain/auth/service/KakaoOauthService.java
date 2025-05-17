@@ -122,12 +122,12 @@ public class KakaoOauthService {
                         }
                 );
 
-        return LoginResponse.builder()
-                .userId(user.getId().toString())
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .requiresOnboarding(requiresOnboarding)
-                .build();
+        return new LoginResponse(
+                user.getId().toString(),
+                accessToken,
+                requiresOnboarding,
+                refreshToken
+        );
     }
 
     public void logoutFromKakao(Long userId) {

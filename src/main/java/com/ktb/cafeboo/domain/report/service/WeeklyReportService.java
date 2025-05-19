@@ -275,42 +275,45 @@ public class WeeklyReportService {
         Map<Integer, WeeklyReport> reportMap = weeklyStats.stream()
             .collect(Collectors.toMap(WeeklyReport::getWeekNum, Function.identity()));
 
-        List<MonthlyCaffeineReportResponse.weeklyIntakeTotal> weeklyIntakeTotals = weekNums.stream()
-            .map(weekNum -> {
-                WeeklyReport report = reportMap.get(weekNum);
-                if (report != null) {
-                    return MonthlyCaffeineReportResponse.weeklyIntakeTotal.builder()
-                        .isoWeek(String.format("%d-W%02d", report.getYear(), report.getWeekNum()))
-                        .totalCaffeineMg(Math.round(report.getTotalCaffeineMg()))
-                        .build();
-                } else {
-                    // 없는 주차는 0으로 채움
-                    return MonthlyCaffeineReportResponse.weeklyIntakeTotal.builder()
-                        .isoWeek(String.format("%d-W%02d", resolvedYear, weekNum))
-                        .totalCaffeineMg(0)
-                        .build();
-                }
-            })
-            .collect(Collectors.toList());
-
-        float sum = (float) weeklyIntakeTotals.stream()
-            .mapToDouble(MonthlyCaffeineReportResponse.weeklyIntakeTotal::getTotalCaffeineMg)
-            .sum();
-
-        float avg = weeklyIntakeTotals.isEmpty() ? 0f : sum / weeklyIntakeTotals.size();
-
-        MonthlyCaffeineReportResponse response = MonthlyCaffeineReportResponse.builder()
-            .filter(MonthlyCaffeineReportResponse.Filter.builder()
-                .year(String.valueOf(resolvedYear))
-                .month(String.valueOf(resolvedMonth))
-                .build()
-            )
-            .startDate(startDate.toString())
-            .endDate(endDate.toString())
-            .monthlyCaffeineTotal(sum)
-            .weeklyCaffeineAvg(avg)
-            .weeklyIntakeTotals(weeklyIntakeTotals)
-            .build();
+//        List<MonthlyCaffeineReportResponse.weeklyIntakeTotal> weeklyIntakeTotals = weekNums.stream()
+//            .map(weekNum -> {
+//                WeeklyReport report = reportMap.get(weekNum);
+//                if (report != null) {
+//                    return MonthlyCaffeineReportResponse.weeklyIntakeTotal.builder()
+//                        .isoWeek(String.format("%d-W%02d", report.getYear(), report.getWeekNum()))
+//                        .totalCaffeineMg(Math.round(report.getTotalCaffeineMg()))
+//                        .build();
+//                } else {
+//                    // 없는 주차는 0으로 채움
+//                    return MonthlyCaffeineReportResponse.weeklyIntakeTotal.builder()
+//                        .isoWeek(String.format("%d-W%02d", resolvedYear, weekNum))
+//                        .totalCaffeineMg(0)
+//                        .build();
+//                }
+//            })
+//            .collect(Collectors.toList());
+//
+//        float sum = (float) weeklyIntakeTotals.stream()
+//            .mapToDouble(MonthlyCaffeineReportResponse.weeklyIntakeTotal::getTotalCaffeineMg)
+//            .sum();
+//
+//        float avg = weeklyIntakeTotals.isEmpty() ? 0f : sum / weeklyIntakeTotals.size();
+//
+//        MonthlyCaffeineReportResponse response = MonthlyCaffeineReportResponse.builder()
+//            .filter(MonthlyCaffeineReportResponse.Filter.builder()
+//                .year(String.valueOf(resolvedYear))
+//                .month(String.valueOf(resolvedMonth))
+//                .build()
+//            )
+//            .startDate(startDate.toString())
+//            .endDate(endDate.toString())
+//            .monthlyCaffeineTotal(sum)
+//            .weeklyCaffeineAvg(avg)
+//            .weeklyIntakeTotals(weeklyIntakeTotals)
+//            .build();
+        MonthlyCaffeineReportResponse response = MonthlyCaffeineReportResponse.create(
+            resolvedYear, resolvedMonth, startDate, endDate, reportMap, weekNums
+        );
 
         return response;
     }

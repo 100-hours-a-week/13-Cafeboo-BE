@@ -39,9 +39,9 @@ public class AiServerClient {
                 .block();
     }
 
-    public CreateWeeklyAnalysisResponse createWeeklyReportAnalysis(List<CreateWeeklyAnalysisRequest> requests){
+    public CreateWeeklyAnalysisResponse createWeeklyReportAnalysis(CreateWeeklyAnalysisRequest requests){
         return aiServerWebClient.post()
-            .uri("/internal/ai/caffeine_weekly_report")
+            .uri("/internal/ai/caffeine_weekly_reports")
             .bodyValue(requests)
             .retrieve()
             .bodyToMono(CreateWeeklyAnalysisResponse.class)

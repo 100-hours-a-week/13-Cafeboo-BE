@@ -1,5 +1,6 @@
 package com.ktb.cafeboo.domain.report.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ktb.cafeboo.domain.caffeinediary.model.CaffeineIntake;
 import com.ktb.cafeboo.domain.caffeinediary.model.CaffeineResidual;
 import com.ktb.cafeboo.domain.caffeinediary.repository.CaffeineIntakeRepository;
@@ -10,7 +11,9 @@ import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.domain.user.repository.UserRepository;
 import com.ktb.cafeboo.global.infra.ai.client.AiServerClient;
 import com.ktb.cafeboo.global.infra.ai.dto.CreateWeeklyAnalysisRequest;
+import com.ktb.cafeboo.global.infra.ai.dto.CreateWeeklyAnalysisResponse;
 import jakarta.transaction.Transactional;
+import java.io.IOException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -36,7 +39,7 @@ public class WeeklyReportScheduler {
     private final CaffeineResidualService caffeineResidualService;
 
     @Scheduled(cron = "0 0 0 * * MON") // 매주 일요일 0시
-    public void generateWeeklyReports() {
+    public CreateWeeklyAnalysisResponse generateWeeklyReports() {
 
 //        int targetYear = 2024;
 //        int targetWeekNum = 19;
@@ -63,9 +66,13 @@ public class WeeklyReportScheduler {
 //        LocalDate endDate = startDate.plusDays(6);
 
         List<User> users = userRepository.findAll();
-        String callbackUrl = "/api/v1/reports/weekly/callback";
+        String callbackUrl = "http://localhost:8080/api/v1/reports/weekly/ai_callback";
 
         CreateWeeklyAnalysisRequest batchRequest = createWeeklyAnalysisRequest(users, callbackUrl);
+
+        CreateWeeklyAnalysisResponse response = aiServerClient.createWeeklyReportAnalysis(batchRequest);
+
+        return response;
     }
 
 
@@ -95,9 +102,9 @@ public class WeeklyReportScheduler {
                 String highlightDayLowStr = (highlightDayLow != null) ? highlightDayLow.toString().substring(0, 3) : "Mon";
 
                 CoffeeTimeStats coffeeTimeStats = calculate(user, intakes);
-                LocalTime firstAvg = coffeeTimeStats.firstAvg;
-                LocalTime lastAvg = coffeeTimeStats.lastAvg;
-                int lateNightDays = coffeeTimeStats.lateNightDays;
+                LocalTime firstAvg = coffeeTimeStats.firstAvg();
+                LocalTime lastAvg = coffeeTimeStats.lastAvg();
+                int lateNightDays = coffeeTimeStats.lateNightDays();
 
                 double totalCaffeine = intakes.stream()
                     .mapToDouble(CaffeineIntake::getCaffeineAmountMg)
@@ -117,9 +124,9 @@ public class WeeklyReportScheduler {
 
                 CreateWeeklyAnalysisRequest.Data userData = CreateWeeklyAnalysisRequest.Data.builder()
                     .period(period)
-                    .avgCaffeinePerDay((int) dailyAvg)
-                    .recommendedDailyLimit((int) recommendedLimit)
-                    .percentageOfLimit((int) (dailyAvg * 100 / recommendedLimit))
+                    .avgCaffeinePerDay((float) dailyAvg)
+                    .recommendedDailyLimit((float)recommendedLimit)
+                    .percentageOfLimit((float)(dailyAvg * 100 / recommendedLimit))
                     .highlightDayHigh(highlightDayHighStr)
                     .highlightDayLow(highlightDayLowStr)
                     .firstCoffeeAvg(firstAvg != null ? firstAvg.toString() : null)

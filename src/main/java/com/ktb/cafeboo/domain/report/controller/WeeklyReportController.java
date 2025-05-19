@@ -66,11 +66,20 @@ public class WeeklyReportController {
     public ResponseEntity<ApiResponse<CreateWeeklyAnalysisResponse>> sendWeeklyCaffeineReportToAI(
         @AuthenticationPrincipal CustomUserDetails userDetails
     ){
+        log.info("API 요청 시작: /api/v1/reports/test - 사용자: {}", userDetails.getUsername()); // 요청 시작 로그
         try {
+            log.debug("weeklyReportScheduler.generateWeeklyReports() 호출"); // 메서드 호출 로그
             CreateWeeklyAnalysisResponse response = weeklyReportScheduler.generateWeeklyReports();
+            log.debug("generateWeeklyReports() 결과: {}", response); // 메서드 결과 로그
             return ResponseEntity.ok(ApiResponse.of(SuccessStatus.REPORT_GENERATION_SUCCESS, response));
+        } catch (CustomApiException e) {
+            log.warn("CustomApiException 발생: {}", e.getMessage()); // CustomApiException 로그
+            throw e;
         } catch (Exception e) {
+            log.error("예상치 못한 에러 발생: {}", e.getMessage(), e); // Exception 로그 (에러 메시지와 스택 트레이스)
             throw new CustomApiException(ErrorStatus.REPORT_GENERATION_FAILED);
+        } finally {
+            log.info("API 요청 종료: /api/v1/reports/test - 사용자: {}", userDetails.getUsername()); // 요청 종료 로그
         }
     }
     

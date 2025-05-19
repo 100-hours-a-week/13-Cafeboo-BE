@@ -38,7 +38,7 @@ public class WeeklyReportScheduler {
     private final CaffeineIntakeRepository intakeRepository;
     private final CaffeineResidualService caffeineResidualService;
 
-    @Scheduled(cron = "0 0 0 * * MON") // 매주 일요일 0시
+    @Scheduled(fixedRate = 30000) // 매주 일요일 0시
     public CreateWeeklyAnalysisResponse generateWeeklyReports() {
 
 //        int targetYear = 2024;
@@ -84,6 +84,7 @@ public class WeeklyReportScheduler {
                 LocalDate startDate = endDate.minusDays(6);
 
                 List<CaffeineIntake> intakes = intakeRepository.findByUserIdAndIntakeTimeBetween(user.getId(), startDate.atStartOfDay(), endDate.atTime(LocalTime.MAX));
+
 
                 Map<DayOfWeek, Double> dailyCaffeine = intakes.stream()
                     .collect(Collectors.groupingBy(

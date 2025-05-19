@@ -16,19 +16,19 @@ public class UserCaffeineInfoMapper {
 
         return UserCaffeinInfo.builder()
                 .user(user)
-                .caffeineSensitivity(dto.getCaffeineSensitivity())
-                .averageDailyCaffeineIntake(dto.getAverageDailyCaffeineIntake())
-                .frequentDrinkTime(LocalTime.parse(dto.getFrequentDrinkTime()))
+                .caffeineSensitivity(dto.caffeineSensitivity())
+                .averageDailyCaffeineIntake(dto.averageDailyCaffeineIntake())
+                .frequentDrinkTime(LocalTime.parse(dto.frequentDrinkTime()))
                 .build();
     }
 
     public static void updateEntity(UserCaffeinInfo entity, UserCaffeineInfoUpdateRequest dto) {
-        if (dto.getCaffeineSensitivity() != null)
-            entity.setCaffeineSensitivity(dto.getCaffeineSensitivity());
-        if (dto.getAverageDailyCaffeineIntake() != null)
-            entity.setAverageDailyCaffeineIntake(dto.getAverageDailyCaffeineIntake());
-        if (dto.getFrequentDrinkTime() != null)
-            entity.setFrequentDrinkTime(LocalTime.parse(dto.getFrequentDrinkTime()));
+        if (dto.caffeineSensitivity() != null)
+            entity.setCaffeineSensitivity(dto.caffeineSensitivity());
+        if (dto.averageDailyCaffeineIntake() != null)
+            entity.setAverageDailyCaffeineIntake(dto.averageDailyCaffeineIntake());
+        if (dto.frequentDrinkTime() != null)
+            entity.setFrequentDrinkTime(LocalTime.parse(dto.frequentDrinkTime()));
     }
 
     public static UserCaffeineInfoResponse toResponse(UserCaffeinInfo entity) {

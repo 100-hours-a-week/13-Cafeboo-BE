@@ -29,16 +29,16 @@ public class UserHealthInfoMapper {
     }
 
     public static void updateEntity(UserHealthInfo entity, UserHealthInfoUpdateRequest dto) {
-        if (dto.getGender() != null) entity.setGender(dto.getGender());
-        if (dto.getAge() != null) entity.setAge(dto.getAge());
-        if (dto.getHeight() != null) entity.setHeight(dto.getHeight());
-        if (dto.getWeight() != null) entity.setWeight(dto.getWeight());
-        if (dto.getPregnant() != null) entity.setPregnant(dto.getPregnant());
-        if (dto.getTakingBirthPill() != null) entity.setTakingBirthPill(dto.getTakingBirthPill());
-        if (dto.getSmoking() != null) entity.setSmoking(dto.getSmoking());
-        if (dto.getHasLiverDisease() != null) entity.setHasLiverDisease(dto.getHasLiverDisease());
-        if (dto.getSleepTime() != null) entity.setSleepTime(LocalTime.parse(dto.getSleepTime()));
-        if (dto.getWakeUpTime() != null) entity.setWakeUpTime(LocalTime.parse(dto.getWakeUpTime()));
+        if (dto.gender() != null) entity.setGender(dto.gender());
+        if (dto.age() != null) entity.setAge(dto.age());
+        if (dto.height() != null) entity.setHeight(dto.height());
+        if (dto.weight() != null) entity.setWeight(dto.weight());
+        if (dto.pregnant() != null) entity.setPregnant(dto.pregnant());
+        if (dto.takingBirthPill() != null) entity.setTakingBirthPill(dto.takingBirthPill());
+        if (dto.smoking() != null) entity.setSmoking(dto.smoking());
+        if (dto.hasLiverDisease() != null) entity.setHasLiverDisease(dto.hasLiverDisease());
+        if (dto.sleepTime() != null) entity.setSleepTime(LocalTime.parse(dto.sleepTime()));
+        if (dto.wakeUpTime() != null) entity.setWakeUpTime(LocalTime.parse(dto.wakeUpTime()));
     }
 
     public static UserHealthInfoResponse toResponse(UserHealthInfo entity) {

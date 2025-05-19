@@ -16,14 +16,14 @@ public class UserAlarmSettingMapper {
     }
 
     public static void updateEntity(UserAlarmSetting entity, UserAlarmSettingUpdateRequest dto) {
-        if (dto.getAlarmWhenExceedIntake() != null) {
-            entity.setAlarmWhenExceedIntake(dto.getAlarmWhenExceedIntake());
+        if (dto.alarmWhenExceedIntake() != null) {
+            entity.setAlarmWhenExceedIntake(dto.alarmWhenExceedIntake());
         }
-        if (dto.getAlarmBeforeSleep() != null) {
-            entity.setAlarmBeforeSleep(dto.getAlarmBeforeSleep());
+        if (dto.alarmBeforeSleep() != null) {
+            entity.setAlarmBeforeSleep(dto.alarmBeforeSleep());
         }
-        if (dto.getAlarmForChat() != null) {
-            entity.setAlarmForChat(dto.getAlarmForChat());
+        if (dto.alarmForChat() != null) {
+            entity.setAlarmForChat(dto.alarmForChat());
         }
     }
 

@@ -1,5 +1,7 @@
-package com.ktb.cafeboo.domain.recommend.service;
+package com.ktb.cafeboo.domain.ai.service;
 
+import com.ktb.cafeboo.global.infra.ai.dto.PredictCanIntakeCaffeineRequest;
+import com.ktb.cafeboo.global.infra.ai.dto.PredictCanIntakeCaffeineResponse;
 import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.domain.user.model.UserHealthInfo;
 import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
@@ -7,6 +9,8 @@ import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import com.ktb.cafeboo.global.infra.ai.client.AiServerClient;
 import com.ktb.cafeboo.global.infra.ai.dto.PredictCaffeineLimitByRuleRequest;
 import com.ktb.cafeboo.global.infra.ai.dto.PredictCaffeineLimitByRuleResponse;
+import java.time.LocalTime;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

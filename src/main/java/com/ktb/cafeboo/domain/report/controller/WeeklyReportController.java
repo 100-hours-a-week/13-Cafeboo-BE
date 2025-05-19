@@ -7,32 +7,36 @@ import com.ktb.cafeboo.domain.report.model.DailyStatistics;
 import com.ktb.cafeboo.domain.report.service.DailyStatisticsService;
 import com.ktb.cafeboo.domain.report.service.WeeklyReportScheduler;
 import com.ktb.cafeboo.domain.report.service.WeeklyReportService;
+import com.ktb.cafeboo.domain.user.service.UserService;
 import com.ktb.cafeboo.global.apiPayload.ApiResponse;
 import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.code.status.SuccessStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
+import com.ktb.cafeboo.global.infra.ai.dto.CreateWeeklyAnalysisResponse;
+import com.ktb.cafeboo.global.infra.ai.dto.ReceiveWeeklyAnalysisRequest;
 import com.ktb.cafeboo.global.security.userdetails.CustomUserDetails;
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
+@Slf4j
 @RequestMapping("/api/v1/reports/weekly")
 public class WeeklyReportController {
     private final WeeklyReportService weeklyReportService;
     private final DailyStatisticsService dailyStatisticsService;
     private final CaffeineIntakeService intakeService;
     private final WeeklyReportScheduler weeklyReportScheduler;
+    private final UserService userService;
     /**
      * 사용자의 일일 카페인 섭취 현황 데이터를 조회합니다.
      * 상세 스펙은 @see <a href="https://freckle-pipe-840.notion.site/1ddb43be904c80ccbb02c746ff16a3ba">주간 섭취 현황 조회 API 스펙 문서</a>
@@ -59,12 +63,27 @@ public class WeeklyReportController {
     }
 
     @GetMapping("/test")
-    public void sendWeeklyCaffeineReportToAI(){
-        weeklyReportScheduler.generateWeeklyReports();
+    public ResponseEntity<ApiResponse<CreateWeeklyAnalysisResponse>> sendWeeklyCaffeineReportToAI(
+        @AuthenticationPrincipal CustomUserDetails userDetails
+    ){
+        try {
+            CreateWeeklyAnalysisResponse response = weeklyReportScheduler.generateWeeklyReports();
+            return ResponseEntity.ok(ApiResponse.of(SuccessStatus.REPORT_GENERATION_SUCCESS, response));
+        } catch (Exception e) {
+            throw new CustomApiException(ErrorStatus.REPORT_GENERATION_FAILED);
+        }
     }
+    
+    @PostMapping("/ai_callback")
+    public void getWeeklyCaffeineReportFromAI(@RequestBody ReceiveWeeklyAnalysisRequest request){
 
-    @PostMapping("/callback")
-    public void getWeeklyCaffeineReportFromAI(){
-        
+        List<ReceiveWeeklyAnalysisRequest.ReportDto> receivedReports = request.getReports();
+
+        for(ReceiveWeeklyAnalysisRequest.ReportDto report : receivedReports){
+            Long userId = Long.valueOf(report.getUserId());
+            String WeeklyReportAnalysis = report.getReport();
+
+            weeklyReportService.updateAiMessage(userId, WeeklyReportAnalysis);
+        }
     }
 }

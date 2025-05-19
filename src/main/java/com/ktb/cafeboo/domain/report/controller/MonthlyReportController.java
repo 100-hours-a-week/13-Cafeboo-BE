@@ -1,7 +1,6 @@
 package com.ktb.cafeboo.domain.report.controller;
 
 import com.ktb.cafeboo.domain.report.dto.MonthlyCaffeineReportResponse;
-import com.ktb.cafeboo.domain.report.dto.WeeklyCaffeineReportResponse;
 import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.domain.report.model.WeeklyReport;
 import com.ktb.cafeboo.domain.report.service.WeeklyReportService;
@@ -13,7 +12,6 @@ import java.time.DateTimeException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.time.ZoneId;
 import java.time.temporal.IsoFields;
 import java.util.List;
 import java.util.Map;
@@ -89,42 +87,41 @@ public class MonthlyReportController {
         Map<Integer, WeeklyReport> reportMap = weeklyStats.stream()
             .collect(Collectors.toMap(WeeklyReport::getWeekNum, Function.identity()));
 
-        List<MonthlyCaffeineReportResponse.weeklyIntakeTotal> weeklyIntakeTotals = weekNums.stream()
+        List<MonthlyCaffeineReportResponse.WeeklyIntakeTotal> weeklyIntakeTotals = weekNums.stream()
             .map(weekNum -> {
                 WeeklyReport report = reportMap.get(weekNum);
                 if (report != null) {
-                    return MonthlyCaffeineReportResponse.weeklyIntakeTotal.builder()
-                        .isoWeek(String.format("%d-W%02d", report.getYear(), report.getWeekNum()))
-                        .totalCaffeineMg(Math.round(report.getTotalCaffeineMg()))
-                        .build();
+                    return new MonthlyCaffeineReportResponse.WeeklyIntakeTotal(
+                            String.format("%d-W%02d", report.getYear(), report.getWeekNum()),
+                            Math.round(report.getTotalCaffeineMg())
+                    );
                 } else {
                     // 없는 주차는 0으로 채움
-                    return MonthlyCaffeineReportResponse.weeklyIntakeTotal.builder()
-                        .isoWeek(String.format("%d-W%02d", resolvedYear, weekNum))
-                        .totalCaffeineMg(0)
-                        .build();
+                    return new MonthlyCaffeineReportResponse.WeeklyIntakeTotal(
+                            String.format("%d-W%02d", resolvedYear, weekNum),
+                            0
+                    );
                 }
             })
             .collect(Collectors.toList());
 
         float sum = (float) weeklyIntakeTotals.stream()
-            .mapToDouble(MonthlyCaffeineReportResponse.weeklyIntakeTotal::getTotalCaffeineMg)
-            .sum();
+                .mapToDouble(MonthlyCaffeineReportResponse.WeeklyIntakeTotal::totalCaffeineMg)
+                .sum();
 
         float avg = weeklyIntakeTotals.isEmpty() ? 0f : sum / weeklyIntakeTotals.size();
 
-        MonthlyCaffeineReportResponse response = MonthlyCaffeineReportResponse.builder()
-            .filter(MonthlyCaffeineReportResponse.Filter.builder()
-                .year(String.valueOf(resolvedYear))
-                .month(String.valueOf(resolvedMonth))
-                .build()
-            )
-            .startDate(startDate.toString())
-            .endDate(endDate.toString())
-            .monthlyCaffeineTotal(sum)
-            .weeklyCaffeineAvg(avg)
-            .weeklyIntakeTotals(weeklyIntakeTotals)
-            .build();
+        MonthlyCaffeineReportResponse response = new MonthlyCaffeineReportResponse(
+            new MonthlyCaffeineReportResponse.Filter(
+                    String.valueOf(resolvedYear),
+                    String.valueOf(resolvedMonth)
+            ),
+            startDate.toString(),
+            endDate.toString(),
+            sum,
+            avg,
+            weeklyIntakeTotals
+        );
 
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.MONTHLY_CAFFEINE_REPORT_SUCCESS, response));
     }

@@ -38,15 +38,15 @@ public class UserCaffeineInfoMapper {
                 .map(fav -> fav.getDrinkType().getName())
                 .toList();
 
-        return UserCaffeineInfoResponse.builder()
-                .caffeineSensitivity(entity.getCaffeineSensitivity())
-                .averageDailyCaffeineIntake(entity.getAverageDailyCaffeineIntake())
-                .frequentDrinkTime(entity.getFrequentDrinkTime().toString())
-                .dailyCaffeineLimitMg(entity.getDailyCaffeineLimitMg())
-                .sleepSensitiveThresholdMg(entity.getSleepSensitiveThresholdMg())
-                .userFavoriteDrinks(favoriteDrinks)
-                .createdAt(entity.getCreatedAt())
-                .updatedAt(entity.getUpdatedAt())
-                .build();
+        return new UserCaffeineInfoResponse(
+                entity.getCaffeineSensitivity(),
+                entity.getAverageDailyCaffeineIntake(),
+                entity.getFrequentDrinkTime().toString(),
+                entity.getDailyCaffeineLimitMg(),
+                entity.getSleepSensitiveThresholdMg(),
+                favoriteDrinks,
+                entity.getCreatedAt(),
+                entity.getUpdatedAt()
+        );
     }
 }

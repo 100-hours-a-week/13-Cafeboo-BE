@@ -77,11 +77,11 @@ public class KakaoOauthService {
             user = userRepository.save(User.fromKakao(kakaoUser));
 
             // 기본 알람 설정
-            UserAlarmSettingCreateRequest userAlarmSetting = UserAlarmSettingCreateRequest.builder()
-                    .alarmBeforeSleep(false)
-                    .alarmWhenExceedIntake(false)
-                    .alarmForChat(false)
-                    .build();
+            UserAlarmSettingCreateRequest userAlarmSetting = new UserAlarmSettingCreateRequest(
+                false,
+                false,
+                false
+            );
             userAlarmSettingService.create(user.getId(), userAlarmSetting);
 
             requiresOnboarding = true;

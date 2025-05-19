@@ -14,16 +14,16 @@ public class UserHealthInfoMapper {
 
         UserHealthInfo entity = new UserHealthInfo();
         entity.setUser(user);
-        entity.setGender(dto.getGender());
-        entity.setAge(dto.getAge());
-        entity.setHeight(dto.getHeight());
-        entity.setWeight(dto.getWeight());
-        entity.setPregnant(dto.getPregnant());
-        entity.setTakingBirthPill(dto.getTakingBirthPill());
-        entity.setSmoking(dto.getSmoking());
-        entity.setHasLiverDisease(dto.getHasLiverDisease());
-        entity.setSleepTime(LocalTime.parse(dto.getSleepTime()));
-        entity.setWakeUpTime(LocalTime.parse(dto.getWakeUpTime()));
+        entity.setGender(dto.gender());
+        entity.setAge(dto.age());
+        entity.setHeight(dto.height());
+        entity.setWeight(dto.weight());
+        entity.setPregnant(dto.pregnant());
+        entity.setTakingBirthPill(dto.takingBirthPill());
+        entity.setSmoking(dto.smoking());
+        entity.setHasLiverDisease(dto.hasLiverDisease());
+        entity.setSleepTime(LocalTime.parse(dto.sleepTime()));
+        entity.setWakeUpTime(LocalTime.parse(dto.wakeUpTime()));
 
         return entity;
     }
@@ -42,19 +42,19 @@ public class UserHealthInfoMapper {
     }
 
     public static UserHealthInfoResponse toResponse(UserHealthInfo entity) {
-        return UserHealthInfoResponse.builder()
-                .gender(entity.getGender())
-                .age(entity.getAge())
-                .height(entity.getHeight())
-                .weight(entity.getWeight())
-                .isPregnant(entity.getPregnant())
-                .isTakingBirthPill(entity.getTakingBirthPill())
-                .isSmoking(entity.getSmoking())
-                .hasLiverDisease(entity.getHasLiverDisease())
-                .sleepTime(entity.getSleepTime().toString())
-                .wakeUpTime(entity.getWakeUpTime().toString())
-                .createdAt(entity.getCreatedAt())
-                .updatedAt(entity.getUpdatedAt())
-                .build();
+        return new UserHealthInfoResponse(
+                entity.getGender(),
+                entity.getAge(),
+                entity.getHeight(),
+                entity.getWeight(),
+                entity.getPregnant(),
+                entity.getTakingBirthPill(),
+                entity.getSmoking(),
+                entity.getHasLiverDisease(),
+                entity.getSleepTime().toString(),
+                entity.getWakeUpTime().toString(),
+                entity.getCreatedAt(),
+                entity.getUpdatedAt()
+        );
     }
 }

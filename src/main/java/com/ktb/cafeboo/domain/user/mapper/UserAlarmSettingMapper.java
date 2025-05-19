@@ -9,9 +9,9 @@ public class UserAlarmSettingMapper {
     public static UserAlarmSetting toEntity(UserAlarmSettingCreateRequest dto, User user) {
         UserAlarmSetting entity = new UserAlarmSetting();
         entity.setUser(user);
-        entity.setAlarmWhenExceedIntake(dto.isAlarmWhenExceedIntake());
-        entity.setAlarmBeforeSleep(dto.isAlarmBeforeSleep());
-        entity.setAlarmForChat(dto.isAlarmForChat());
+        entity.setAlarmWhenExceedIntake(dto.alarmWhenExceedIntake());
+        entity.setAlarmBeforeSleep(dto.alarmBeforeSleep());
+        entity.setAlarmForChat(dto.alarmForChat());
         return entity;
     }
 
@@ -29,12 +29,12 @@ public class UserAlarmSettingMapper {
 
 
     public static UserAlarmSettingResponse toResponse(UserAlarmSetting entity) {
-        return UserAlarmSettingResponse.builder()
-                .alarmWhenExceedIntake(entity.isAlarmWhenExceedIntake())
-                .alarmBeforeSleep(entity.isAlarmBeforeSleep())
-                .alarmForChat(entity.isAlarmForChat())
-                .createdAt(entity.getCreatedAt())
-                .updatedAt(entity.getUpdatedAt())
-                .build();
+        return new UserAlarmSettingResponse(
+            entity.isAlarmWhenExceedIntake(),
+            entity.isAlarmBeforeSleep(),
+            entity.isAlarmForChat(),
+            entity.getCreatedAt(),
+            entity.getUpdatedAt()
+        );
     }
 }

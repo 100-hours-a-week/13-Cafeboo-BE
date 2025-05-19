@@ -1,14 +1,8 @@
 package com.ktb.cafeboo.domain.user.dto;
 
-import lombok.Builder;
-import lombok.Getter;
-
 import java.time.LocalDateTime;
 
-@Getter
-@Builder
-public class UserAlarmSettingUpdateResponse {
-    private String userId;
-    private LocalDateTime updatedAt;
-}
-
+public record UserAlarmSettingUpdateResponse(
+        String userId,
+        LocalDateTime updatedAt
+) {}

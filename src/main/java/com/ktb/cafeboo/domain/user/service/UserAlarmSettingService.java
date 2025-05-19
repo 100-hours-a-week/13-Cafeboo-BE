@@ -31,10 +31,10 @@ public class UserAlarmSettingService {
         try {
             UserAlarmSetting entity = UserAlarmSettingMapper.toEntity(request, user);
             userAlarmSettingRepository.save(entity);
-            return UserAlarmSettingCreateResponse.builder()
-                    .userId(user.getId().toString())
-                    .createdAt(entity.getCreatedAt())
-                    .build();
+            return new UserAlarmSettingCreateResponse(
+                user.getId().toString(),
+                entity.getCreatedAt()
+            );
         } catch (Exception e) {
             throw new CustomApiException(ErrorStatus.BAD_REQUEST);
         }
@@ -52,10 +52,10 @@ public class UserAlarmSettingService {
 
         try {
             UserAlarmSettingMapper.updateEntity(entity, request);
-            return UserAlarmSettingUpdateResponse.builder()
-                    .userId(user.getId().toString())
-                    .updatedAt(entity.getUpdatedAt())
-                    .build();
+            return new UserAlarmSettingUpdateResponse(
+                user.getId().toString(),
+                entity.getUpdatedAt()
+            );
         } catch (Exception e) {
             throw new CustomApiException(ErrorStatus.BAD_REQUEST);
         }

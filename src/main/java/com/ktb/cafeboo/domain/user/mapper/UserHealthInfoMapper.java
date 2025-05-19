@@ -14,47 +14,47 @@ public class UserHealthInfoMapper {
 
         UserHealthInfo entity = new UserHealthInfo();
         entity.setUser(user);
-        entity.setGender(dto.getGender());
-        entity.setAge(dto.getAge());
-        entity.setHeight(dto.getHeight());
-        entity.setWeight(dto.getWeight());
-        entity.setPregnant(dto.getPregnant());
-        entity.setTakingBirthPill(dto.getTakingBirthPill());
-        entity.setSmoking(dto.getSmoking());
-        entity.setHasLiverDisease(dto.getHasLiverDisease());
-        entity.setSleepTime(LocalTime.parse(dto.getSleepTime()));
-        entity.setWakeUpTime(LocalTime.parse(dto.getWakeUpTime()));
+        entity.setGender(dto.gender());
+        entity.setAge(dto.age());
+        entity.setHeight(dto.height());
+        entity.setWeight(dto.weight());
+        entity.setPregnant(dto.pregnant());
+        entity.setTakingBirthPill(dto.takingBirthPill());
+        entity.setSmoking(dto.smoking());
+        entity.setHasLiverDisease(dto.hasLiverDisease());
+        entity.setSleepTime(LocalTime.parse(dto.sleepTime()));
+        entity.setWakeUpTime(LocalTime.parse(dto.wakeUpTime()));
 
         return entity;
     }
 
     public static void updateEntity(UserHealthInfo entity, UserHealthInfoUpdateRequest dto) {
-        if (dto.getGender() != null) entity.setGender(dto.getGender());
-        if (dto.getAge() != null) entity.setAge(dto.getAge());
-        if (dto.getHeight() != null) entity.setHeight(dto.getHeight());
-        if (dto.getWeight() != null) entity.setWeight(dto.getWeight());
-        if (dto.getPregnant() != null) entity.setPregnant(dto.getPregnant());
-        if (dto.getTakingBirthPill() != null) entity.setTakingBirthPill(dto.getTakingBirthPill());
-        if (dto.getSmoking() != null) entity.setSmoking(dto.getSmoking());
-        if (dto.getHasLiverDisease() != null) entity.setHasLiverDisease(dto.getHasLiverDisease());
-        if (dto.getSleepTime() != null) entity.setSleepTime(LocalTime.parse(dto.getSleepTime()));
-        if (dto.getWakeUpTime() != null) entity.setWakeUpTime(LocalTime.parse(dto.getWakeUpTime()));
+        if (dto.gender() != null) entity.setGender(dto.gender());
+        if (dto.age() != null) entity.setAge(dto.age());
+        if (dto.height() != null) entity.setHeight(dto.height());
+        if (dto.weight() != null) entity.setWeight(dto.weight());
+        if (dto.pregnant() != null) entity.setPregnant(dto.pregnant());
+        if (dto.takingBirthPill() != null) entity.setTakingBirthPill(dto.takingBirthPill());
+        if (dto.smoking() != null) entity.setSmoking(dto.smoking());
+        if (dto.hasLiverDisease() != null) entity.setHasLiverDisease(dto.hasLiverDisease());
+        if (dto.sleepTime() != null) entity.setSleepTime(LocalTime.parse(dto.sleepTime()));
+        if (dto.wakeUpTime() != null) entity.setWakeUpTime(LocalTime.parse(dto.wakeUpTime()));
     }
 
     public static UserHealthInfoResponse toResponse(UserHealthInfo entity) {
-        return UserHealthInfoResponse.builder()
-                .gender(entity.getGender())
-                .age(entity.getAge())
-                .height(entity.getHeight())
-                .weight(entity.getWeight())
-                .isPregnant(entity.getPregnant())
-                .isTakingBirthPill(entity.getTakingBirthPill())
-                .isSmoking(entity.getSmoking())
-                .hasLiverDisease(entity.getHasLiverDisease())
-                .sleepTime(entity.getSleepTime().toString())
-                .wakeUpTime(entity.getWakeUpTime().toString())
-                .createdAt(entity.getCreatedAt())
-                .updatedAt(entity.getUpdatedAt())
-                .build();
+        return new UserHealthInfoResponse(
+                entity.getGender(),
+                entity.getAge(),
+                entity.getHeight(),
+                entity.getWeight(),
+                entity.getPregnant(),
+                entity.getTakingBirthPill(),
+                entity.getSmoking(),
+                entity.getHasLiverDisease(),
+                entity.getSleepTime().toString(),
+                entity.getWakeUpTime().toString(),
+                entity.getCreatedAt(),
+                entity.getUpdatedAt()
+        );
     }
 }

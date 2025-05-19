@@ -24,7 +24,6 @@ public interface CaffeineResidualRepository extends JpaRepository<CaffeineResidu
         @Param("startDate") LocalDateTime startDate,
         @Param("endDate") LocalDateTime endDate
     );
-    );
 
     /**
      * 현재 시간 기준 전후 35시간의 카페인 잔존량 데이터를 조회합니다.

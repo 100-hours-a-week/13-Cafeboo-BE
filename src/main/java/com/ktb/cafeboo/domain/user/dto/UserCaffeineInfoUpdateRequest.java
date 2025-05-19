@@ -1,13 +1,10 @@
 package com.ktb.cafeboo.domain.user.dto;
 
-import lombok.Getter;
-
 import java.util.List;
 
-@Getter
-public class UserCaffeineInfoUpdateRequest {
-    private Integer caffeineSensitivity;
-    private Float averageDailyCaffeineIntake;
-    private String frequentDrinkTime;
-    private List<String> userFavoriteDrinks;
-}
+public record UserCaffeineInfoUpdateRequest(
+        Integer caffeineSensitivity,
+        Float averageDailyCaffeineIntake,
+        String frequentDrinkTime,
+        List<String> userFavoriteDrinks
+) {}

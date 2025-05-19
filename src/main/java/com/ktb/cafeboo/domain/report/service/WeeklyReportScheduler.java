@@ -116,9 +116,9 @@ public class WeeklyReportScheduler {
         String highlightDayLowStr = (highlightDayLow != null) ? highlightDayLow.toString().substring(0, 3) : "Mon";
 
         CoffeeTimeStats coffeeTimeStats = calculate(user, intakes);
-        LocalTime firstAvg = coffeeTimeStats.firstAvg;
-        LocalTime lastAvg = coffeeTimeStats.lastAvg;
-        int lateNightDays = coffeeTimeStats.lateNightDays;
+        LocalTime firstAvg = coffeeTimeStats.firstAvg();
+        LocalTime lastAvg = coffeeTimeStats.lastAvg();
+        int lateNightDays = coffeeTimeStats.lateNightDays();
 
         double totalCaffeine = intakes.stream()
             .mapToDouble(CaffeineIntake::getCaffeineAmountMg)

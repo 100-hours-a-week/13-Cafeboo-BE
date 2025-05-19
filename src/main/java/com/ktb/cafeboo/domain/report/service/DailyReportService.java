@@ -61,16 +61,18 @@ public class DailyReportService {
         List<CaffeineResidual> residuals = residualService.getCaffeineResidualsByTimeRange(user,
             currentDateTime);
 
-
-        return DailyCaffeineReportResponse.builder()
-            .nickname(user.getNickname())
-            .dailyCaffeineLimit(user.getCaffeinInfo().getDailyCaffeineLimitMg())
-            .dailyCaffeineIntakeMg(dailyStatistics.getTotalCaffeineMg())
-            .dailyCaffeineIntakeRate(calculateIntakeRate(dailyStatistics.getTotalCaffeineMg(), user.getCaffeinInfo().getDailyCaffeineLimitMg()))
-            .intakeGuide(dailyStatistics.getAiMessage())
-            .sleepSensitiveThreshold(100F)
-            .caffeineByHour(createHourlyCaffeineInfo(residuals, currentDateTime))
-            .build();
+        return new DailyCaffeineReportResponse(
+            user.getNickname(),
+            user.getCaffeinInfo().getDailyCaffeineLimitMg(),
+            dailyStatistics.getTotalCaffeineMg(),
+            calculateIntakeRate(
+                    dailyStatistics.getTotalCaffeineMg(),
+                    user.getCaffeinInfo().getDailyCaffeineLimitMg()
+            ),
+            dailyStatistics.getAiMessage(),
+            100F,
+            createHourlyCaffeineInfo(residuals, currentDateTime)
+        );
     }
 
     private int calculateIntakeRate(float dailyTotal, float userDailyLimit) {

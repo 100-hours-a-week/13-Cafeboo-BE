@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import java.util.Comparator;
 
 @Service
 @RequiredArgsConstructor
@@ -32,14 +33,23 @@ public class CaffeineResidualService {
     private double k = Math.log(2) / DEFAULT_HALF_LIFE_HOUR;
 
     public void modifyResidualAmounts(Long userId, LocalDateTime previousIntakeTime, float previousCaffeineAmount) {
-        final LocalDateTime previousTargetTime = previousIntakeTime.toLocalDate().atStartOfDay();
+        final LocalDateTime previousTargetTime = previousIntakeTime.minusHours(17).toLocalDate().atStartOfDay();
         final LocalDateTime previousEndTime = previousIntakeTime.plusHours(24);
 
         User user = userService.findUserById(userId);
         LocalDateTime previousIntakeHour = previousIntakeTime.truncatedTo(ChronoUnit.HOURS);
-
+        log.error("previousIntakeHour: {}", previousIntakeHour);
         // 1. 섭취 내역 수정으로 인해 영향을 받는 잔존량 데이터 조회 (24hour)
         List<CaffeineResidual> residualsToModify = residualRepository.findByUserAndTargetDateBetween(user, previousTargetTime, previousEndTime);
+
+        // Comparator를 사용하여 정렬
+        Comparator<CaffeineResidual> comparator = Comparator
+            .comparing(CaffeineResidual::getTargetDate) // targetDate의 날짜 부분으로 먼저 비교
+            .thenComparing(CaffeineResidual::getHour); // 그 다음 hour 값으로 비교
+
+// 리스트 정렬
+        residualsToModify.sort(comparator);
+
         int hoursSincePreviousIntake = 0;
         // 2. 섭취 내역 수정으로 인해 영향을 받는 잔존량 데이터에 대해 이전 카페인 섭취량의 영향 제거
         for (CaffeineResidual residual : residualsToModify) {
@@ -49,6 +59,7 @@ public class CaffeineResidualService {
             // 해당 시점이 이전 섭취 시간과 새로운 섭취 시간 사이에 있는 경우에만 처리
             if (residualDateTime.isAfter(previousIntakeHour) || residualDateTime.isEqual(previousIntakeHour)) {
                 // 이전 섭취로 인한 잔존량 계산
+                log.error("residualDateTime: {}, residualDateTime.isAfter: {}, residualDateTime.isEqual: {}", residualDateTime, residualDateTime.isAfter(previousIntakeHour), residualDateTime.isEqual(previousIntakeHour));
                 double previousResidualAmount =
                     previousCaffeineAmount * Math.exp(-k * hoursSincePreviousIntake);
 

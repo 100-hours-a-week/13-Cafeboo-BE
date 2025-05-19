@@ -17,13 +17,11 @@ public interface CaffeineResidualRepository extends JpaRepository<CaffeineResidu
 
     @Query("SELECT cr FROM CaffeineResidual cr " +
         "WHERE cr.user = :user " +
-        "AND cr.targetDate BETWEEN :startDate AND :endDate " +
-        "ORDER BY cr.targetDate ASC") // targetDate 기준으로 오름차순 정렬
+        "AND cr.targetDate BETWEEN :startDate AND :endDate")
     List<CaffeineResidual> findByUserAndTargetDateBetween(
         @Param("user") User user,
         @Param("startDate") LocalDateTime startDate,
         @Param("endDate") LocalDateTime endDate
-    );
     );
 
     /**

@@ -1,7 +1,8 @@
 package com.ktb.cafeboo.domain.report.service;
 
+import com.ktb.cafeboo.domain.ai.service.CaffeineRecommendationService;
+import com.ktb.cafeboo.domain.ai.service.IntakeSuggestionService;
 import com.ktb.cafeboo.domain.caffeinediary.model.CaffeineResidual;
-import com.ktb.cafeboo.domain.caffeinediary.repository.CaffeineResidualRepository;
 import com.ktb.cafeboo.domain.caffeinediary.service.CaffeineResidualService;
 import com.ktb.cafeboo.domain.report.model.DailyStatistics;
 import com.ktb.cafeboo.domain.report.model.MonthlyReport;
@@ -13,19 +14,14 @@ import com.ktb.cafeboo.domain.user.service.UserService;
 import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import com.ktb.cafeboo.global.infra.ai.client.AiServerClient;
-import com.ktb.cafeboo.global.infra.ai.dto.PredictCanIntakeCaffeineRequest;
-import com.ktb.cafeboo.global.infra.ai.dto.PredictCanIntakeCaffeineResponse;
 import jakarta.transaction.Transactional;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -43,9 +39,8 @@ public class DailyStatisticsService {
     private final MonthlyReportService monthlyReportService;
     private final YearlyReportService yearlyReportService;
     private final UserService userService;
-    private final AiServerClient aiServerClient;
     private final CaffeineResidualService caffeineResidualService;
-
+    private final IntakeSuggestionService intakeSuggestionService;
     /**
      * 일일 통계 데이터를 갱신합니다. 섭취 내역이 추가됨에 따라 일일 섭취 카페인 수치를 갱신합니다.
      * @param user 일일 통계를 기록할 유저 정보
@@ -66,51 +61,41 @@ public class DailyStatisticsService {
 
         CaffeineResidual residualAtSleep = caffeineResidualService.findByUserAndTargetDateAndHour(user, date.atStartOfDay(), user.getHealthInfo().getSleepTime().getHour());
 
-        //현재 카페인 양이 < limit이고 addtionalCaffeine을 더한 값이 limit 보다 크다면 weeklyReport의 overIntakeDays + 1
-        //현재 카페인 양이 > limit이고 addtionalCaffeine을 뺀 값이 limit 보다 크다면 weeklyReport의 overIntakeDays - 1
-        float userDailyLimit = user.getCaffeinInfo().getDailyCaffeineLimitMg();
-        float currentCaffeine = statistics.getTotalCaffeineMg();
-
-//        if(currentCaffeine < userDailyLimit && currentCaffeine + additionalCaffeine >= userDailyLimit){
-//            weeklyReport.setOverIntakeDays(weeklyReport.getOverIntakeDays() + 1);
-//        }
-//        else if(currentCaffeine >= userDailyLimit && currentCaffeine + additionalCaffeine < userDailyLimit){
-//            weeklyReport.setOverIntakeDays(weeklyReport.getOverIntakeDays() - 1);
-//        }
-//
-//        weeklyReportService.saveReport(weeklyReport);
-
         statistics.setTotalCaffeineMg(statistics.getTotalCaffeineMg() + additionalCaffeine);
 
-        PredictCanIntakeCaffeineRequest request = PredictCanIntakeCaffeineRequest.builder()
-            .userId(user.getId().toString())
-            .currentTime(convertTimeToFloat(LocalTime.now()))
-            .sleepTime(convertTimeToFloat(user.getHealthInfo().getSleepTime()))
-            .caffeineLimit(Math.round(user.getCaffeinInfo().getDailyCaffeineLimitMg()))
-            .currentCaffeine(Math.round(statistics.getTotalCaffeineMg()))
-            .caffeineSensitivity(user.getCaffeinInfo().getCaffeineSensitivity())
-            .targetResidualAtSleep(50f)
-            .residualAtSleep(residualAtSleep.getResidueAmountMg())
-            .gender(user.getHealthInfo().getGender())
-            .age(user.getHealthInfo().getAge())
-            .weight(user.getHealthInfo().getWeight())
-            .height(user.getHealthInfo().getHeight())
-            .isSmoker(user.getHealthInfo().getSmoking() ? 1 : 0)
-            .takeHormonalContraceptive(user.getHealthInfo().getTakingBirthPill() ? 1 : 0)
-            .build();
+        int currentCaffeine = Math.round(statistics.getTotalCaffeineMg());
+        double caffeineResidualAtSleep = residualAtSleep.getResidueAmountMg();
 
-        PredictCanIntakeCaffeineResponse response = aiServerClient.predictCanIntakeCaffeine(request);
-
-        String message = "";
-
-        if(Objects.equals(response.getStatus(), "success")){
-            if(Objects.equals(response.getData().getCaffeineStatus(), "N")){
-                message += " 카페인을 추가로 섭취하면 수면에 영향을 줄 수 있어요.";
-            }
-            else if (Objects.equals(response.getData().getCaffeineStatus(), "Y")){
-                message += " 카페인을 추가로 섭취해도 수면에 영향이 없어요.";
-            }
-        }
+        String message = intakeSuggestionService.getPredictedIntakeSuggestion(user, currentCaffeine, caffeineResidualAtSleep);
+//        PredictCanIntakeCaffeineRequest request = PredictCanIntakeCaffeineRequest.builder()
+//            .userId(user.getId().toString())
+//            .currentTime(convertTimeToFloat(LocalTime.now()))
+//            .sleepTime(convertTimeToFloat(user.getHealthInfo().getSleepTime()))
+//            .caffeineLimit(Math.round(user.getCaffeinInfo().getDailyCaffeineLimitMg()))
+//            .currentCaffeine(Math.round(statistics.getTotalCaffeineMg()))
+//            .caffeineSensitivity(user.getCaffeinInfo().getCaffeineSensitivity())
+//            .targetResidualAtSleep(50f)
+//            .residualAtSleep(residualAtSleep.getResidueAmountMg())
+//            .gender(user.getHealthInfo().getGender())
+//            .age(user.getHealthInfo().getAge())
+//            .weight(user.getHealthInfo().getWeight())
+//            .height(user.getHealthInfo().getHeight())
+//            .isSmoker(user.getHealthInfo().getSmoking() ? 1 : 0)
+//            .takeHormonalContraceptive(user.getHealthInfo().getTakingBirthPill() ? 1 : 0)
+//            .build();
+//
+//        PredictCanIntakeCaffeineResponse response = aiServerClient.predictCanIntakeCaffeine(request);
+//
+//        String message = "";
+//
+//        if(Objects.equals(response.getStatus(), "success")){
+//            if(Objects.equals(response.getData().getCaffeineStatus(), "N")){
+//                message += " 카페인을 추가로 섭취하면 수면에 영향을 줄 수 있어요.";
+//            }
+//            else if (Objects.equals(response.getData().getCaffeineStatus(), "Y")){
+//                message += " 카페인을 추가로 섭취해도 수면에 영향이 없어요.";
+//            }
+//        }
 
         statistics.setAiMessage(message);
 
@@ -134,35 +119,40 @@ public class DailyStatisticsService {
 
         CaffeineResidual residualAtSleep = caffeineResidualService.findByUserAndTargetDateAndHour(user, date.atStartOfDay(), user.getHealthInfo().getSleepTime().getHour());
 
-        PredictCanIntakeCaffeineRequest request = PredictCanIntakeCaffeineRequest.builder()
-            .userId(user.getId().toString())
-            .currentTime(convertTimeToFloat(LocalTime.now()))
-            .sleepTime(convertTimeToFloat(user.getHealthInfo().getSleepTime()))
-            .caffeineLimit(Math.round(user.getCaffeinInfo().getDailyCaffeineLimitMg()))
-            .currentCaffeine(Math.round(statistics.getTotalCaffeineMg()))
-            .caffeineSensitivity(user.getCaffeinInfo().getCaffeineSensitivity())
-            .targetResidualAtSleep(50f)
-            .residualAtSleep(residualAtSleep.getResidueAmountMg())
-            .gender(user.getHealthInfo().getGender())
-            .age(user.getHealthInfo().getAge())
-            .weight(user.getHealthInfo().getWeight())
-            .height(user.getHealthInfo().getHeight())
-            .isSmoker(user.getHealthInfo().getSmoking() ? 1 : 0)
-            .takeHormonalContraceptive(user.getHealthInfo().getTakingBirthPill() ? 1 : 0)
-            .build();
+//        PredictCanIntakeCaffeineRequest request = PredictCanIntakeCaffeineRequest.builder()
+//            .userId(user.getId().toString())
+//            .currentTime(convertTimeToFloat(LocalTime.now()))
+//            .sleepTime(convertTimeToFloat(user.getHealthInfo().getSleepTime()))
+//            .caffeineLimit(Math.round(user.getCaffeinInfo().getDailyCaffeineLimitMg()))
+//            .currentCaffeine(Math.round(statistics.getTotalCaffeineMg()))
+//            .caffeineSensitivity(user.getCaffeinInfo().getCaffeineSensitivity())
+//            .targetResidualAtSleep(50f)
+//            .residualAtSleep(residualAtSleep.getResidueAmountMg())
+//            .gender(user.getHealthInfo().getGender())
+//            .age(user.getHealthInfo().getAge())
+//            .weight(user.getHealthInfo().getWeight())
+//            .height(user.getHealthInfo().getHeight())
+//            .isSmoker(user.getHealthInfo().getSmoking() ? 1 : 0)
+//            .takeHormonalContraceptive(user.getHealthInfo().getTakingBirthPill() ? 1 : 0)
+//            .build();
+//
+//        PredictCanIntakeCaffeineResponse response = aiServerClient.predictCanIntakeCaffeine(request);
+//
+//        String message = "";
+//
+//        if(Objects.equals(response.getStatus(), "success")){
+//            if(Objects.equals(response.getData().getCaffeineStatus(), "N")){
+//                message += "카페인을 추가로 섭취하면 수면에 영향을 줄 수 있어요.";
+//            }
+//            else if (Objects.equals(response.getData().getCaffeineStatus(), "Y")){
+//                message += "카페인을 추가로 섭취해도 수면에 영향이 없어요.";
+//            }
+//        }
 
-        PredictCanIntakeCaffeineResponse response = aiServerClient.predictCanIntakeCaffeine(request);
+        int currentCaffeine = Math.round(statistics.getTotalCaffeineMg());
+        double caffeineResidualAtSleep = residualAtSleep.getResidueAmountMg();
 
-        String message = "";
-
-        if(Objects.equals(response.getStatus(), "success")){
-            if(Objects.equals(response.getData().getCaffeineStatus(), "N")){
-                message += "카페인을 추가로 섭취하면 수면에 영향을 줄 수 있어요.";
-            }
-            else if (Objects.equals(response.getData().getCaffeineStatus(), "Y")){
-                message += "카페인을 추가로 섭취해도 수면에 영향이 없어요.";
-            }
-        }
+        String message = intakeSuggestionService.getPredictedIntakeSuggestion(user, currentCaffeine, caffeineResidualAtSleep);
 
         statistics.setAiMessage(message);
 

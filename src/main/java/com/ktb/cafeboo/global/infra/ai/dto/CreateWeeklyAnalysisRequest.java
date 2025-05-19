@@ -1,23 +1,36 @@
 package com.ktb.cafeboo.global.infra.ai.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 @Builder
-public class CreateWeeklyReportRequest {
-
-    @JsonProperty("user_id")
-    private String userId;
-
-    @JsonProperty("data")
-    private Data data;
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
+public class CreateWeeklyAnalysisRequest {
 
     @JsonProperty("callback_url")
     private String callbackUrl;
+
+    @JsonProperty("users")
+    private List<UserReportData> users;
+
+    @Getter
+    @Setter
+    @Builder
+    public static class UserReportData {
+        @JsonProperty("user_id")
+        private String userId;
+
+        @JsonProperty("data")
+        private Data data;
+    }
 
     @Getter
     @Setter
@@ -27,13 +40,13 @@ public class CreateWeeklyReportRequest {
         private String period;
 
         @JsonProperty("avg_caffeine_per_day")
-        private Integer avgCaffeinePerDay;
+        private float avgCaffeinePerDay;
 
         @JsonProperty("recommended_daily_limit")
-        private Integer recommendedDailyLimit;
+        private float recommendedDailyLimit;
 
         @JsonProperty("percentage_of_limit")
-        private Integer percentageOfLimit;
+        private float percentageOfLimit;
 
         @JsonProperty("highlight_day_high")
         private String highlightDayHigh;

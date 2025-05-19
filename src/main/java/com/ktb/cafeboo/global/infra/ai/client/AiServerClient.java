@@ -1,9 +1,7 @@
 package com.ktb.cafeboo.global.infra.ai.client;
 
-import com.ktb.cafeboo.global.infra.ai.dto.CreateWeeklyReportRequest;
-import com.ktb.cafeboo.global.infra.ai.dto.CreateWeeklyReportResponse;
-import com.ktb.cafeboo.global.infra.ai.dto.PredictCaffeineLimitByRuleRequest;
-import com.ktb.cafeboo.global.infra.ai.dto.PredictCaffeineLimitByRuleResponse;
+import com.ktb.cafeboo.global.infra.ai.dto.CreateWeeklyAnalysisRequest;
+import com.ktb.cafeboo.global.infra.ai.dto.CreateWeeklyAnalysisResponse;
 import com.ktb.cafeboo.global.infra.ai.dto.PredictCaffeineLimitByRuleRequest;
 import com.ktb.cafeboo.global.infra.ai.dto.PredictCaffeineLimitByRuleResponse;
 import com.ktb.cafeboo.global.infra.ai.dto.PredictCanIntakeCaffeineRequest;
@@ -41,12 +39,12 @@ public class AiServerClient {
                 .block();
     }
 
-    public CreateWeeklyReportResponse createWeeklyReportAnalysis(List<CreateWeeklyReportRequest> requests){
+    public CreateWeeklyAnalysisResponse createWeeklyReportAnalysis(CreateWeeklyAnalysisRequest requests){
         return aiServerWebClient.post()
-            .uri("/internal/ai/caffeine_weekly_report")
+            .uri("/internal/ai/caffeine_weekly_reports")
             .bodyValue(requests)
             .retrieve()
-            .bodyToMono(CreateWeeklyReportResponse.class)
+            .bodyToMono(CreateWeeklyAnalysisResponse.class)
             .block();
     }
 }

@@ -5,19 +5,29 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 @Builder
-public class CreateWeeklyReportRequest {
-
-    @JsonProperty("user_id")
-    private String userId;
-
-    @JsonProperty("data")
-    private Data data;
+public class CreateWeeklyAnalysisRequest {
 
     @JsonProperty("callback_url")
     private String callbackUrl;
+
+    @JsonProperty("users")
+    private List<UserReportData> users;
+
+    @Getter
+    @Setter
+    @Builder
+    public static class UserReportData {
+        @JsonProperty("user_id")
+        private String userId;
+
+        @JsonProperty("data")
+        private Data data;
+    }
 
     @Getter
     @Setter

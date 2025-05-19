@@ -1,6 +1,5 @@
 package com.ktb.cafeboo.domain.caffeinediary.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDateTime;
 
 public record CaffeineIntakeRequest(

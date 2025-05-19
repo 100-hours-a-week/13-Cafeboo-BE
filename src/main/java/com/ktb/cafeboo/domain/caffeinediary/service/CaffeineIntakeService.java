@@ -223,14 +223,10 @@ public class CaffeineIntakeService {
         List<MonthlyCaffeineDiaryResponse.DailyIntake> dailyIntakeList =
             getDailyIntakeListForMonth(intakes, targetYear, targetMonth);
 
-        return MonthlyCaffeineDiaryResponse.builder()
-            .filter(MonthlyCaffeineDiaryResponse.Filter.builder()
-                .year(targetYear)
-                .month(String.valueOf(targetMonth))
-                .build())
-            .dailyIntakeList(dailyIntakeList)
-            .build();
-
+        return new MonthlyCaffeineDiaryResponse(
+                new MonthlyCaffeineDiaryResponse.Filter(targetYear, String.valueOf(targetMonth)),
+                dailyIntakeList
+        );
     }
 
     public List<MonthlyCaffeineDiaryResponse.DailyIntake> getDailyIntakeListForMonth(List<CaffeineIntake> intakes, String targetYear, String targetMonth) {
@@ -256,10 +252,7 @@ public class CaffeineIntakeService {
             LocalDate date = yearMonth.atDay(day);
             float total = dailySumMap.getOrDefault(date, 0f);
             dailyIntakeList.add(
-                MonthlyCaffeineDiaryResponse.DailyIntake.builder()
-                    .date(date.toString())
-                    .totalCaffeineMg(total)
-                    .build()
+              new MonthlyCaffeineDiaryResponse.DailyIntake(date.toString(), total)
             );
         }
         return dailyIntakeList;
@@ -284,23 +277,21 @@ public class CaffeineIntakeService {
 
         // intakeList 생성
         List<DailyCaffeineDiaryResponse.IntakeDetail> intakeList = intakes.stream()
-            .map(intake -> DailyCaffeineDiaryResponse.IntakeDetail.builder()
-                .intakeId(intake.getId().toString())
-                .drinkId(intake.getDrink().getId().toString())
-                .drinkName(intake.getDrink().getName())
-                .drinkCount(intake.getDrinkCount())
-                .caffeineMg(intake.getCaffeineAmountMg())
-                .intakeTime(intake.getIntakeTime().toString()) // ISO 8601
-                .build())
-            .collect(Collectors.toList());
+                .map(intake -> new DailyCaffeineDiaryResponse.IntakeDetail(
+                        intake.getId().toString(),
+                        intake.getDrink().getId().toString(),
+                        intake.getDrink().getName(),
+                        intake.getDrinkCount(),
+                        intake.getCaffeineAmountMg(),
+                        intake.getIntakeTime().toString() // ISO 8601
+                ))
+                .collect(Collectors.toList());
 
-        return DailyCaffeineDiaryResponse.builder()
-            .filter(DailyCaffeineDiaryResponse.Filter.builder()
-                .date(targetDate)
-                .build())
-            .totalCaffeineMg(totalCaffeineMg)
-            .intakeList(intakeList)
-            .build();
+        return new DailyCaffeineDiaryResponse(
+                new DailyCaffeineDiaryResponse.Filter(targetDate),
+                totalCaffeineMg,
+                intakeList
+        );
     }
 
     public List<CaffeineIntake> getDailyCaffeineIntakeForWeek(Long userId, String targetYear, String targetMonth, String targetWeek){

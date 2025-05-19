@@ -1,35 +1,16 @@
 package com.ktb.cafeboo.domain.user.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
-import lombok.Setter;
 
-@Getter
-@Setter
-public class UserHealthInfoCreateRequest {
-
-    private String gender;
-    private int age;
-    private float height;
-    private float weight;
-
-    @JsonProperty("isPregnant")
-    private Boolean pregnant;
-
-    @JsonProperty("isTakingBirthPill")
-    private Boolean takingBirthPill;
-
-    @JsonProperty("isSmoking")
-    private Boolean smoking;
-
-    @JsonProperty("hasLiverDisease")
-    private Boolean hasLiverDisease;
-
-    @JsonProperty("sleepTime")
-    private String sleepTime;
-
-    @JsonProperty("wakeUpTime")
-    private String wakeUpTime;
-}
-
-
+public record UserHealthInfoCreateRequest(
+        String gender,
+        int age,
+        float height,
+        float weight,
+        @JsonProperty("isPregnant") Boolean pregnant,
+        @JsonProperty("isTakingBirthPill") Boolean takingBirthPill,
+        @JsonProperty("isSmoking") Boolean smoking,
+        @JsonProperty("hasLiverDisease") Boolean hasLiverDisease,
+        @JsonProperty("sleepTime") String sleepTime,
+        @JsonProperty("wakeUpTime") String wakeUpTime
+) {}

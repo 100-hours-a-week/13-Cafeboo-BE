@@ -1,37 +1,21 @@
 package com.ktb.cafeboo.domain.report.dto;
 
 import java.util.List;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 
-@Getter
-@AllArgsConstructor
-@Builder
-public class YearlyCaffeineReportResponse {
+public record YearlyCaffeineReportResponse(
+        Filter filter,
+        String startDate,
+        String endDate,
+        float yearlyCaffeineTotal,
+        float monthlyCaffeineAvg,
+        List<MonthlyIntakeTotal> monthlyIntakeTotals
+) {
+    public record Filter(
+            String year
+    ) {}
 
-    private Filter filter;
-    private String startDate;
-    private String endDate;
-    private float yearlyCaffeineTotal;
-    private float monthlyCaffeineAvg;
-    private List<MonthlyIntakeTotal> monthlyIntakeTotals;
-
-    @Getter
-    @AllArgsConstructor
-    @NoArgsConstructor
-    @Builder
-    public static class Filter {
-        private String year;
-    }
-
-    @Getter
-    @AllArgsConstructor
-    @NoArgsConstructor
-    @Builder
-    public static class MonthlyIntakeTotal {
-        private int month;           // 1~12
-        private float totalCaffeineMg;
-    }
+    public record MonthlyIntakeTotal(
+            int month,
+            float totalCaffeineMg
+    ) {}
 }

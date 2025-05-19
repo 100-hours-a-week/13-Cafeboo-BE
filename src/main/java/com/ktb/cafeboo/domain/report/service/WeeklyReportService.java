@@ -130,41 +130,41 @@ public class WeeklyReportService {
         float dailyAvg = weeklyReport.getDailyCaffeineAvgMg();
 
         List<WeeklyCaffeineReportResponse.DailyIntakeTotal> dailyIntakeTotals = dailyStats.stream()
-            .map(stat -> WeeklyCaffeineReportResponse.DailyIntakeTotal.builder()
-                .date(stat.getDate().toString())
-                .caffeineMg(Math.round(stat.getTotalCaffeineMg()))
-                .build())
+            .map(stat -> new WeeklyCaffeineReportResponse.DailyIntakeTotal(
+                    stat.getDate().toString(),
+                    Math.round(stat.getTotalCaffeineMg())
+            ))
             .collect(Collectors.toList());
 
         for (int i = 0; i < 7; i++) {
             LocalDate d = startDate.plusDays(i);
-            boolean exists = dailyIntakeTotals.stream().anyMatch(t -> t.getDate().equals(d.toString()));
+            boolean exists = dailyIntakeTotals.stream().anyMatch(t -> t.date().equals(d.toString()));
             if (!exists) {
                 dailyIntakeTotals.add(
-                    WeeklyCaffeineReportResponse.DailyIntakeTotal.builder()
-                        .date(d.toString())
-                        .caffeineMg(0)
-                        .build()
+                    new WeeklyCaffeineReportResponse.DailyIntakeTotal(
+                            d.toString(),
+                            0
+                    )
                 );
             }
         }
 
-        return WeeklyCaffeineReportResponse.builder()
-            .filter(WeeklyCaffeineReportResponse.Filter.builder()
-                .year(String.valueOf(year))
-                .month(String.valueOf(month))
-                .week(week + "주차")
-                .build())
-            .isoWeek(isoWeek)
-            .startDate(startDate.toString())
-            .endDate(endDate.toString())
-            .weeklyCaffeineTotal(weeklyTotal)
-            .dailyCaffeineLimit((int)userCaffeinInfo.getDailyCaffeineLimitMg())
-            .overLimitDays(overLimitDays)
-            .dailyCaffeineAvg(dailyAvg)
-            .dailyIntakeTotals(dailyIntakeTotals)
-            .aiMessage(weeklyReport.getAiMessage())
-            .build();
+        return new WeeklyCaffeineReportResponse(
+            new WeeklyCaffeineReportResponse.Filter(
+                    String.valueOf(year),
+                    String.valueOf(month),
+                    week + "주차"
+            ),
+            isoWeek,
+            startDate.toString(),
+            endDate.toString(),
+            weeklyTotal,
+            (int) userCaffeinInfo.getDailyCaffeineLimitMg(),
+            overLimitDays,
+            dailyAvg,
+            dailyIntakeTotals,
+            weeklyReport.getAiMessage()
+        );
     }
 
     public void updateWeeklyReport(Long userId, WeeklyReport weeklyReport, Float additionalCaffeine){

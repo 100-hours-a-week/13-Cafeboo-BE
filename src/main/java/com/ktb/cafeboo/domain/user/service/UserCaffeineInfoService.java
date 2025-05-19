@@ -58,7 +58,7 @@ public class UserCaffeineInfoService {
                 entity.setDailyCaffeineLimitMg(400f);  // 기본값
             }
 
-            List<UserFavoriteDrinkType> favoriteDrinkTypes = Optional.ofNullable(request.getUserFavoriteDrinks())
+            List<UserFavoriteDrinkType> favoriteDrinkTypes = Optional.ofNullable(request.userFavoriteDrinks())
                     .orElse(Collections.emptyList())
                     .stream()
                     .filter(StringUtils::hasText)
@@ -76,10 +76,11 @@ public class UserCaffeineInfoService {
 
             userCaffeineInfoRepository.save(entity);
 
-            return UserCaffeineInfoCreateResponse.builder()
-                    .userId(user.getId().toString())
-                    .createdAt(entity.getCreatedAt())
-                    .build();
+            return new UserCaffeineInfoCreateResponse(
+                user.getId().toString(),
+                entity.getCreatedAt()
+            );
+
 
         } catch (Exception e) {
             log.error(e.getMessage(), e);
@@ -112,7 +113,7 @@ public class UserCaffeineInfoService {
                 // 값 유지: set 하지 않음
             }
 
-            List<UserFavoriteDrinkType> favoriteDrinkTypes = Optional.ofNullable(request.getUserFavoriteDrinks())
+            List<UserFavoriteDrinkType> favoriteDrinkTypes = Optional.ofNullable(request.userFavoriteDrinks())
                     .orElse(Collections.emptyList())
                     .stream()
                     .filter(StringUtils::hasText)
@@ -130,10 +131,10 @@ public class UserCaffeineInfoService {
                 user.setFavoriteDrinks(favoriteDrinkTypes);
             }
 
-            return UserCaffeineInfoUpdateResponse.builder()
-                    .userId(user.getId().toString())
-                    .updatedAt(entity.getUpdatedAt())
-                    .build();
+            return new UserCaffeineInfoUpdateResponse(
+                    user.getId().toString(),
+                    entity.getUpdatedAt()
+            );
         } catch (Exception e) {
             throw new CustomApiException(ErrorStatus.BAD_REQUEST);
         }

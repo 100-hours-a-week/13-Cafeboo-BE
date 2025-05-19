@@ -1,7 +1,6 @@
 package com.ktb.cafeboo.domain.report.controller;
 
 import com.ktb.cafeboo.domain.report.dto.MonthlyCaffeineReportResponse;
-import com.ktb.cafeboo.domain.report.dto.WeeklyCaffeineReportResponse;
 import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.domain.report.model.WeeklyReport;
 import com.ktb.cafeboo.domain.report.service.WeeklyReportService;
@@ -13,7 +12,6 @@ import java.time.DateTimeException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.time.ZoneId;
 import java.time.temporal.IsoFields;
 import java.util.List;
 import java.util.Map;

@@ -77,11 +77,11 @@ public class KakaoOauthService {
             user = userRepository.save(User.fromKakao(kakaoUser));
 
             // 기본 알람 설정
-            UserAlarmSettingCreateRequest userAlarmSetting = UserAlarmSettingCreateRequest.builder()
-                    .alarmBeforeSleep(false)
-                    .alarmWhenExceedIntake(false)
-                    .alarmForChat(false)
-                    .build();
+            UserAlarmSettingCreateRequest userAlarmSetting = new UserAlarmSettingCreateRequest(
+                false,
+                false,
+                false
+            );
             userAlarmSettingService.create(user.getId(), userAlarmSetting);
 
             requiresOnboarding = true;
@@ -122,12 +122,12 @@ public class KakaoOauthService {
                         }
                 );
 
-        return LoginResponse.builder()
-                .userId(user.getId().toString())
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .requiresOnboarding(requiresOnboarding)
-                .build();
+        return new LoginResponse(
+                user.getId().toString(),
+                accessToken,
+                requiresOnboarding,
+                refreshToken
+        );
     }
 
     public void logoutFromKakao(Long userId) {

@@ -40,10 +40,10 @@ public class UserHealthInfoService {
             UserHealthInfo entity = UserHealthInfoMapper.toEntity(request, user);
             userHealthInfoRepository.save(entity);
 
-            return UserHealthInfoCreateResponse.builder()
-                    .userId(user.getId().toString())
-                    .createdAt(entity.getCreatedAt())
-                    .build();
+            return new UserHealthInfoCreateResponse(
+                    user.getId().toString(),
+                    entity.getCreatedAt()
+            );
 
         } catch (Exception e) {
             // 매핑/저장 중 오류 발생 시 BAD_REQUEST 반환
@@ -83,10 +83,10 @@ public class UserHealthInfoService {
             throw new CustomApiException(ErrorStatus.BAD_REQUEST);
         }
 
-        return UserHealthInfoUpdateResponse.builder()
-                .userId(userId.toString())
-                .updatedAt(healthInfo.getUpdatedAt())
-                .build();
+        return new UserHealthInfoUpdateResponse(
+            userId.toString(),
+            healthInfo.getUpdatedAt()
+        );
     }
 
     @Transactional(readOnly = true)

@@ -72,14 +72,15 @@ public class MonthlyReportService {
         }
 
         List<YearlyCaffeineReportResponse.MonthlyIntakeTotal> monthlyIntakeTotals = result.stream()
-            .map(report -> YearlyCaffeineReportResponse.MonthlyIntakeTotal.builder()
-                .month(report.getMonth())
-                .totalCaffeineMg(report.getTotalCaffeineMg())
-                .build())
+            .map(report -> new YearlyCaffeineReportResponse.MonthlyIntakeTotal(
+                report.getMonth(),
+                report.getTotalCaffeineMg()
+            ))
             .collect(Collectors.toList());
 
+
         float yearlyCaffeineTotal = (float) monthlyIntakeTotals.stream()
-            .mapToDouble(YearlyCaffeineReportResponse.MonthlyIntakeTotal::getTotalCaffeineMg)
+            .mapToDouble(YearlyCaffeineReportResponse.MonthlyIntakeTotal::totalCaffeineMg)
             .sum();
 
         float monthlyCaffeineAvg = monthlyIntakeTotals.isEmpty() ? 0f :
@@ -88,15 +89,14 @@ public class MonthlyReportService {
         String startDate = year + "-01-01";
         String endDate = year + "-12-31";
 
-        return YearlyCaffeineReportResponse.builder()
-            .filter(YearlyCaffeineReportResponse.Filter.builder().year(String.valueOf(year)).build())
-            .startDate(startDate)
-            .endDate(endDate)
-            .yearlyCaffeineTotal(yearlyCaffeineTotal)
-            .monthlyCaffeineAvg(monthlyCaffeineAvg)
-            .monthlyIntakeTotals(monthlyIntakeTotals)
-            .build();
-
+        return new YearlyCaffeineReportResponse(
+            new YearlyCaffeineReportResponse.Filter(String.valueOf(year)),
+            startDate,
+            endDate,
+            yearlyCaffeineTotal,
+            monthlyCaffeineAvg,
+            monthlyIntakeTotals
+        );
     }
 
     public void updateMonthlyReport(Long userId, MonthlyReport monthlyReport, Float additionalCaffeine) {

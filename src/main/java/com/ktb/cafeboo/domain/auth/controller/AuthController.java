@@ -51,9 +51,9 @@ public class AuthController {
             @RequestBody KakaoLoginRequest request,
             HttpServletResponse response) {
 
-        LoginResponse loginResponse = kakaoOauthService.login(request.getCode());
+        LoginResponse loginResponse = kakaoOauthService.login(request.code());
 
-        ResponseCookie cookie = ResponseCookie.from("refreshToken", loginResponse.getRefreshToken())
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", loginResponse.refreshToken())
                 .httpOnly(true)
                 .secure(true)
                 .path("/")

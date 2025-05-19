@@ -1,14 +1,8 @@
 package com.ktb.cafeboo.domain.user.dto;
 
-import lombok.Builder;
-import lombok.Getter;
-
 import java.time.LocalDateTime;
 
-@Getter
-@Builder
-public class UserCaffeineInfoUpdateResponse {
-    private String userId;
-    private LocalDateTime updatedAt;
-}
-
+public record UserCaffeineInfoUpdateResponse(
+        String userId,
+        LocalDateTime updatedAt
+) {}

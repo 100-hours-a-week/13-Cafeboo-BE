@@ -1,6 +1,6 @@
 package com.ktb.cafeboo.domain.user.service;
 
-import com.ktb.cafeboo.domain.recommend.service.CaffeineRecommendationService;
+import com.ktb.cafeboo.domain.ai.service.CaffeineRecommendationService;
 import com.ktb.cafeboo.domain.report.service.DailyStatisticsService;
 import com.ktb.cafeboo.domain.user.dto.*;
 import com.ktb.cafeboo.domain.user.mapper.UserHealthInfoMapper;

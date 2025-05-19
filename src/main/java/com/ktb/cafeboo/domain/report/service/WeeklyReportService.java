@@ -1,8 +1,6 @@
 package com.ktb.cafeboo.domain.report.service;
 
-import com.ktb.cafeboo.domain.caffeinediary.dto.CaffeineIntakeResponse;
 import com.ktb.cafeboo.domain.caffeinediary.model.CaffeineIntake;
-import com.ktb.cafeboo.domain.report.dto.CoffeeTimeStats;
 import com.ktb.cafeboo.domain.report.dto.WeeklyCaffeineReportResponse;
 import com.ktb.cafeboo.domain.report.model.DailyStatistics;
 import com.ktb.cafeboo.domain.report.model.MonthlyReport;
@@ -15,19 +13,13 @@ import com.ktb.cafeboo.domain.user.service.UserService;
 import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import com.ktb.cafeboo.global.infra.ai.client.AiServerClient;
-import com.ktb.cafeboo.global.infra.ai.dto.CreateWeeklyReportRequest;
-import com.ktb.cafeboo.global.infra.ai.dto.CreateWeeklyReportResponse;
 import jakarta.transaction.Transactional;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.YearMonth;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.IsoFields;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -274,6 +266,19 @@ public class WeeklyReportService {
             }
         }
         weeklyReport.setOverIntakeDays(overIntakeDays);
+
+        weeklyReportRepository.save(weeklyReport);
+    }
+
+    public void updateAiMessage(Long userId, String WeeklyReportAnalysis){
+        LocalDate yesterday = LocalDate.now().minusDays(1);
+        int weekNum = yesterday.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
+        int year = yesterday.getYear();
+
+        WeeklyReport weeklyReport = weeklyReportRepository.findByUserIdAndYearAndWeekNum(userId, year, weekNum)
+            .orElseThrow(() -> new CustomApiException(ErrorStatus.REPORT_NOT_FOUND));
+
+        weeklyReport.setAiMessage(WeeklyReportAnalysis);
 
         weeklyReportRepository.save(weeklyReport);
     }

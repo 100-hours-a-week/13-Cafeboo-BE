@@ -38,7 +38,7 @@ public class WeeklyReportScheduler {
     private final CaffeineIntakeRepository intakeRepository;
     private final CaffeineResidualService caffeineResidualService;
 
-    @Scheduled(fixedRate = 30000) // 매주 일요일 0시
+    @Scheduled(fixedRate = 300000) // 매주 일요일 0시
     public CreateWeeklyAnalysisResponse generateWeeklyReports() {
 
 //        int targetYear = 2024;
@@ -114,10 +114,12 @@ public class WeeklyReportScheduler {
                 double recommendedLimit = user.getCaffeinInfo().getDailyCaffeineLimitMg();
 
                 String period = startDate.toString() + " ~ " + endDate.toString();
+                LocalTime userSleepTime = (user.getHealthInfo() != null && user.getHealthInfo().getSleepTime() != null) ? user.getHealthInfo().getSleepTime()
+                                                                                                                        : LocalTime.of(0, 0);
 
                 int over100mgBeforeSleepDays = 0;
                 for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
-                    CaffeineResidual residual = caffeineResidualService.findByUserAndTargetDateAndHour(user, date.atStartOfDay(), user.getHealthInfo().getSleepTime().getHour());
+                    CaffeineResidual residual = caffeineResidualService.findByUserAndTargetDateAndHour(user, date.atStartOfDay(), userSleepTime.getHour());
                     if (residual != null && residual.getResidueAmountMg() > 100.0) {
                         over100mgBeforeSleepDays++;
                     }
@@ -130,8 +132,8 @@ public class WeeklyReportScheduler {
                     .percentageOfLimit((float)(dailyAvg * 100 / recommendedLimit))
                     .highlightDayHigh(highlightDayHighStr)
                     .highlightDayLow(highlightDayLowStr)
-                    .firstCoffeeAvg(firstAvg != null ? firstAvg.toString() : null)
-                    .lastCoffeeAvg(lastAvg != null ? lastAvg.toString() : null)
+                    .firstCoffeeAvg(firstAvg != null ? firstAvg.toString() : "")
+                    .lastCoffeeAvg(lastAvg != null ? lastAvg.toString() : "")
                     .lateNightCaffeineDays(lateNightDays)
                     .over100mgBeforeSleepDays(over100mgBeforeSleepDays)
                     .averageSleepQuality("good") // TODO: 이후 유저에게서 수면 피드백을 받을 것인지?
@@ -213,7 +215,8 @@ public class WeeklyReportScheduler {
         List<LocalTime> lastTimes = new ArrayList<>();
         int lateNightDays = 0;
 
-        LocalTime wakeUpTime = user.getHealthInfo().getWakeUpTime();
+        LocalTime userWakeupTime = (user.getHealthInfo() != null && user.getHealthInfo().getSleepTime() != null) ? user.getHealthInfo().getSleepTime()
+            : LocalTime.of(7, 0);
 
         for (Map.Entry<LocalDate, List<CaffeineIntake>> entry : byDate.entrySet()) {
             LocalDate date = entry.getKey();
@@ -231,7 +234,7 @@ public class WeeklyReportScheduler {
 
             // 22시 ~ 다음날 기상시간 사이 섭취 기록이 있는지 체크
             LocalDateTime lateStart = date.atTime(22, 0);
-            LocalDateTime lateEnd = date.plusDays(1).atTime(wakeUpTime);
+            LocalDateTime lateEnd = date.plusDays(1).atTime(userWakeupTime);
 
             boolean hasLateNight = dayIntakes.stream()
                 .map(CaffeineIntake::getIntakeTime)

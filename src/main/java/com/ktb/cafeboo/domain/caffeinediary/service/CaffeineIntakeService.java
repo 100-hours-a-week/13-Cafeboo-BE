@@ -82,6 +82,7 @@ public class CaffeineIntakeService {
         intakeRepository.save(intake);
 
         // 2. 잔존량 계산
+        caffeineResidualService.updateResidualAmounts(userId, request.intakeTime(), request.caffeineAmount());
 
         // 3. DailyStatistics 업데이트
         dailyStatisticsService.updateDailyStatistics(user, LocalDate.from(request.intakeTime()), request.caffeineAmount());

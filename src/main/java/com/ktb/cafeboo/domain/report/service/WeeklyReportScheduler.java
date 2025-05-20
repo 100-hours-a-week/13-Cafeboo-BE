@@ -111,7 +111,8 @@ public class WeeklyReportScheduler {
                     .mapToDouble(CaffeineIntake::getCaffeineAmountMg)
                     .sum();
                 double dailyAvg = totalCaffeine / 7.0;
-                double recommendedLimit = user.getCaffeinInfo().getDailyCaffeineLimitMg();
+                double recommendedLimit = user.getCaffeinInfo() != null ? user.getCaffeinInfo().getDailyCaffeineLimitMg()
+                                                                        : 400;
 
                 String period = startDate.toString() + " ~ " + endDate.toString();
                 LocalTime userSleepTime = (user.getHealthInfo() != null && user.getHealthInfo().getSleepTime() != null) ? user.getHealthInfo().getSleepTime()
@@ -215,7 +216,7 @@ public class WeeklyReportScheduler {
         List<LocalTime> lastTimes = new ArrayList<>();
         int lateNightDays = 0;
 
-        LocalTime userWakeupTime = (user.getHealthInfo() != null && user.getHealthInfo().getSleepTime() != null) ? user.getHealthInfo().getSleepTime()
+        LocalTime userWakeupTime = (user.getHealthInfo() != null && user.getHealthInfo().getWakeUpTime() != null) ? user.getHealthInfo().getWakeUpTime()
             : LocalTime.of(7, 0);
 
         for (Map.Entry<LocalDate, List<CaffeineIntake>> entry : byDate.entrySet()) {

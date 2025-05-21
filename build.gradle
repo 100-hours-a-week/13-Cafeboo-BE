@@ -33,6 +33,17 @@ dependencies {
 	implementation 'com.mysql:mysql-connector-j:8.0.33'
 	implementation 'com.auth0:java-jwt:4.2.1'
 
+	//swagger
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6'
+
+
+	//prometheus
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'io.micrometer:micrometer-registry-prometheus'
+
+	implementation 'org.springframework.boot:spring-boot-starter'
+	implementation 'io.micrometer:micrometer-core'
+
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	annotationProcessor 'org.projectlombok:lombok'

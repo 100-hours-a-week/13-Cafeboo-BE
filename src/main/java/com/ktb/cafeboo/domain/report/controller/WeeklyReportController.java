@@ -38,10 +38,10 @@ public class WeeklyReportController {
     private final WeeklyReportScheduler weeklyReportScheduler;
     private final UserService userService;
     /**
-     * 사용자의 일일 카페인 섭취 현황 데이터를 조회합니다.
+     * 사용자의 주간 카페인 섭취 현황 데이터를 조회합니다.
      * 상세 스펙은 @see <a href="https://freckle-pipe-840.notion.site/1ddb43be904c80ccbb02c746ff16a3ba">주간 섭취 현황 조회 API 스펙 문서</a>
      //     * @param user 현재 인증된 사용자
-     * @return 일일 카페인 섭취 리포트
+     * @return 주간 카페인 섭취 리포트
      * @throws IllegalArgumentException 잘못된 요청 파라미터
     //     * @throws AuthenticationException 인증 실패
      */
@@ -55,9 +55,8 @@ public class WeeklyReportController {
         Long userId = userDetails.getId();
 
         List<DailyStatistics> dailyStats = dailyStatisticsService.getDailyStatisticsForWeek(userId, targetYear, targetMonth, targetWeek);
-        List<CaffeineIntake> intakes = intakeService.getDailyCaffeineIntakeForWeek(userId, targetYear, targetMonth, targetWeek);
 
-        WeeklyCaffeineReportResponse response = weeklyReportService.getWeeklyReport(userId, targetYear, targetMonth, targetWeek, dailyStats, intakes);
+        WeeklyCaffeineReportResponse response = weeklyReportService.getWeeklyReport(userId, targetYear, targetMonth, targetWeek, dailyStats);
 
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.WEEKLY_CAFFEINE_REPORT_SUCCESS, response));
     }
@@ -82,7 +81,11 @@ public class WeeklyReportController {
             log.info("API 요청 종료: /api/v1/reports/test - 사용자: {}", userDetails.getUsername()); // 요청 종료 로그
         }
     }
-    
+
+    /**
+     * AI 서버가 비동기로 유저 주간 섭취내역에 대한 평가 생성 완료 후 콜백으로 호출하는 BE 엔드포인트
+     * @param request AI 서버가 비동기로 생성한 유저 주간 섭취내역에 대한 평가
+     */
     @PostMapping("/ai_callback")
     public void getWeeklyCaffeineReportFromAI(@RequestBody ReceiveWeeklyAnalysisRequest request){
 

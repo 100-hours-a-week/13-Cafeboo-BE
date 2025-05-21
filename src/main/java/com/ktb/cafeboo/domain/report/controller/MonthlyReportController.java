@@ -38,21 +38,12 @@ public class MonthlyReportController {
     @GetMapping
     ResponseEntity<ApiResponse<MonthlyCaffeineReportResponse>> getMonthlyCaffeineReport(
         @AuthenticationPrincipal CustomUserDetails userDetails,
-        @RequestParam(required = false, name = "year") String year,
-        @RequestParam(required = false, name = "month") String month){
+        @RequestParam(required = true, name = "year") String year,
+        @RequestParam(required = true, name = "month") String month){
 
         Long userId = userDetails.getId();
-        YearMonth targetMonth;
 
-        //TODO: Controller와 Service 로직 분리
-        try {
-            targetMonth = YearMonth.of(Integer.parseInt(year), Integer.parseInt(month));
-        } catch (DateTimeException e) {
-            throw new CustomApiException(ErrorStatus.BAD_REQUEST);
-        }
-
-
-        MonthlyCaffeineReportResponse response = weeklyReportService.getWeeklyStatisticsForMonth(userId, targetMonth);
+        MonthlyCaffeineReportResponse response = weeklyReportService.getWeeklyStatisticsForMonth(userId, year, month);
 //        int resolvedYear = targetMonth.getYear();
 //        int resolvedMonth = targetMonth.getMonthValue();
 //

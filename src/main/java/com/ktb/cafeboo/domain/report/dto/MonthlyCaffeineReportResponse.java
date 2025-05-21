@@ -13,7 +13,7 @@ public record MonthlyCaffeineReportResponse(
         String endDate,
         float monthlyCaffeineTotal,
         float weeklyCaffeineAvg,
-        List<WeeklyIntake> weeklyIntakeTotal
+        List<WeeklyIntake> weeklyIntakeTotals
 ) {
     public record Filter(
             String year,

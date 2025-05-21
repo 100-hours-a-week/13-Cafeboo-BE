@@ -15,6 +15,7 @@ import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import com.ktb.cafeboo.global.infra.ai.client.AiServerClient;
 import jakarta.transaction.Transactional;
+import java.time.DateTimeException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -67,12 +68,12 @@ public class WeeklyReportService {
             });
     }
 
-    public WeeklyCaffeineReportResponse getWeeklyReport(Long userId, String targetYear, String targetMonth, String targetWeek,  List<DailyStatistics> dailyStats, List<CaffeineIntake> intakes) {
+    public WeeklyCaffeineReportResponse getWeeklyReport(Long userId, String targetYear, String targetMonth, String targetWeek,  List<DailyStatistics> dailyStats) {
         int year = Integer.parseInt(targetYear);
         int month = Integer.parseInt(targetMonth);
         int week = Integer.parseInt(targetWeek);
+
         User user = userService.findUserById(userId);
-        UserHealthInfo userHealthInfo = user.getHealthInfo();
         UserCaffeinInfo userCaffeinInfo = user.getCaffeinInfo();
 
         LocalDate startOfMonth = LocalDate.of(year, month, 1);;
@@ -194,7 +195,16 @@ public class WeeklyReportService {
         weeklyReportRepository.save(weeklyReport);
     }
 
-    public MonthlyCaffeineReportResponse getWeeklyStatisticsForMonth(Long userId, YearMonth yearMonth){
+    public MonthlyCaffeineReportResponse getWeeklyStatisticsForMonth(Long userId, String givenYear, String givenMonth){
+        YearMonth yearMonth;
+
+        try {
+            yearMonth = YearMonth.of(Integer.parseInt(givenYear), Integer.parseInt(givenMonth));
+        } catch (DateTimeException e) {
+            throw new CustomApiException(ErrorStatus.BAD_REQUEST);
+        }
+
+
         int year = yearMonth.getYear();
         int month = yearMonth.getMonthValue();
 

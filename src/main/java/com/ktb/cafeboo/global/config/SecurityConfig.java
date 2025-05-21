@@ -30,7 +30,10 @@ public class SecurityConfig {
                 .requestMatchers(
                     "/api/v1/auth/**",
                     "/api/v1/users/email",
-                    "/api/v1/reports/weekly/ai_callback"
+                    "/api/v1/reports/weekly/ai_callback",
+                    "/v3/api-docs/**",      // OpenAPI 3.0 스펙 JSON/YAML
+                    "/swagger-ui/**",       // Swagger UI HTML, JS, CSS 파일
+                    "/swagger-ui.html"      // Swagger UI 메인 페이지
                 ).permitAll()
                 .anyRequest().authenticated()
             )

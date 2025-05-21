@@ -36,6 +36,33 @@ public class CreateWeeklyAnalysisRequest {
     @Setter
     @Builder
     public static class Data {
+        @JsonProperty("gender")
+        private String gender;
+
+        @JsonProperty("age")
+        private int age;
+
+        @JsonProperty("weight")
+        private float weight;
+
+        @JsonProperty("height")
+        private float height;
+
+        @JsonProperty("is_smoker")
+        private int isSmoker;
+
+        @JsonProperty("take_hormonal_contraceptive")
+        private int takeHormonalContraceptive;
+
+        @JsonProperty("has_liver_disease")
+        private int hasLiverDisease;
+
+        @JsonProperty("is_pregnant")
+        private int isPregnant;
+
+        @JsonProperty("nickname")
+        private String nickname;
+
         @JsonProperty("period")
         private String period;
 
@@ -65,8 +92,5 @@ public class CreateWeeklyAnalysisRequest {
 
         @JsonProperty("over_100mg_before_sleep_days")
         private Integer over100mgBeforeSleepDays;
-
-        @JsonProperty("average_sleep_quality")
-        private String averageSleepQuality;
     }
 }

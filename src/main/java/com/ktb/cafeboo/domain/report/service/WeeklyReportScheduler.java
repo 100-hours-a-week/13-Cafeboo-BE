@@ -8,6 +8,7 @@ import com.ktb.cafeboo.domain.caffeinediary.service.CaffeineResidualService;
 import com.ktb.cafeboo.domain.report.dto.CoffeeTimeStats;
 import com.ktb.cafeboo.domain.report.repository.WeeklyReportRepository;
 import com.ktb.cafeboo.domain.user.model.User;
+import com.ktb.cafeboo.domain.user.model.UserHealthInfo;
 import com.ktb.cafeboo.domain.user.repository.UserRepository;
 import com.ktb.cafeboo.global.infra.ai.client.AiServerClient;
 import com.ktb.cafeboo.global.infra.ai.dto.CreateWeeklyAnalysisRequest;
@@ -38,7 +39,7 @@ public class WeeklyReportScheduler {
     private final CaffeineIntakeRepository intakeRepository;
     private final CaffeineResidualService caffeineResidualService;
 
-    @Scheduled(fixedRate = 300000) // 매주 일요일 0시
+    @Scheduled(fixedRate = 300000) // 매주 월요일 오전 9시
     public CreateWeeklyAnalysisResponse generateWeeklyReports() {
 
 //        int targetYear = 2024;
@@ -85,6 +86,22 @@ public class WeeklyReportScheduler {
 
                 List<CaffeineIntake> intakes = intakeRepository.findByUserIdAndIntakeTimeBetween(user.getId(), startDate.atStartOfDay(), endDate.atTime(LocalTime.MAX));
 
+                if (intakes.isEmpty()) {
+                    return null;
+                }
+
+                if(user.getHealthInfo() == null){
+                    return null;
+                }
+
+                UserHealthInfo userHealthInfo = user.getHealthInfo();
+                if (userHealthInfo.getGender() == null ||
+                    userHealthInfo.getSmoking() == null ||
+                    userHealthInfo.getTakingBirthPill() == null ||
+                    userHealthInfo.getHasLiverDisease() == null ||
+                    userHealthInfo.getPregnant() == null) {
+                    return null; // healthInfo 내부 필드 중 하나라도 null이면 null 반환
+                }
 
                 Map<DayOfWeek, Double> dailyCaffeine = intakes.stream()
                     .collect(Collectors.groupingBy(
@@ -127,6 +144,15 @@ public class WeeklyReportScheduler {
                 }
 
                 CreateWeeklyAnalysisRequest.Data userData = CreateWeeklyAnalysisRequest.Data.builder()
+                    .gender(userHealthInfo.getGender())
+                    .age(userHealthInfo.getAge())
+                    .weight(userHealthInfo.getWeight())
+                    .height(userHealthInfo.getHeight())
+                    .isSmoker(userHealthInfo.getSmoking() ? 1 : 0)
+                    .takeHormonalContraceptive(userHealthInfo.getTakingBirthPill() ? 1 : 0)
+                    .hasLiverDisease(userHealthInfo.getHasLiverDisease() ? 1 : 0)
+                    .isPregnant(userHealthInfo.getPregnant() ? 1 : 0)
+                    .nickname(user.getNickname())
                     .period(period)
                     .avgCaffeinePerDay((float) dailyAvg)
                     .recommendedDailyLimit((float)recommendedLimit)
@@ -137,7 +163,6 @@ public class WeeklyReportScheduler {
                     .lastCoffeeAvg(lastAvg != null ? lastAvg.toString() : "")
                     .lateNightCaffeineDays(lateNightDays)
                     .over100mgBeforeSleepDays(over100mgBeforeSleepDays)
-                    .averageSleepQuality("good") // TODO: 이후 유저에게서 수면 피드백을 받을 것인지?
                     .build();
 
                 return CreateWeeklyAnalysisRequest.UserReportData.builder()
@@ -145,6 +170,7 @@ public class WeeklyReportScheduler {
                     .data(userData)
                     .build();
             })
+            .filter(java.util.Objects::nonNull)
             .collect(Collectors.toList());
 
         return CreateWeeklyAnalysisRequest.builder()

@@ -10,6 +10,7 @@ import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.code.status.SuccessStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import com.ktb.cafeboo.global.security.userdetails.CustomUserDetails;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,9 +50,10 @@ public class AuthController {
     @PostMapping("/kakao")
     public ResponseEntity<ApiResponse<LoginResponse>> kakaoLogin(
             @RequestBody KakaoLoginRequest request,
+            HttpServletRequest httpRequest,
             HttpServletResponse response) {
 
-        LoginResponse loginResponse = kakaoOauthService.login(request.code());
+        LoginResponse loginResponse = kakaoOauthService.login(request.code(), httpRequest);
 
         ResponseCookie cookie = ResponseCookie.from("refreshToken", loginResponse.refreshToken())
                 .httpOnly(true)

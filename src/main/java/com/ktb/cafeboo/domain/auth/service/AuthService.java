@@ -7,9 +7,11 @@ import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import com.ktb.cafeboo.global.security.JwtProvider;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -18,12 +20,19 @@ public class AuthService {
     private final JwtProvider jwtProvider;
 
     public TokenRefreshResponse refreshAccessToken(String refreshToken) {
+        log.info("[AuthService.refreshAccessToken] accessToken 갱신 시작");
+
         String userId = jwtProvider.validateRefreshToken(refreshToken);
+        log.info("[AuthService.refreshAccessToken] refreshToken 유효성 검사 완료");
 
         User user = userRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> new CustomApiException(ErrorStatus.USER_NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.warn("[AuthService.refreshAccessToken] 존재하지 않는 사용자 - userId={}", userId);
+                    return new CustomApiException(ErrorStatus.USER_NOT_FOUND);
+                });
 
         if (!refreshToken.equals(user.getRefreshToken())) {
+            log.warn("[AuthService.refreshAccessToken] 저장된 refreshToken과 일치하지 않음 - userId={}", userId);
             throw new CustomApiException(ErrorStatus.REFRESH_TOKEN_MISMATCH);
         }
 
@@ -33,15 +42,24 @@ public class AuthService {
                 user.getRole().name()
         );
 
+        log.info("[AuthService.refreshAccessToken] accessToken 재발급 완료");
+
         return new TokenRefreshResponse(userId, newAccessToken);
     }
 
     @Transactional
     public void logout(Long userId) {
+        log.info("[AuthService.logout] 로그아웃 처리 시작");
+
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomApiException(ErrorStatus.USER_NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.warn("[AuthService.logout] 존재하지 않는 사용자 - userId={}", userId);
+                    return new CustomApiException(ErrorStatus.USER_NOT_FOUND);
+                });
 
         user.updateRefreshToken(null);
         userRepository.save(user);
+
+        log.info("[AuthService.logout] refreshToken 초기화 및 로그아웃 처리 완료");
     }
 }

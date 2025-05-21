@@ -23,7 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.Optional;
+import java.util.function.Consumer;
 
 @Slf4j
 @Service
@@ -63,11 +63,19 @@ public class KakaoOauthService {
 
     @Transactional
     public LoginResponse login(String code) {
+        log.info("[KakaoOauthService.login] 카카오 로그인 요청 수신");
+
         KakaoTokenResponse kakaoToken = getKakaoToken(code);
         KakaoUserResponse kakaoUser = getKakaoUserInfo(kakaoToken.getAccessToken());
 
         User user = getOrCreateUser(kakaoUser);
         boolean requiresOnboarding = !userService.hasCompletedOnboarding(user);
+
+        if (requiresOnboarding) {
+            log.info("[KakaoOauthService.login] 신규 사용자 가입 - userId={}", user.getId());
+        } else {
+            log.info("[KakaoOauthService.login] 기존 사용자 로그인 - userId={}", user.getId());
+        }
 
         String accessToken = generateAccessToken(user);
         String refreshToken = generateRefreshToken(user);
@@ -94,8 +102,13 @@ public class KakaoOauthService {
     }
 
     public String refreshAccessTokenIfExpired(Long userId) {
+        log.info("[KakaoOauthService.refreshAccessTokenIfExpired] accessToken 갱신 시도 - userId={}", userId);
+
         OauthToken oauthToken = oauthTokenRepository.findByUserId(userId)
-                .orElseThrow(() -> new CustomApiException(ErrorStatus.OAUTH_TOKEN_NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.warn("[KakaoOauthService.refreshAccessTokenIfExpired] OauthToken 없음 - userId={}", userId);
+                    return new CustomApiException(ErrorStatus.OAUTH_TOKEN_NOT_FOUND);
+                });
 
         try {
             KakaoTokenResponse response = kakaoTokenClient.refreshAccessToken(
@@ -110,12 +123,15 @@ public class KakaoOauthService {
             );
             oauthTokenRepository.save(oauthToken);
 
+            log.info("[KakaoOauthService.refreshAccessTokenIfExpired] accessToken 갱신 성공 - userId={}", userId);
             return response.getAccessToken();
+
         } catch (CustomApiException e) {
-            log.warn("[카카오 토큰 갱신 실패 - 커스텀 예외] userId: {}, status: {}", userId, e.getErrorCode().getStatus());
+            log.warn("[KakaoOauthService.refreshAccessTokenIfExpired] 카카오 토큰 갱신 실패 (CustomException) - userId={}, status={}", userId, e.getErrorCode().getStatus());
             throw e;
+
         } catch (Exception e) {
-            log.error("[카카오 토큰 갱신 실패 - 시스템 예외] userId: {}, message: {}", userId, e.getMessage());
+            log.error("[KakaoOauthService.refreshAccessTokenIfExpired] 카카오 토큰 갱신 실패 (Exception) - userId={}, message={}", userId, e.getMessage());
             throw new CustomApiException(ErrorStatus.KAKAO_TOKEN_REFRESH_FAILED);
         }
     }
@@ -174,14 +190,17 @@ public class KakaoOauthService {
                 );
     }
 
-    private void tryWithTokenRefresh(Long userId, java.util.function.Consumer<String> action) {
+    private void tryWithTokenRefresh(Long userId, Consumer<String> action) {
         OauthToken oauthToken = oauthTokenRepository.findByUserId(userId)
-                .orElseThrow(() -> new CustomApiException(ErrorStatus.OAUTH_TOKEN_NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.warn("[KakaoOauthService.tryWithTokenRefresh] OauthToken 없음 - userId={}", userId);
+                    return new CustomApiException(ErrorStatus.OAUTH_TOKEN_NOT_FOUND);
+                });
 
         try {
             action.accept(oauthToken.getAccessToken());
         } catch (Exception e) {
-            log.warn("[OauthTokenRefresh] accessToken이 만료되어 재발급 후 재시도합니다. userId: {}", userId);
+            log.warn("[KakaoOauthService.tryWithTokenRefresh] accessToken 만료로 재발급 후 재시도 - userId={}", userId);
             String newAccessToken = refreshAccessTokenIfExpired(userId);
             action.accept(newAccessToken);
         }

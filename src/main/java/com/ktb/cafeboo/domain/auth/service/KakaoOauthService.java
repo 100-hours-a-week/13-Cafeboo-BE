@@ -63,64 +63,19 @@ public class KakaoOauthService {
 
     @Transactional
     public LoginResponse login(String code) {
-        KakaoTokenResponse kakaoToken = kakaoTokenClient.getToken(code, clientId, redirectUri, grantType);
-        KakaoUserResponse kakaoUser = kakaoUserClient.getUserInfo(kakaoToken.getAccessToken());
+        KakaoTokenResponse kakaoToken = getKakaoToken(code);
+        KakaoUserResponse kakaoUser = getKakaoUserInfo(kakaoToken.getAccessToken());
 
-        Optional<User> userOpt = userRepository.findByOauthIdAndLoginType(kakaoUser.getId(), LoginType.KAKAO);
-        User user;
-        boolean requiresOnboarding;
+        User user = getOrCreateUser(kakaoUser);
+        boolean requiresOnboarding = !userService.hasCompletedOnboarding(user);
 
-        if (userOpt.isPresent()) {
-            user = userOpt.get();
-            requiresOnboarding = !userService.hasCompletedOnboarding(user);
-        } else {
-            user = userRepository.save(User.fromKakao(kakaoUser));
+        String accessToken = generateAccessToken(user);
+        String refreshToken = generateRefreshToken(user);
 
-            // 기본 알람 설정
-            UserAlarmSettingCreateRequest userAlarmSetting = new UserAlarmSettingCreateRequest(
-                false,
-                false,
-                false
-            );
-            userAlarmSettingService.create(user.getId(), userAlarmSetting);
-
-            requiresOnboarding = true;
-        }
-
-        String accessToken = jwtProvider.createAccessToken(
-                String.valueOf(user.getId()),
-                LoginType.KAKAO.name(),
-                user.getRole().name()
-        );
-        String refreshToken = jwtProvider.createRefreshToken(
-                String.valueOf(user.getId()),
-                LoginType.KAKAO.name(),
-                user.getRole().name()
-        );
         user.updateRefreshToken(refreshToken);
         userRepository.save(user);
 
-        // 카카오 Oauth 토큰 저장
-        oauthTokenRepository.findByUserId(user.getId())
-                .ifPresentOrElse(
-                        existingToken -> {
-                            existingToken.update(
-                                    kakaoToken.getAccessToken(),
-                                    kakaoToken.getRefreshToken(),
-                                    kakaoToken.getExpiresIn()
-                            );
-                        },
-                        () -> {
-                            OauthToken newToken = OauthToken.of(
-                                    user,
-                                    kakaoToken.getAccessToken(),
-                                    kakaoToken.getRefreshToken(),
-                                    LoginType.KAKAO,
-                                    kakaoToken.getExpiresIn()
-                            );
-                            oauthTokenRepository.save(newToken);
-                        }
-                );
+        saveOrUpdateOauthToken(user, kakaoToken);
 
         return new LoginResponse(
                 user.getId().toString(),
@@ -163,6 +118,60 @@ public class KakaoOauthService {
             log.error("[카카오 토큰 갱신 실패 - 시스템 예외] userId: {}, message: {}", userId, e.getMessage());
             throw new CustomApiException(ErrorStatus.KAKAO_TOKEN_REFRESH_FAILED);
         }
+    }
+
+    private KakaoTokenResponse getKakaoToken(String code) {
+        return kakaoTokenClient.getToken(code, clientId, redirectUri, grantType);
+    }
+
+    private KakaoUserResponse getKakaoUserInfo(String accessToken) {
+        return kakaoUserClient.getUserInfo(accessToken);
+    }
+
+    private User getOrCreateUser(KakaoUserResponse kakaoUser) {
+        return userRepository.findByOauthIdAndLoginType(kakaoUser.getId(), LoginType.KAKAO)
+                .orElseGet(() -> {
+                    User newUser = userRepository.save(User.fromKakao(kakaoUser));
+                    userAlarmSettingService.create(
+                            newUser.getId(),
+                            new UserAlarmSettingCreateRequest(false, false, false)
+                    );
+                    return newUser;
+                });
+    }
+
+    private String generateAccessToken(User user) {
+        return jwtProvider.createAccessToken(
+                user.getId().toString(),
+                user.getLoginType().name(),
+                user.getRole().name()
+        );
+    }
+
+    private String generateRefreshToken(User user) {
+        return jwtProvider.createRefreshToken(
+                user.getId().toString(),
+                user.getLoginType().name(),
+                user.getRole().name()
+        );
+    }
+
+    private void saveOrUpdateOauthToken(User user, KakaoTokenResponse kakaoToken) {
+        oauthTokenRepository.findByUserId(user.getId())
+                .ifPresentOrElse(
+                        existingToken -> existingToken.update(
+                                kakaoToken.getAccessToken(),
+                                kakaoToken.getRefreshToken(),
+                                kakaoToken.getExpiresIn()
+                        ),
+                        () -> oauthTokenRepository.save(OauthToken.of(
+                                user,
+                                kakaoToken.getAccessToken(),
+                                kakaoToken.getRefreshToken(),
+                                LoginType.KAKAO,
+                                kakaoToken.getExpiresIn()
+                        ))
+                );
     }
 
     private void tryWithTokenRefresh(Long userId, java.util.function.Consumer<String> action) {

@@ -29,7 +29,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers(
                     "/api/v1/auth/**",
-                    "/api/v1/users/email"
+                    "/api/v1/users/email",
+                    "/api/v1/reports/weekly/ai_callback"
                 ).permitAll()
                 .anyRequest().authenticated()
             )

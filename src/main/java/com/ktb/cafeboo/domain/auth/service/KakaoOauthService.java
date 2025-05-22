@@ -16,6 +16,7 @@ import com.ktb.cafeboo.domain.user.repository.UserRepository;
 import com.ktb.cafeboo.domain.user.service.UserService;
 import com.ktb.cafeboo.global.enums.LoginType;
 import com.ktb.cafeboo.global.security.JwtProvider;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -62,11 +63,19 @@ public class KakaoOauthService {
     }
 
     @Transactional
-    public LoginResponse login(String code) {
+    public LoginResponse login(String code, HttpServletRequest request) {
         log.info("[KakaoOauthService.login] 카카오 로그인 요청 수신");
+        String origin = request.getHeader("Origin");
+        String resolvedRedirectUri;
 
-        KakaoTokenResponse kakaoToken = getKakaoToken(code);
-        KakaoUserResponse kakaoUser = getKakaoUserInfo(kakaoToken.getAccessToken());
+        if (origin != null && origin.contains("localhost")) {
+            resolvedRedirectUri = "http://localhost:5173/oauth/kakao/callback";
+        } else {
+            resolvedRedirectUri = this.redirectUri;
+        }
+
+        KakaoTokenResponse kakaoToken = kakaoTokenClient.getToken(code, clientId, resolvedRedirectUri, grantType);
+        KakaoUserResponse kakaoUser = kakaoUserClient.getUserInfo(kakaoToken.getAccessToken());
 
         User user = getOrCreateUser(kakaoUser);
         boolean requiresOnboarding = !userService.hasCompletedOnboarding(user);

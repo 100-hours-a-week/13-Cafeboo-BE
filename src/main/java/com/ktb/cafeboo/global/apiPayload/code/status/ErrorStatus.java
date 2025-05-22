@@ -54,7 +54,10 @@ public enum ErrorStatus implements BaseCode {
     REPORT_NOT_FOUND(404, "REPORT_NOT_FOUND", "리포트 정보를 찾을 수 없습니다."),
 
     //AI 리포트 생성 관련 오류
-    REPORT_GENERATION_FAILED(500, "REPORT_GENERATION_FAILED", "AI 리포트 생성에 실패했습니다")
+    REPORT_GENERATION_FAILED(500, "REPORT_GENERATION_FAILED", "AI 리포트 생성에 실패했습니다"),
+
+    //파라미터 관련 오류
+    INVALID_PARAMETER(400, "INVALID_PARAMETER", "요청 파라미터의 올바르지 않습니다."),
     ;
 
     private final int status;

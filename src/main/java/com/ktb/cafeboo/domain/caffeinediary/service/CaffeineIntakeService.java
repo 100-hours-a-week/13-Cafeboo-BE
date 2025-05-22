@@ -213,7 +213,7 @@ public class CaffeineIntakeService {
     public MonthlyCaffeineDiaryResponse getCaffeineIntakeDiary(Long userId, String targetYear, String targetMonth){
         if(targetYear == null || targetMonth == null || targetYear.isEmpty() || targetMonth.isEmpty()){
             log.error("[CaffeineIntakeService.getCaffeineIntakeDiary] 파라미터 누락 - year={}, month={}", targetYear, targetMonth);
-            throw new CustomApiException(ErrorStatus.BAD_REQUEST);
+            throw new CustomApiException(ErrorStatus.INVALID_PARAMETER);
         }
 
         int year = Integer.parseInt(targetYear);
@@ -265,7 +265,7 @@ public class CaffeineIntakeService {
     public DailyCaffeineDiaryResponse getDailyCaffeineIntake(Long userId, String targetDate){
         if(targetDate == null || targetDate.isEmpty()){
             log.error("[CaffeineIntakeService.getDailyCaffeineIntake] 파라미터 누락 - date={}", targetDate);
-            throw new CustomApiException(ErrorStatus.BAD_REQUEST);
+            throw new CustomApiException(ErrorStatus.INVALID_PARAMETER);
         }
 
         LocalDate date = LocalDate.parse(targetDate);
@@ -297,72 +297,5 @@ public class CaffeineIntakeService {
                 totalCaffeineMg,
                 intakeList
         );
-    }
-
-    public List<CaffeineIntake> getDailyCaffeineIntakeForWeek(Long userId, String targetYear, String targetMonth, String targetWeek){
-        if(targetYear == null || targetMonth == null || targetWeek == null
-            || targetYear.isEmpty() || targetMonth.isEmpty() || targetWeek.isEmpty())
-        {
-            log.error("[CaffeineIntakeService.getDailyCaffeineIntakeForWeek] 파라미터 누락 - year={}, month={}, week={}",
-                    targetYear, targetMonth, targetWeek);
-            throw new CustomApiException(ErrorStatus.BAD_REQUEST);
-        }
-
-        int year = Integer.parseInt(targetYear);
-        int month = Integer.parseInt(targetMonth);
-        int week = Integer.parseInt(targetWeek);
-
-//        // 주어진 year와 month로 해당 달의 첫 번째 날짜를 얻습니다.
-//        LocalDate firstDayOfMonth = LocalDate.of(year, month, 1);
-//
-//        // 해당 달의 첫 번째 주 월요일을 찾습니다.
-//        LocalDate firstMondayOfMonth = firstDayOfMonth.with(
-//            TemporalAdjusters.firstInMonth(DayOfWeek.MONDAY));
-//
-//        // 만약 첫 번째 날짜가 월요일보다 앞선다면, 그 주는 이전 달의 마지막 주에 해당할 수 있습니다.
-//        // 이를 보정하기 위해 첫 번째 월요일이 없다면 해당 달의 1일로 시작하는 주를 기준으로 합니다.
-//        LocalDate firstWeekStart = firstMondayOfMonth.getMonthValue() != month ?
-//            firstDayOfMonth : firstMondayOfMonth;
-//
-//        // 첫 번째 주 시작 날짜에 (weekOfMonth - 1) 주를 더하여 해당 월의 weekOfMonth 번째 주의 시작 날짜를 얻습니다.
-//        LocalDate startDate = firstWeekStart.plusWeeks(week - 1);
-//        LocalDate endDate = startDate.plusDays(6);
-
-        LocalDate startOfMonth = LocalDate.of(year, month, 1);;
-        DayOfWeek dayOfWeek = startOfMonth.getDayOfWeek();
-
-        //ISO 8601 기준은 월요일 기준. 월 ~ 일요일 까지 날짜 중, 과반 수 이상이 포함된 주차로 속하게 됨
-        if (dayOfWeek == DayOfWeek.FRIDAY ||
-            dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
-            startOfMonth = startOfMonth.plusWeeks(1);
-        }
-
-        LocalDate endOfMonth = LocalDate.of(year, month, 1);
-        dayOfWeek = endOfMonth.getDayOfWeek();
-
-        //ISO 8601 기준은 월요일 기준. 월 ~ 일요일 까지 날짜 중, 과반 수 이상이 포함된 주차로 속하게 됨
-        if (dayOfWeek == DayOfWeek.MONDAY ||
-            dayOfWeek == DayOfWeek.TUESDAY || dayOfWeek == DayOfWeek.WEDNESDAY) {
-            endOfMonth = endOfMonth.minusWeeks(1);
-        }
-
-//        // 주어진 year와 month로 해당 달의 첫 번째 날짜를 얻습니다.
-//        LocalDate startOfMonth = LocalDate.of(year, month, 1);
-//
-//        // 해당 달의 첫 번째 주 월요일을 찾습니다.
-//        LocalDate firstMondayOfMonth = firstDayOfMonth.with(TemporalAdjusters.firstInMonth(DayOfWeek.MONDAY));
-//
-//        // 만약 첫 번째 날짜가 월요일보다 앞선다면, 그 주는 이전 달의 마지막 주에 해당할 수 있습니다.
-//        // 이를 보정하기 위해 첫 번째 월요일이 없다면 해당 달의 1일로 시작하는 주를 기준으로 합니다.
-//        LocalDate firstWeekStart = firstMondayOfMonth.getMonthValue() != month ?
-//            firstDayOfMonth : firstMondayOfMonth;
-//
-//        // 첫 번째 주 시작 날짜에 (weekOfMonth - 1) 주를 더하여 해당 월의 weekOfMonth 번째 주의 시작 날짜를 얻습니다.
-        LocalDate startDate = startOfMonth.plusWeeks(week - 1).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-        LocalDate endDate = startDate.plusDays(6);
-
-        LocalDateTime start = startDate.atStartOfDay();
-        LocalDateTime end = endDate.atTime(LocalTime.MAX);
-        return intakeRepository.findByUserIdAndIntakeTimeBetween(userId, start, end);
     }
 }

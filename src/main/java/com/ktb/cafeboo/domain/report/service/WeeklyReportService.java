@@ -14,6 +14,7 @@ import com.ktb.cafeboo.domain.user.service.UserService;
 import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import com.ktb.cafeboo.global.infra.ai.client.AiServerClient;
+import com.ktb.cafeboo.global.infra.ai.dto.ReceiveWeeklyAnalysisRequest;
 import jakarta.transaction.Transactional;
 import java.time.DateTimeException;
 import java.time.DayOfWeek;
@@ -351,16 +352,21 @@ public class WeeklyReportService {
         weeklyReportRepository.save(weeklyReport);
     }
 
-    public void updateAiMessage(Long userId, String WeeklyReportAnalysis){
+    public void updateAiMessage(List<ReceiveWeeklyAnalysisRequest.ReportDto> receivedReports){
         LocalDate yesterday = LocalDate.now().minusDays(1);
         int weekNum = yesterday.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
         int year = yesterday.getYear();
 
-        WeeklyReport weeklyReport = weeklyReportRepository.findByUserIdAndYearAndWeekNum(userId, year, weekNum)
-            .orElseThrow(() -> new CustomApiException(ErrorStatus.REPORT_NOT_FOUND));
+        for(ReceiveWeeklyAnalysisRequest.ReportDto report : receivedReports) {
+            Long userId = Long.valueOf(report.getUserId());
+            String WeeklyReportAnalysis = report.getReport();
 
-        weeklyReport.setAiMessage(WeeklyReportAnalysis);
+            WeeklyReport weeklyReport = weeklyReportRepository.findByUserIdAndYearAndWeekNum(userId, year, weekNum)
+                .orElseThrow(() -> new CustomApiException(ErrorStatus.REPORT_NOT_FOUND));
 
-        weeklyReportRepository.save(weeklyReport);
+            weeklyReport.setAiMessage(WeeklyReportAnalysis);
+
+            weeklyReportRepository.save(weeklyReport);
+        }
     }
 }

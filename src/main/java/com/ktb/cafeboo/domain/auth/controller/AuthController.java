@@ -10,6 +10,7 @@ import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.code.status.SuccessStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import com.ktb.cafeboo.global.security.userdetails.CustomUserDetails;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,10 +52,12 @@ public class AuthController {
     @PostMapping("/kakao")
     public ResponseEntity<ApiResponse<LoginResponse>> kakaoLogin(
             @RequestBody KakaoLoginRequest request,
+            HttpServletRequest httpRequest,
             HttpServletResponse response) {
         log.info("[POST /api/v1/auth/kakao] 카카오 로그인 요청 수신");
 
-        LoginResponse loginResponse = kakaoOauthService.login(request.code());
+  
+        LoginResponse loginResponse = kakaoOauthService.login(request.code(), httpRequest);
         log.info("[POST /api/v1/auth/kakao] 카카오 로그인 성공");
 
         ResponseCookie cookie = ResponseCookie.from("refreshToken", loginResponse.refreshToken())

@@ -91,11 +91,6 @@ public class WeeklyReportController {
 
         List<ReceiveWeeklyAnalysisRequest.ReportDto> receivedReports = request.getReports();
 
-        for(ReceiveWeeklyAnalysisRequest.ReportDto report : receivedReports){
-            Long userId = Long.valueOf(report.getUserId());
-            String WeeklyReportAnalysis = report.getReport();
-
-            weeklyReportService.updateAiMessage(userId, WeeklyReportAnalysis);
-        }
+        weeklyReportService.updateAiMessage(receivedReports);
     }
 }

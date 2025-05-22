@@ -87,8 +87,6 @@ public class CaffeineResidualService {
     public void updateResidualAmounts(Long userId, LocalDateTime intakeTime, float initialCaffeineAmount) {
         User user = userService.findUserById(userId);
 
-        LocalDateTime endTime = intakeTime.plusHours(24);
-
         List<CaffeineResidual> residuals = new ArrayList<>();
         for (int hourOffset = 0; hourOffset <= 24; hourOffset++) {
             LocalDateTime targetTime = intakeTime.plusHours(hourOffset);
@@ -134,8 +132,8 @@ public class CaffeineResidualService {
         User user,
         LocalDateTime currentDateTime) {
 
-        LocalDateTime startTime = currentDateTime.minusHours(17);
-        LocalDateTime endTime = currentDateTime.plusHours(17);
+        LocalDateTime startTime = currentDateTime.minusHours(HOURS_RANGE);
+        LocalDateTime endTime = currentDateTime.plusHours(HOURS_RANGE);
 
         List<CaffeineResidual> residuals = residualRepository.findResidualsByTimeRange(
             user,
@@ -153,7 +151,7 @@ public class CaffeineResidualService {
 
         // 3. 35시간 구간의 모든 시간 포인트 생성 및 매핑
         List<CaffeineResidual> result = new ArrayList<>();
-        for (int i = -17; i <= 17; i++) {
+        for (int i = -1 * HOURS_RANGE; i <= HOURS_RANGE; i++) {
             LocalDateTime timePoint = currentDateTime.plusHours(i);
             String key = timePoint.toLocalDate().toString() + "-" + timePoint.getHour();
             CaffeineResidual residual = residualMap.get(key);

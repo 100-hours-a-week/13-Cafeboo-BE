@@ -8,38 +8,26 @@ import com.ktb.cafeboo.domain.user.repository.UserRepository;
 import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class UserService {
+
     private final UserRepository userRepository;
     private final OauthTokenRepository oauthTokenRepository;
 
-    /**
-     * 새로운 유저를 저장합니다.
-     *
-     * @param user 저장할 유저 객체
-     */
-    public void saveUser(User user){
-        userRepository.save(user);
-    }
-
-    /**
-     * 주어진 ID에 해당하는 유저 정보를 조회합니다.
-     *
-     * @param id 조회할 유저의 ID
-     * @return 주어진 ID에 해당하는 유저 객체
-     * @throws IllegalArgumentException 해당 ID를 가진 유저 정보가 존재하지 않을 경우 발생합니다.
-     */
     public User findUserById(Long id){
         return userRepository.findById(id)
-            .orElseThrow(() -> new CustomApiException(ErrorStatus.USER_NOT_FOUND));
+                .orElseThrow(() -> new CustomApiException(ErrorStatus.USER_NOT_FOUND));
     }
-  
+
     public EmailDuplicationResponse isEmailDuplicated(String email) {
         boolean isDuplicated = userRepository.existsByEmail(email);
+        log.info("[UserService.isEmailDuplicated] 이메일 중복 확인 - email={}, duplicated={}", email, isDuplicated);
         return new EmailDuplicationResponse(email, isDuplicated);
     }
 
@@ -49,9 +37,13 @@ public class UserService {
     }
   
     public UserProfileResponse getUserProfile(Long targetUserId, Long currentUserId) {
-        User targetUser = userRepository.findById(targetUserId)
-                .orElseThrow(() -> new CustomApiException(ErrorStatus.USER_NOT_FOUND));
+        log.info("[UserService.getUserProfile] 사용자 프로필 조회 - targetUserId={}, currentUserId={}", targetUserId, currentUserId);
 
+        User targetUser = userRepository.findById(targetUserId)
+                .orElseThrow(() -> {
+                    log.warn("[UserService.getUserProfile] 존재하지 않는 사용자 - userId={}", targetUserId);
+                    return new CustomApiException(ErrorStatus.USER_NOT_FOUND);
+                });
 
         float dailyCaffeineLimit = targetUser.getCaffeinInfo() != null
                 ? targetUser.getCaffeinInfo().getDailyCaffeineLimitMg()
@@ -69,25 +61,36 @@ public class UserService {
 
     @Transactional
     public void deleteUser(Long userId) {
+        log.info("[UserService.deleteUser] 회원 탈퇴 처리 시작 - userId={}", userId);
+
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomApiException(ErrorStatus.USER_NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.warn("[UserService.deleteUser] 존재하지 않는 사용자 - userId={}", userId);
+                    return new CustomApiException(ErrorStatus.USER_NOT_FOUND);
+                });
 
         if (user.getHealthInfo() != null) {
             user.getHealthInfo().delete();
         }
+
         if (user.getCaffeinInfo() != null) {
             user.getCaffeinInfo().delete();
         }
+
         if (user.getAlarmSetting() != null) {
             user.getAlarmSetting().delete();
         }
-        if (user.getFavoriteDrinks() != null) {
+
+        if (user.getFavoriteDrinks() != null && !user.getFavoriteDrinks().isEmpty()) {
             user.getFavoriteDrinks().clear();
         }
+
         user.setRefreshToken(null);
         oauthTokenRepository.deleteByUserId(userId);
+        log.info("[UserService.deleteUser] Oauth 토큰 제거 완료 - userId={}", userId);
 
         user.delete();
         userRepository.save(user);
+        log.info("[UserService.deleteUser] 사용자 soft delete 완료 - userId={}", userId);
     }
 }

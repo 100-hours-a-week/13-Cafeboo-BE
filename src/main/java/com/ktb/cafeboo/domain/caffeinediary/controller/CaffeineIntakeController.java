@@ -71,8 +71,7 @@ public class CaffeineIntakeController {
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.CAFFEINE_INTAKE_DELETED, null));
     }
 
-    @GetMapping
-    @RequestMapping("/monthly")
+    @GetMapping("/monthly")
     public ResponseEntity<ApiResponse<MonthlyCaffeineDiaryResponse>>getCaffeineIntakeDiary(
         @AuthenticationPrincipal CustomUserDetails userDetails,
         @RequestParam("year") String targetYear,
@@ -87,8 +86,7 @@ public class CaffeineIntakeController {
             SuccessStatus.MONTHLY_CAFFEINE_CALENDAR_SUCCESS, response));
     }
 
-    @GetMapping
-    @RequestMapping("/daily")
+    @GetMapping("/daily")
     public ResponseEntity<ApiResponse<DailyCaffeineDiaryResponse>> getDailyCaffeineIntake(
         @AuthenticationPrincipal CustomUserDetails userDetails,
         @RequestParam("date") String date) {

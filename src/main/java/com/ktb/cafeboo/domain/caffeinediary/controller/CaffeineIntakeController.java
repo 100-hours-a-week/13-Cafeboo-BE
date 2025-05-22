@@ -4,20 +4,12 @@ import com.ktb.cafeboo.domain.caffeinediary.dto.CaffeineIntakeRequest;
 import com.ktb.cafeboo.domain.caffeinediary.dto.CaffeineIntakeResponse;
 import com.ktb.cafeboo.domain.caffeinediary.dto.DailyCaffeineDiaryResponse;
 import com.ktb.cafeboo.domain.caffeinediary.dto.MonthlyCaffeineDiaryResponse;
-import com.ktb.cafeboo.domain.caffeinediary.model.CaffeineIntake;
 import com.ktb.cafeboo.domain.caffeinediary.service.CaffeineIntakeService;
-import com.ktb.cafeboo.domain.user.model.User;
-import com.ktb.cafeboo.domain.user.service.UserService;
 import com.ktb.cafeboo.global.apiPayload.ApiResponse;
 import com.ktb.cafeboo.global.apiPayload.code.status.SuccessStatus;
 import com.ktb.cafeboo.global.security.userdetails.CustomUserDetails;
-import com.ktb.cafeboo.global.util.AuthChecker;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -41,6 +33,7 @@ public class CaffeineIntakeController {
     public ResponseEntity<ApiResponse<CaffeineIntakeResponse>> recordCaffeineIntake(
         @AuthenticationPrincipal CustomUserDetails userDetails,
         @RequestBody CaffeineIntakeRequest request) {
+        log.info("[POST /api/v1/caffeine-intakes] 카페인 섭취 기록 요청 수신");
 
         Long userId = userDetails.getId();
 
@@ -56,6 +49,7 @@ public class CaffeineIntakeController {
         @AuthenticationPrincipal CustomUserDetails userDetails,
         @PathVariable Long id,
         @RequestBody CaffeineIntakeRequest request) {
+        log.info("[PATCH /api/v1/caffeine-intakes/{}] 카페인 섭취 수정 요청 수신", id);
 
         // 1. 서비스 메서드 호출
         CaffeineIntakeResponse response = caffeineIntakeService.updateCaffeineIntake(id, request);
@@ -68,6 +62,7 @@ public class CaffeineIntakeController {
     public ResponseEntity<ApiResponse<CaffeineIntakeResponse>>deleteCaffeineIntake(
         @AuthenticationPrincipal CustomUserDetails userDetails,
         @PathVariable Long id) {
+        log.info("[DELETE /api/v1/caffeine-intakes/{}] 카페인 섭취 삭제 요청 수신", id);
 
         // 1. 서비스 메서드 호출
         caffeineIntakeService.deleteCaffeineIntake(id);
@@ -82,6 +77,7 @@ public class CaffeineIntakeController {
         @AuthenticationPrincipal CustomUserDetails userDetails,
         @RequestParam("year") String targetYear,
         @RequestParam("month") String targetMonth){
+        log.info("[GET /api/v1/caffeine-intakes/monthly] 월간 카페인 다이어리 조회 요청 - year={}, month={}", targetYear, targetMonth);
 
         Long userId = userDetails.getId();
 
@@ -96,6 +92,7 @@ public class CaffeineIntakeController {
     public ResponseEntity<ApiResponse<DailyCaffeineDiaryResponse>> getDailyCaffeineIntake(
         @AuthenticationPrincipal CustomUserDetails userDetails,
         @RequestParam("date") String date) {
+        log.info("[GET /api/v1/caffeine-intakes/daily] 일간 카페인 다이어리 조회 요청 - date={}", date);
 
         Long userId = userDetails.getId();
         DailyCaffeineDiaryResponse response = caffeineIntakeService.getDailyCaffeineIntake(userId, date);

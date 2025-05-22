@@ -1,34 +1,29 @@
 package com.ktb.cafeboo.domain.report.controller;
 
 import com.ktb.cafeboo.domain.report.dto.DailyCaffeineReportResponse;
-import com.ktb.cafeboo.domain.caffeinediary.service.CaffeineResidualService;
 import com.ktb.cafeboo.domain.report.service.DailyReportService;
-import com.ktb.cafeboo.domain.report.service.DailyStatisticsService;
-import com.ktb.cafeboo.domain.user.service.UserService;
 import com.ktb.cafeboo.global.apiPayload.ApiResponse;
+import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.code.status.SuccessStatus;
-import com.ktb.cafeboo.global.security.JwtProvider;
+import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import com.ktb.cafeboo.global.security.userdetails.CustomUserDetails;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/reports/daily")
 public class DailyReportController {
-    private final DailyStatisticsService dailyStatisticsService;
-    private final CaffeineResidualService residualService;
     private final DailyReportService dailyReportService;
-    private final UserService userService;
-    private final JwtProvider jwtProvider;
 
     /**
      * 사용자의 일일 카페인 섭취 현황 데이터를 조회합니다.
@@ -43,14 +38,20 @@ public class DailyReportController {
     public ResponseEntity<ApiResponse<DailyCaffeineReportResponse>> getDailyCaffeineReport(
         @AuthenticationPrincipal CustomUserDetails userDetails,
         @RequestParam(required = false, name = "date") String targetDate) {
+        log.info("[DailyReportController.getDailyCaffeineReport] 일일 카페인 리포트 요청 수신 - date={}", targetDate);
 
         Long userId = userDetails.getId();
         LocalDate date;
 
-        if(targetDate == null)
-            date = LocalDate.now();
-        else
-            date = LocalDate.parse(targetDate);
+        try {
+            date = (targetDate == null || targetDate.isBlank())
+                    ? LocalDate.now()
+                    : LocalDate.parse(targetDate);
+        } catch (Exception e) {
+            log.error("[DailyReportController.getDailyCaffeineReport] 잘못된 날짜 형식입니다. - targetDate={}", targetDate);
+            throw new CustomApiException(ErrorStatus.BAD_REQUEST);
+        }
+
         // 일일 리포트 생성
         DailyCaffeineReportResponse response = dailyReportService.createDailyReport(userId, date, LocalTime.now());
 

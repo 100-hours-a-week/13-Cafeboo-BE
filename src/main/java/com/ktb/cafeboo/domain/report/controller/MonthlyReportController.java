@@ -40,6 +40,7 @@ public class MonthlyReportController {
         @AuthenticationPrincipal CustomUserDetails userDetails,
         @RequestParam(required = true, name = "year") String year,
         @RequestParam(required = true, name = "month") String month){
+        log.info("[MonthlyReportController.getMonthlyCaffeineReport] 월간 카페인 리포트 요청 수신 - year={}, month={}", year, month);
 
         Long userId = userDetails.getId();
 

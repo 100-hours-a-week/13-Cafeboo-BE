@@ -51,6 +51,7 @@ public class WeeklyReportController {
         @RequestParam(name = "year", required = false) String targetYear,
         @RequestParam(name ="month", required = false) String targetMonth,
         @RequestParam(name = "week",required = false) String targetWeek) {
+        log.info("[WeeklyReportController.getWeeklyCaffeineReport] 주간 카페인 리포트 요청 수신 - year={}, month={}, week={}", targetYear, targetMonth, targetWeek);
 
         Long userId = userDetails.getId();
 
@@ -65,20 +66,20 @@ public class WeeklyReportController {
     public ResponseEntity<ApiResponse<CreateWeeklyAnalysisResponse>> sendWeeklyCaffeineReportToAI(
         @AuthenticationPrincipal CustomUserDetails userDetails
     ){
-        log.info("API 요청 시작: /api/v1/reports/test - 사용자: {}", userDetails.getUsername()); // 요청 시작 로그
+        log.info("[WeeklyReportController.sendWeeklyCaffeineReportToAI] 주간 리포트 AI 생성 요청 시작");
         try {
-            log.debug("weeklyReportScheduler.generateWeeklyReports() 호출"); // 메서드 호출 로그
+            log.debug("[WeeklyReportController.sendWeeklyCaffeineReportToAI] 주간 리포트 생성 스케줄러 호출");
             CreateWeeklyAnalysisResponse response = weeklyReportScheduler.generateWeeklyReports();
-            log.debug("generateWeeklyReports() 결과: {}", response); // 메서드 결과 로그
+            log.debug("[WeeklyReportController.sendWeeklyCaffeineReportToAI] 주간 리포트 생성 완료 - 응답={}", response);
             return ResponseEntity.ok(ApiResponse.of(SuccessStatus.REPORT_GENERATION_SUCCESS, response));
         } catch (CustomApiException e) {
-            log.warn("CustomApiException 발생: {}", e.getMessage()); // CustomApiException 로그
+            log.warn("[WeeklyReportController.sendWeeklyCaffeineReportToAI] 커스텀 예외 발생 - message={}", e.getMessage());
             throw e;
         } catch (Exception e) {
-            log.error("예상치 못한 에러 발생: {}", e.getMessage(), e); // Exception 로그 (에러 메시지와 스택 트레이스)
+            log.error("[WeeklyReportController.sendWeeklyCaffeineReportToAI] 시스템 예외 발생 - message={}", e.getMessage(), e);
             throw new CustomApiException(ErrorStatus.REPORT_GENERATION_FAILED);
         } finally {
-            log.info("API 요청 종료: /api/v1/reports/test - 사용자: {}", userDetails.getUsername()); // 요청 종료 로그
+            log.info("[WeeklyReportController.sendWeeklyCaffeineReportToAI] 주간 리포트 AI 생성 요청 종료");
         }
     }
 
@@ -88,6 +89,7 @@ public class WeeklyReportController {
      */
     @PostMapping("/ai_callback")
     public void getWeeklyCaffeineReportFromAI(@RequestBody ReceiveWeeklyAnalysisRequest request){
+        log.info("[WeeklyReportController.getWeeklyCaffeineReportFromAI] AI 서버로부터 주간 리포트 분석 콜백 수신 - reportCount={}", request.getReports().size());
 
         List<ReceiveWeeklyAnalysisRequest.ReportDto> receivedReports = request.getReports();
 
@@ -97,5 +99,6 @@ public class WeeklyReportController {
 
             weeklyReportService.updateAiMessage(userId, WeeklyReportAnalysis);
         }
+        log.info("[WeeklyReportController.getWeeklyCaffeineReportFromAI] AI 분석 처리 완료");
     }
 }

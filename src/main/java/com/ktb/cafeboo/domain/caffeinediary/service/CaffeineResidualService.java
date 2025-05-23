@@ -38,7 +38,7 @@ public class CaffeineResidualService {
 
         User user = userService.findUserById(userId);
         LocalDateTime previousIntakeHour = previousIntakeTime.truncatedTo(ChronoUnit.HOURS);
-        log.error("previousIntakeHour: {}", previousIntakeHour);
+        log.info("[CaffeineResidualService.modifyResidualAmounts] 수정 대상 기준 섭취 시간(hour 단위) - previousIntakeHour={}", previousIntakeHour);
         // 1. 섭취 내역 수정으로 인해 영향을 받는 잔존량 데이터 조회 (24hour)
         List<CaffeineResidual> residualsToModify = residualRepository.findByUserAndTargetDateBetween(user, previousTargetTime, previousEndTime);
 
@@ -47,7 +47,7 @@ public class CaffeineResidualService {
             .comparing(CaffeineResidual::getTargetDate) // targetDate의 날짜 부분으로 먼저 비교
             .thenComparing(CaffeineResidual::getHour); // 그 다음 hour 값으로 비교
 
-// 리스트 정렬
+        // 리스트 정렬
         residualsToModify.sort(comparator);
 
         int hoursSincePreviousIntake = 0;
@@ -59,7 +59,10 @@ public class CaffeineResidualService {
             // 해당 시점이 이전 섭취 시간과 새로운 섭취 시간 사이에 있는 경우에만 처리
             if (residualDateTime.isAfter(previousIntakeHour) || residualDateTime.isEqual(previousIntakeHour)) {
                 // 이전 섭취로 인한 잔존량 계산
-                log.error("residualDateTime: {}, residualDateTime.isAfter: {}, residualDateTime.isEqual: {}", residualDateTime, residualDateTime.isAfter(previousIntakeHour), residualDateTime.isEqual(previousIntakeHour));
+                log.info("[modifyResidualAmounts] 잔존량 계산 대상 시간 비교 - residualDateTime={}, 기준섭취시간={}, isAfter={}, isEqual={}",
+                        residualDateTime, previousIntakeHour,
+                        residualDateTime.isAfter(previousIntakeHour),
+                        residualDateTime.isEqual(previousIntakeHour));
                 double previousResidualAmount =
                     previousCaffeineAmount * Math.exp(-k * hoursSincePreviousIntake);
 
@@ -80,6 +83,7 @@ public class CaffeineResidualService {
         try {
             residualRepository.saveAll(residualsToModify);
         } catch (Exception e) {
+            log.error("[CaffeineResidualService.modifyResidualAmounts] 잔존량 수정 저장 실패 - userId={}, message={}", userId, e.getMessage(), e);
             throw new RuntimeException("카페인 잔존량 저장 중 오류가 발생했습니다.", e);
         }
     }
@@ -119,7 +123,12 @@ public class CaffeineResidualService {
                 residuals.add(residual);
             }
         }
-        residualRepository.saveAll(residuals);
+        try {
+            residualRepository.saveAll(residuals);
+        } catch (Exception e) {
+            log.error("[CaffeineResidualService.updateResidualAmounts] 잔존량 갱신 저장 실패 - userId={}, message={}", userId, e.getMessage(), e);
+            throw new RuntimeException("카페인 잔존량 갱신 중 오류가 발생했습니다.", e);
+        }
     }
 
     /**

@@ -62,6 +62,7 @@ public class CaffeineIntakeService {
 
         //request dto에 required field 값 누락 시 exception 발생
         if(request.drinkId() == null || request.drinkSize() == null || request.intakeTime() == null || request.drinkCount() == null || request.caffeineAmount() == null){
+            log.error("[CaffeineIntakeService.recordCaffeineIntake] 필수 필드 누락 - request={}", request);
             throw new CustomApiException(ErrorStatus.BAD_REQUEST);
         }
 
@@ -185,7 +186,7 @@ public class CaffeineIntakeService {
 
         }
         catch(Exception e){ // Error 대신 Exception으로 catch 하는 것이 더 일반적입니다.
-            log.error("카페인 섭취 수정 중 오류 발생 - intakeId: {}, request: {}", intakeId, request, e);
+            log.error("[CaffeineIntakeService.updateCaffeineIntake] 섭취 기록 수정 실패 - intakeId: {}, request: {}", intakeId, request);
             // 필요하다면 여기서 예외를 다시 던지거나, 특정 예외 유형에 따라 다른 처리를 할 수 있습니다.
             throw new RuntimeException("카페인 섭취 수정 실패", e);
             // 또는 특정 에러 코드나 메시지를 담은 응답을 클라이언트에게 반환할 수도 있습니다.
@@ -211,6 +212,7 @@ public class CaffeineIntakeService {
 
     public MonthlyCaffeineDiaryResponse getCaffeineIntakeDiary(Long userId, String targetYear, String targetMonth){
         if(targetYear == null || targetMonth == null || targetYear.isEmpty() || targetMonth.isEmpty()){
+            log.error("[CaffeineIntakeService.getCaffeineIntakeDiary] 파라미터 누락 - year={}, month={}", targetYear, targetMonth);
             throw new CustomApiException(ErrorStatus.INVALID_PARAMETER);
         }
 
@@ -233,6 +235,7 @@ public class CaffeineIntakeService {
     public List<MonthlyCaffeineDiaryResponse.DailyIntake> getDailyIntakeListForMonth(List<CaffeineIntake> intakes, String targetYear, String targetMonth) {
         // 1. 일별 합계 Map 생성
         if(targetYear == null || targetMonth == null || targetYear.isEmpty() || targetMonth.isEmpty()){
+            log.error("[CaffeineIntakeService.getDailyIntakeListForMonth] 파라미터 누락 - year={}, month={}", targetYear, targetMonth);
             throw new CustomApiException(ErrorStatus.BAD_REQUEST);
         }
 
@@ -261,6 +264,7 @@ public class CaffeineIntakeService {
 
     public DailyCaffeineDiaryResponse getDailyCaffeineIntake(Long userId, String targetDate){
         if(targetDate == null || targetDate.isEmpty()){
+            log.error("[CaffeineIntakeService.getDailyCaffeineIntake] 파라미터 누락 - date={}", targetDate);
             throw new CustomApiException(ErrorStatus.INVALID_PARAMETER);
         }
 

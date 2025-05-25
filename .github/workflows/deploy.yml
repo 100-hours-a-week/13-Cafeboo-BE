@@ -42,11 +42,11 @@ jobs:
             --project=elevated-valve-459107-h8 \
             --zone=asia-northeast3-a \
             --tunnel-through-iap \
-            --command="docker stop cafeboo || true && \
-                      docker rm cafeboo || true && \
-                      docker pull asia-northeast3-docker.pkg.dev/elevated-valve-459107-h8/backend/cafeboo:latest && \
-                      docker run -d --name cafeboo -p 8080:8080 \
-                        -e SPRING_PROFILES_ACTIVE=prod \
-                        -e JWT_SECRET='${JWT_SECRET}' \
-                        -e SPRING_DATASOURCE_PASSWORD='${SPRING_PASSWORD}' \
-                        asia-northeast3-docker.pkg.dev/elevated-valve-459107-h8/backend/cafeboo:latest"
+            --command="sudo docker stop cafeboo || true && \
+           sudo docker rm cafeboo || true && \
+           sudo docker pull asia-northeast3-docker.pkg.dev/elevated-valve-459107-h8/backend/cafeboo:latest && \
+           sudo docker run -d --name cafeboo -p 8080:8080 \
+             -e SPRING_PROFILES_ACTIVE=dev \
+             -e JWT_SECRET='${JWT_SECRET}' \
+             -e SPRING_DATASOURCE_PASSWORD='${SPRING_PASSWORD}' \
+             asia-northeast3-docker.pkg.dev/elevated-valve-459107-h8/backend/cafeboo:latest"

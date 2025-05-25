@@ -46,7 +46,6 @@ jobs:
            sudo docker rm cafeboo || true && \
            sudo docker pull asia-northeast3-docker.pkg.dev/elevated-valve-459107-h8/backend/cafeboo:latest && \
            sudo docker run -d --name cafeboo -p 8080:8080 \
-             -e SPRING_PROFILES_ACTIVE=dev \
              -e JWT_SECRET='${JWT_SECRET}' \
              -e SPRING_DATASOURCE_PASSWORD='${SPRING_PASSWORD}' \
              asia-northeast3-docker.pkg.dev/elevated-valve-459107-h8/backend/cafeboo:latest"

@@ -9,10 +9,10 @@ COPY src/ src/
 
 # 실행 권한 추가 및 빌드 수행
 RUN chmod +x gradlew
-RUN ./gradlew build -x test
+RUN ./gradlew build -x test --no-daemon
 
 # 2. 실행 컨테이너 설정
-FROM eclipse-temurin:21
+FROM eclipse-temurin:21-jre
 WORKDIR /app
 
 # 빌드된 JAR 파일 복사
@@ -20,4 +20,4 @@ COPY --from=build /app/build/libs/*.jar app.jar
 
 # 3. 환경 변수는 Dockerfile에서 직접 설정하지 않고, 외부에서 제공
 EXPOSE 8080
-CMD ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]

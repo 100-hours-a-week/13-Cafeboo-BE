@@ -20,7 +20,6 @@ jobs:
         uses: google-github-actions/setup-gcloud@v1
         with:
           project_id: elevated-valve-459107-h8
-          install_components: 'docker'
           version: latest
 
       - name: Configure Docker to use Artifact Registry

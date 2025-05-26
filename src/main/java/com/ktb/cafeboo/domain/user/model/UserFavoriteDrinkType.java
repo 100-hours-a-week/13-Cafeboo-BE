@@ -26,5 +26,4 @@ public class UserFavoriteDrinkType {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "drink_type_id", nullable = false)
     private DrinkType drinkType;
-
 }

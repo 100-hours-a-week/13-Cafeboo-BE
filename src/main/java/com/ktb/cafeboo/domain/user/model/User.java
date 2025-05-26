@@ -1,8 +1,6 @@
 package com.ktb.cafeboo.domain.user.model;
 
 import com.ktb.cafeboo.domain.caffeinediary.model.*;
-import com.ktb.cafeboo.domain.drink.model.DrinkType;
-import com.ktb.cafeboo.domain.drink.repository.DrinkTypeRepository;
 import com.ktb.cafeboo.domain.report.model.*;
 import com.ktb.cafeboo.global.infra.kakao.dto.KakaoUserResponse;
 import com.ktb.cafeboo.global.BaseEntity;
@@ -12,13 +10,10 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.Where;
-import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Getter
 @Setter

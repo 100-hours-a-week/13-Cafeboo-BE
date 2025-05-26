@@ -37,7 +37,7 @@ jobs:
         env:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
-          KAKAO_CLIENT_ID: ${{ secrets.KAKAO_CLIENT_ID }}
+   #       KAKAO_CLIENT_ID: ${{ secrets.KAKAO_CLIENT_ID }}
         run: |
           gcloud compute ssh dev-private-vm \
             --project=elevated-valve-459107-h8 \
@@ -49,5 +49,5 @@ jobs:
            sudo docker run -d --name cafeboo --network host \
              -e JWT_SECRET='${JWT_SECRET}' \
              -e SPRING_DATASOURCE_PASSWORD='${SPRING_DATASOURCE_PASSWORD}' \
-             -e KAKAO_CLIENT_ID='${KAKAO_CLIENT_ID}' \
              asia-northeast3-docker.pkg.dev/elevated-valve-459107-h8/backend/cafeboo:latest"
+                 #        -e KAKAO_CLIENT_ID='${KAKAO_CLIENT_ID}' \

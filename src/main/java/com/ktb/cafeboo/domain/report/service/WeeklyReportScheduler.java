@@ -10,6 +10,8 @@ import com.ktb.cafeboo.domain.report.repository.WeeklyReportRepository;
 import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.domain.user.model.UserHealthInfo;
 import com.ktb.cafeboo.domain.user.repository.UserRepository;
+import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
+import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import com.ktb.cafeboo.global.infra.ai.client.AiServerClient;
 import com.ktb.cafeboo.global.infra.ai.dto.CreateWeeklyAnalysisRequest;
 import com.ktb.cafeboo.global.infra.ai.dto.CreateWeeklyAnalysisResponse;
@@ -39,9 +41,9 @@ public class WeeklyReportScheduler {
     private final CaffeineIntakeRepository intakeRepository;
     private final CaffeineResidualService caffeineResidualService;
 
-    @Scheduled(fixedRate = 300000) // 매주 월요일 오전 9시
+    @Scheduled(cron = "0 0 12 ? * MON") // 매주 월요일 오전 9시, 현재는 12시로 설정
     public CreateWeeklyAnalysisResponse generateWeeklyReports() {
-
+        log.info("[IntakeSuggestionService.getPredictedIntakeSuggestion] 호출 시작");
 //        int targetYear = 2024;
 //        int targetWeekNum = 19;
 //
@@ -73,12 +75,18 @@ public class WeeklyReportScheduler {
 
         CreateWeeklyAnalysisResponse response = aiServerClient.createWeeklyReportAnalysis(batchRequest);
 
+        if (!"success".equals(response.getStatus())) {
+            log.error("[CaffeineRecommendationService.generateWeeklyReports] - AI 주간 섭취 내역 평가 리포트 생성 요청 실패");
+            throw new CustomApiException(ErrorStatus.AI_SERVER_ERROR);
+        }
+
         return response;
     }
 
 
 
     private CreateWeeklyAnalysisRequest createWeeklyAnalysisRequest(List<User> users, String callbackUrl) {
+        log.info("[IntakeSuggestionService.createWeeklyAnalysisRequest] 호출 시작");
         List<CreateWeeklyAnalysisRequest.UserReportData> userReportDataList = users.stream()
             .map(user -> {
                 LocalDate endDate = LocalDate.now().minusDays(1); // 예시: 스케줄링 기준에 따라 변경
@@ -173,6 +181,7 @@ public class WeeklyReportScheduler {
             .filter(java.util.Objects::nonNull)
             .collect(Collectors.toList());
 
+        log.info("[IntakeSuggestionService.createWeeklyAnalysisRequest] WeeklyAnalysisRequest 생성 완료");
         return CreateWeeklyAnalysisRequest.builder()
             .callbackUrl(callbackUrl)
             .users(userReportDataList)

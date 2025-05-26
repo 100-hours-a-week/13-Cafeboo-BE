@@ -203,10 +203,11 @@ public class DailyStatisticsService {
     }
 
     public List<DailyStatistics> getDailyStatisticsForWeek(Long userId, String targetYear, String targetMonth, String targetWeek){
-
+        log.info("[DailyStatistics.getDailyStatisticsForWeek] 호출 시작 - userID={}, targetYear={}, targetMonth={}, targetWeek={}", userId, targetYear, targetMonth, targetWeek);
         if(targetYear == null || targetMonth == null || targetWeek == null
             || targetYear.isEmpty() || targetMonth.isEmpty() || targetWeek.isEmpty())
         {
+            log.error("[DailyStatistics.getDailyStatisticsForWeek] 실행 실패 - userID={}, targetYear={}, targetMonth={}, targetWeek={}", userId, targetYear, targetMonth, targetWeek);
             throw new CustomApiException(ErrorStatus.BAD_REQUEST);
         }
 
@@ -289,12 +290,5 @@ public class DailyStatisticsService {
         }
 
         return result;
-    }
-
-    private static float convertTimeToFloat(LocalTime time) {
-        if (time == null) {
-            return 0.0f; // 또는 다른 적절한 기본값
-        }
-        return time.getHour() + (float) time.getMinute() / 60.0f;
     }
 }

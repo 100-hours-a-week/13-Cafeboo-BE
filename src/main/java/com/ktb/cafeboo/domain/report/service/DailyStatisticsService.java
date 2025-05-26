@@ -66,6 +66,7 @@ public class DailyStatisticsService {
         int currentCaffeine = Math.round(statistics.getTotalCaffeineMg());
         double caffeineResidualAtSleep = residualAtSleep.getResidueAmountMg();
 
+        log.info("[DailyStatisticsService.updateDailyStatistics] intakeSuggestionService 호출");
         String message = intakeSuggestionService.getPredictedIntakeSuggestion(user, currentCaffeine, caffeineResidualAtSleep);
 //        PredictCanIntakeCaffeineRequest request = PredictCanIntakeCaffeineRequest.builder()
 //            .userId(user.getId().toString())

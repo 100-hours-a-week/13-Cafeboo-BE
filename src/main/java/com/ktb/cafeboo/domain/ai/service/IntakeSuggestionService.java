@@ -38,28 +38,35 @@ public class IntakeSuggestionService {
             .takeHormonalContraceptive(user.getHealthInfo().getTakingBirthPill() ? 1 : 0)
             .build();
 
-        PredictCanIntakeCaffeineResponse response = aiServerClient.predictCanIntakeCaffeine(request);
-        if (!"success".equals(response.getStatus())) {
-            log.error("[IntakeSuggestionService.getPredictedIntakeSuggestion] AI 서버 예측 실패 - userId={}, caffeineStatus={}",
-                response.getData().getUserId(),
-                response.getData().getCaffeineStatus());
+        try{
+            log.info("[IntakeSuggestionService.getPredictedIntakeSuggestion] AI 서버 호출");
+            PredictCanIntakeCaffeineResponse response = aiServerClient.predictCanIntakeCaffeine(request);
+
+            if (!"success".equals(response.getStatus())) {
+                log.error("[IntakeSuggestionService.getPredictedIntakeSuggestion] AI 서버 예측 실패 - userId={}, caffeineStatus={}",
+                    response.getData().getUserId(),
+                    response.getData().getCaffeineStatus());
+                throw new CustomApiException(ErrorStatus.AI_SERVER_ERROR);
+            }
+
+            String message = "";
+
+            if(Objects.equals(response.getStatus(), "success")){
+                if(Objects.equals(response.getData().getCaffeineStatus(), "N")){
+                    message += " 카페인을 추가로 섭취하면 수면에 영향을 줄 수 있어요.";
+                }
+                else if (Objects.equals(response.getData().getCaffeineStatus(), "Y")){
+                    message += " 카페인을 추가로 섭취해도 수면에 영향이 없어요.";
+                }
+            }
+
+            log.info("[IntakeSuggestionService.getPredictedIntakeSuggestion] 예측 성공 - caffeineStatus={}", response.getData().getCaffeineStatus());
+
+            return message;
+        } catch (Exception e) {
+            log.error("[IntakeSuggestionService.getPredictedIntakeSuggestion] AI 서버 호출 실패");
             throw new CustomApiException(ErrorStatus.AI_SERVER_ERROR);
         }
-
-        String message = "";
-
-        if(Objects.equals(response.getStatus(), "success")){
-            if(Objects.equals(response.getData().getCaffeineStatus(), "N")){
-                message += " 카페인을 추가로 섭취하면 수면에 영향을 줄 수 있어요.";
-            }
-            else if (Objects.equals(response.getData().getCaffeineStatus(), "Y")){
-                message += " 카페인을 추가로 섭취해도 수면에 영향이 없어요.";
-            }
-        }
-
-        log.info("[IntakeSuggestionService.getPredictedIntakeSuggestion] 예측 성공 - caffeineStatus={}", response.getData().getCaffeineStatus());
-
-        return message;
     }
 
     private static float convertTimeToFloat(LocalTime time) {

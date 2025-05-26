@@ -188,26 +188,32 @@ public class CaffeineIntakeService {
         catch(Exception e){ // Error 대신 Exception으로 catch 하는 것이 더 일반적입니다.
             log.error("[CaffeineIntakeService.updateCaffeineIntake] 섭취 기록 수정 실패 - intakeId: {}, request: {}", intakeId, request);
             // 필요하다면 여기서 예외를 다시 던지거나, 특정 예외 유형에 따라 다른 처리를 할 수 있습니다.
-            throw new RuntimeException("카페인 섭취 수정 실패", e);
+            throw new RuntimeException("카페인 섭취 내역 수정 실패", e);
             // 또는 특정 에러 코드나 메시지를 담은 응답을 클라이언트에게 반환할 수도 있습니다.
             // return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("카페인 섭취 수정에 실패했습니다.");
         }
     }
 
     public void deleteCaffeineIntake(Long intakeId) {
-        // 1. 수정할 섭취 기록 조회
-        CaffeineIntake intake = getCaffeineIntakeById(intakeId);
-        User user = intake.getUser();
-        LocalDateTime previousIntakeTime = intake.getIntakeTime();
-        float previousCaffeineAmount = intake.getCaffeineAmountMg();
-        int previousDrinkCount = intake.getDrinkCount();
+        try{
+            // 1. 수정할 섭취 기록 조회
+            CaffeineIntake intake = getCaffeineIntakeById(intakeId);
+            User user = intake.getUser();
+            LocalDateTime previousIntakeTime = intake.getIntakeTime();
+            float previousCaffeineAmount = intake.getCaffeineAmountMg();
+            int previousDrinkCount = intake.getDrinkCount();
 
-        // 2. 해당 섭취 내역의 영향이 있는 시간 범위 내의 카페인 잔존량 수치 수정
-        caffeineResidualService.modifyResidualAmounts(user.getId(), previousIntakeTime, previousCaffeineAmount);
-        dailyStatisticsService.updateDailyStatistics(user, LocalDate.from(previousIntakeTime), previousCaffeineAmount * -1);
+            // 2. 해당 섭취 내역의 영향이 있는 시간 범위 내의 카페인 잔존량 수치 수정
+            caffeineResidualService.modifyResidualAmounts(user.getId(), previousIntakeTime, previousCaffeineAmount);
+            dailyStatisticsService.updateDailyStatistics(user, LocalDate.from(previousIntakeTime), previousCaffeineAmount * -1);
 
-        // 3. 해당 데이터 CaffeineIntakes 테이블에서 삭제
-        intakeRepository.deleteById(intakeId);
+            // 3. 해당 데이터 CaffeineIntakes 테이블에서 삭제
+            intakeRepository.deleteById(intakeId);
+        }
+        catch(Exception e){
+            log.error("[CaffeineIntakeService.updateCaffeineIntake] 섭취 기록 삭ㅈ[ 실패 - intakeId: {}", intakeId);
+            throw new RuntimeException("카페인 섭취 내역 삭제 실패", e);
+        }
     }
 
     public MonthlyCaffeineDiaryResponse getCaffeineIntakeDiary(Long userId, String targetYear, String targetMonth){
@@ -236,7 +242,7 @@ public class CaffeineIntakeService {
         // 1. 일별 합계 Map 생성
         if(targetYear == null || targetMonth == null || targetYear.isEmpty() || targetMonth.isEmpty()){
             log.error("[CaffeineIntakeService.getDailyIntakeListForMonth] 파라미터 누락 - year={}, month={}", targetYear, targetMonth);
-            throw new CustomApiException(ErrorStatus.BAD_REQUEST);
+            throw new CustomApiException(ErrorStatus.INVALID_PARAMETER);
         }
 
         int year = Integer.parseInt(targetYear);

@@ -1,6 +1,8 @@
 package com.ktb.cafeboo.domain.ai.service;
 
 import com.ktb.cafeboo.domain.user.model.User;
+import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
+import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import com.ktb.cafeboo.global.infra.ai.client.AiServerClient;
 import com.ktb.cafeboo.global.infra.ai.dto.PredictCanIntakeCaffeineRequest;
 import com.ktb.cafeboo.global.infra.ai.dto.PredictCanIntakeCaffeineResponse;
@@ -17,6 +19,8 @@ public class IntakeSuggestionService {
     private final AiServerClient aiServerClient;
 
     public String getPredictedIntakeSuggestion(User user, int currentCaffeine, double residualAtSleep){
+        log.info("[IntakeSuggestionService.getPredictedIntakeSuggestion] 호출 시작 - userId = {}, currentCaffeine = {}, residualAtSleep = {}", user.getId(), currentCaffeine, residualAtSleep);
+
         PredictCanIntakeCaffeineRequest request = PredictCanIntakeCaffeineRequest.builder()
             .userId(user.getId().toString())
             .currentTime(convertTimeToFloat(LocalTime.now()))
@@ -35,6 +39,12 @@ public class IntakeSuggestionService {
             .build();
 
         PredictCanIntakeCaffeineResponse response = aiServerClient.predictCanIntakeCaffeine(request);
+        if (!"success".equals(response.getStatus())) {
+            log.error("[IntakeSuggestionService.getPredictedIntakeSuggestion] AI 서버 예측 실패 - userId={}, caffeineStatus={}",
+                response.getData().getUserId(),
+                response.getData().getCaffeineStatus());
+            throw new CustomApiException(ErrorStatus.AI_SERVER_ERROR);
+        }
 
         String message = "";
 
@@ -46,6 +56,9 @@ public class IntakeSuggestionService {
                 message += " 카페인을 추가로 섭취해도 수면에 영향이 없어요.";
             }
         }
+
+        log.info("[IntakeSuggestionService.getPredictedIntakeSuggestion] 예측 성공 - caffeineStatus={}", response.getData().getCaffeineStatus());
+
         return message;
     }
 

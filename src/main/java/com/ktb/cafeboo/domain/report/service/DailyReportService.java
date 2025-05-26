@@ -4,6 +4,7 @@ import com.ktb.cafeboo.domain.report.dto.DailyCaffeineReportResponse;
 import com.ktb.cafeboo.domain.report.dto.DailyCaffeineReportResponse.HourlyCaffeineInfo;
 import com.ktb.cafeboo.domain.caffeinediary.model.CaffeineResidual;
 import com.ktb.cafeboo.domain.caffeinediary.service.CaffeineResidualService;
+import com.ktb.cafeboo.domain.report.mapper.DailyReportMapper;
 import com.ktb.cafeboo.domain.report.model.DailyStatistics;
 import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.domain.user.service.UserService;
@@ -34,17 +35,9 @@ public class DailyReportService {
     /**
      * 일일 카페인 리포트를 생성합니다.
      */
-    public DailyCaffeineReportResponse createDailyReport(Long userId, LocalDate targetDate,
-        LocalTime targetTime) {
-        ZoneId krTimeZone = ZoneId.of("Asia/Seoul");
-        LocalDateTime currentDateTime;
+    public DailyCaffeineReportResponse createDailyReport(Long userId, LocalDate targetDate, LocalTime targetTime) {
 
-        if (targetDate != null && targetTime != null) {
-            ZonedDateTime zonedDateTime = ZonedDateTime.of(targetDate, targetTime, ZoneId.systemDefault()).withZoneSameInstant(krTimeZone);
-            currentDateTime = zonedDateTime.toLocalDateTime();
-        } else {
-            currentDateTime = LocalDateTime.now(krTimeZone);
-        }
+        LocalDateTime currentDateTime = getReportBaseDateTime(targetDate, targetTime);;
 
         User user = userService.findUserById(userId);
 
@@ -55,18 +48,28 @@ public class DailyReportService {
         List<CaffeineResidual> residuals = residualService.getCaffeineResidualsByTimeRange(user,
             currentDateTime);
 
-        return new DailyCaffeineReportResponse(
-            user.getNickname(),
-            user.getCaffeinInfo().getDailyCaffeineLimitMg(),
-            dailyStatistics.getTotalCaffeineMg(),
-            calculateIntakeRate(
-                    dailyStatistics.getTotalCaffeineMg(),
-                    user.getCaffeinInfo().getDailyCaffeineLimitMg()
-            ),
-            dailyStatistics.getAiMessage(),
-            100F,
-            createHourlyCaffeineInfo(residuals, currentDateTime)
+        int intakeRate = calculateIntakeRate(dailyStatistics.getTotalCaffeineMg(),
+            user.getCaffeinInfo().getDailyCaffeineLimitMg()
         );
+
+        List<DailyCaffeineReportResponse.HourlyCaffeineInfo> hourlyInfo = createHourlyCaffeineInfo(residuals, currentDateTime);
+
+        return DailyReportMapper.toResponse(
+            user, dailyStatistics, intakeRate, hourlyInfo
+        );
+
+//        return new DailyCaffeineReportResponse(
+//            user.getNickname(),
+//            user.getCaffeinInfo().getDailyCaffeineLimitMg(),
+//            dailyStatistics.getTotalCaffeineMg(),
+//            calculateIntakeRate(
+//                    dailyStatistics.getTotalCaffeineMg(),
+//                    user.getCaffeinInfo().getDailyCaffeineLimitMg()
+//            ),
+//            dailyStatistics.getAiMessage(),
+//            100F,
+//            createHourlyCaffeineInfo(residuals, currentDateTime)
+//        );
     }
 
     private int calculateIntakeRate(float dailyTotal, float userDailyLimit) {
@@ -102,5 +105,18 @@ public class DailyReportService {
             count++;
         }
         return count > 0 ? totalCaffeine / count : 0f;
+    }
+
+    private LocalDateTime getReportBaseDateTime(LocalDate targetDate, LocalTime targetTime) {
+        ZoneId krTimeZone = ZoneId.of("Asia/Seoul"); // 또는 클래스 레벨 상수로 선언
+
+        if (targetDate != null && targetTime != null) {
+            // 시스템 기본 타임존으로 ZonedDateTime 생성 후 한국 시간으로 변환
+            ZonedDateTime zonedDateTime = ZonedDateTime.of(targetDate, targetTime, ZoneId.systemDefault())
+                .withZoneSameInstant(krTimeZone);
+            return zonedDateTime.toLocalDateTime();
+        } else {
+            return LocalDateTime.now(krTimeZone);
+        }
     }
 }

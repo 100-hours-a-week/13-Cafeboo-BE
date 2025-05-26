@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import java.util.Comparator;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -32,11 +33,13 @@ public class CaffeineResidualService {
     // 카페인 반감기 (현재는 임의로 5시간으로 설정)
     private double k = Math.log(2) / DEFAULT_HALF_LIFE_HOUR;
 
+    @Transactional
     public void modifyResidualAmounts(Long userId, LocalDateTime previousIntakeTime, float previousCaffeineAmount) {
+        User user = userService.findUserById(userId);
+
         final LocalDateTime previousTargetTime = previousIntakeTime.minusHours(17).toLocalDate().atStartOfDay();
         final LocalDateTime previousEndTime = previousIntakeTime.plusHours(24);
 
-        User user = userService.findUserById(userId);
         LocalDateTime previousIntakeHour = previousIntakeTime.truncatedTo(ChronoUnit.HOURS);
         log.info("[CaffeineResidualService.modifyResidualAmounts] 수정 대상 기준 섭취 시간(hour 단위) - previousIntakeHour={}", previousIntakeHour);
         // 1. 섭취 내역 수정으로 인해 영향을 받는 잔존량 데이터 조회 (24hour)

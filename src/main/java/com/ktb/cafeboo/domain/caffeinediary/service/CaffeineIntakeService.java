@@ -4,6 +4,7 @@ import com.ktb.cafeboo.domain.caffeinediary.dto.CaffeineIntakeRequest;
 import com.ktb.cafeboo.domain.caffeinediary.dto.CaffeineIntakeResponse;
 import com.ktb.cafeboo.domain.caffeinediary.dto.DailyCaffeineDiaryResponse;
 import com.ktb.cafeboo.domain.caffeinediary.dto.MonthlyCaffeineDiaryResponse;
+import com.ktb.cafeboo.domain.caffeinediary.mapper.CaffeineIntakeMapper;
 import com.ktb.cafeboo.domain.caffeinediary.model.CaffeineIntake;
 import com.ktb.cafeboo.domain.drink.model.Drink;
 import com.ktb.cafeboo.domain.caffeinediary.repository.CaffeineIntakeRepository;
@@ -33,7 +34,6 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional
 public class CaffeineIntakeService {
 
     private final CaffeineIntakeRepository intakeRepository;
@@ -56,30 +56,25 @@ public class CaffeineIntakeService {
      * @return CaffeineIntakeResponse: 생성된 카페인 섭취 기록에 대한 응답
      * @throws IllegalArgumentException 유저 정보 또는 음료 정보가 없을 경우 발생합니다.
      */
+    @Transactional
     public CaffeineIntakeResponse recordCaffeineIntake(Long userId, CaffeineIntakeRequest request) {
-        // 0. 데이터 유효성 겁사. 사용자 정보, 음료 정보가 유효하지 않을 시 IllegalArgumentException 발생
-        User user = userService.findUserById(userId);
-
         //request dto에 required field 값 누락 시 exception 발생
         if(request.drinkId() == null || request.drinkSize() == null || request.intakeTime() == null || request.drinkCount() == null || request.caffeineAmount() == null){
             log.error("[CaffeineIntakeService.recordCaffeineIntake] 필수 필드 누락 - request={}", request);
             throw new CustomApiException(ErrorStatus.BAD_REQUEST);
         }
 
-        Drink drink = drinkService.findDrinkById(Long.parseLong(request.drinkId()));
-
+        // 0. 데이터 유효성 겁사. 사용자 정보, 음료 정보가 유효하지 않을 시 IllegalArgumentException 발생
+        // 유저, 음료, 음료 사이즈 정보 조회
+        User user = userService.findUserById(userId);
+        Long drinkId = Long.parseLong(request.drinkId());
+        Drink drink = drinkService.findDrinkById(drinkId);
         DrinkSize drinkSize = DrinkSize.valueOf(request.drinkSize());
+        DrinkSizeNutrition drinkSizeNutrition = drinkService.findDrinkSizeNutritionByIdAndSize(drinkId, drinkSize);
 
-        DrinkSizeNutrition drinkSizeNutrition = drinkService.findDrinkSizeNutritionByIdAndSize(drink.getId(), drinkSize);
         // 1. 섭취 정보 저장
-        CaffeineIntake intake = CaffeineIntake.builder()
-            .user(user)
-            .drink(drink)
-            .drinkSizeNutrition(drinkSizeNutrition)
-            .intakeTime(request.intakeTime())
-            .drinkCount(request.drinkCount())
-            .caffeineAmountMg(request.caffeineAmount())
-            .build();
+        CaffeineIntake intake = CaffeineIntakeMapper.toEntity(request, user, drink, drinkSizeNutrition);
+
         intakeRepository.save(intake);
 
         // 2. 잔존량 계산
@@ -89,14 +84,16 @@ public class CaffeineIntakeService {
         dailyStatisticsService.updateDailyStatistics(user, LocalDate.from(request.intakeTime()), request.caffeineAmount());
 
         // 4. 응답 DTO 생성 및 반환
-        return new CaffeineIntakeResponse(
-                intake.getId().toString(),
-                request.drinkId(),
-                drink.getName(),
-                request.intakeTime(),
-                request.drinkCount(),
-                request.caffeineAmount()
-        );
+//        return new CaffeineIntakeResponse(
+//                intake.getId().toString(),
+//                request.drinkId(),
+//                drink.getName(),
+//                request.intakeTime(),
+//                request.drinkCount(),
+//                request.caffeineAmount()
+//        );
+        log.info("[CaffeineIntakeService.recordCaffeineIntake] 카페인 섭취 내역 등록 성공 - userId={}", userId);
+        return CaffeineIntakeMapper.toResponse(intake, drink);
     }
 
     /**
@@ -117,6 +114,7 @@ public class CaffeineIntakeService {
      * @return 수정된 카페인 섭취 기록에 대한 응답
      * @throws IllegalArgumentException 해당 ID의 섭취 기록이 없거나, 유효하지 않은 음료 ID가 입력된 경우 발생
      */
+    @Transactional
     public CaffeineIntakeResponse updateCaffeineIntake(Long intakeId, CaffeineIntakeRequest request) {
         // 1. 수정할 섭취 기록 조회
         try {
@@ -128,62 +126,66 @@ public class CaffeineIntakeService {
             int previousDrinkCount = intake.getDrinkCount();
 
             // 2. 수정할 필드 적용
-            if (request.drinkId() != null) {
-                Drink drink = drinkService.findDrinkById(Long.parseLong(request.drinkId()));
-                intake.setDrink(drink);
-            }
-            if (request.intakeTime() != null) {
-                intake.setIntakeTime(request.intakeTime());
-            }
-            if (request.drinkCount() != null) {
-                intake.setDrinkCount(request.drinkCount());
-            }
-            if (request.caffeineAmount() != null) {
-                intake.setCaffeineAmountMg(request.caffeineAmount());
-            }
-            if (request.drinkSize() != null) {
-                DrinkSize drinkSize = DrinkSize.valueOf(request.drinkSize());
-
-                DrinkSizeNutrition drinkSizeNutrition = request.drinkId() != null
-                        ? drinkService.findDrinkSizeNutritionByIdAndSize(Long.parseLong(request.drinkId()), drinkSize)
-                        : drinkService.findDrinkSizeNutritionByIdAndSize(intake.getDrink().getId(), drinkSize);
-
-                intake.setDrinkSizeNutrition(drinkSizeNutrition);
-            }
+            applyIntakeUpdates(intake, request);
+//            if (request.drinkId() != null) {
+//                Drink drink = drinkService.findDrinkById(Long.parseLong(request.drinkId()));
+//                intake.setDrink(drink);
+//            }
+//            if (request.intakeTime() != null) {
+//                intake.setIntakeTime(request.intakeTime());
+//            }
+//            if (request.drinkCount() != null) {
+//                intake.setDrinkCount(request.drinkCount());
+//            }
+//            if (request.caffeineAmount() != null) {
+//                intake.setCaffeineAmountMg(request.caffeineAmount());
+//            }
+//            if (request.drinkSize() != null) {
+//                DrinkSize drinkSize = DrinkSize.valueOf(request.drinkSize());
+//
+//                DrinkSizeNutrition drinkSizeNutrition = request.drinkId() != null
+//                        ? drinkService.findDrinkSizeNutritionByIdAndSize(Long.parseLong(request.drinkId()), drinkSize)
+//                        : drinkService.findDrinkSizeNutritionByIdAndSize(intake.getDrink().getId(), drinkSize);
+//
+//                intake.setDrinkSizeNutrition(drinkSizeNutrition);
+//            }
 
             // 3. 연관된 잔존량 정보 수정. 수정된 섭취 시간, 음료 잔 수에 따라 잔존량 정보를 다시 계산해야 함
-            float newCaffeineAmount =
-                    request.caffeineAmount() != null ? request.caffeineAmount() : intake.getCaffeineAmountMg();
+            adjustRelatedCaffeineData(user, previousIntakeTime, previousCaffeineAmount, intake);
 
-            int newDrinkCount =
-                    request.drinkCount() != null ? request.drinkCount() : intake.getDrinkCount();
-
-            LocalDateTime newIntakeTime =
-                    request.intakeTime() != null ? request.intakeTime() : intake.getIntakeTime();
-
-            // 기존 시간 기준 삭제 ->  수정 이전의 잔존량 삭제
-            caffeineResidualService.modifyResidualAmounts(user.getId(), previousIntakeTime,
-                previousCaffeineAmount);
-            dailyStatisticsService.updateDailyStatistics(user, LocalDate.from(previousIntakeTime),
-                previousCaffeineAmount * -1);
-
-            // 새로운 시간 기준으로 update -> 수정 후의 잔존량 계산 및 저장
-            caffeineResidualService.updateResidualAmounts(user.getId(), newIntakeTime,
-                newCaffeineAmount);
-            dailyStatisticsService.updateDailyStatistics(user, LocalDate.from(newIntakeTime),
-                newCaffeineAmount);
+//            float newCaffeineAmount =
+//                    request.caffeineAmount() != null ? request.caffeineAmount() : intake.getCaffeineAmountMg();
+//
+//            int newDrinkCount =
+//                    request.drinkCount() != null ? request.drinkCount() : intake.getDrinkCount();
+//
+//            LocalDateTime newIntakeTime =
+//                    request.intakeTime() != null ? request.intakeTime() : intake.getIntakeTime();
+//
+//            // 기존 시간 기준 삭제 ->  수정 이전의 잔존량 삭제
+//            caffeineResidualService.modifyResidualAmounts(user.getId(), previousIntakeTime,
+//                previousCaffeineAmount);
+//            dailyStatisticsService.updateDailyStatistics(user, LocalDate.from(previousIntakeTime),
+//                previousCaffeineAmount * -1);
+//
+//            // 새로운 시간 기준으로 update -> 수정 후의 잔존량 계산 및 저장
+//            caffeineResidualService.updateResidualAmounts(user.getId(), newIntakeTime,
+//                newCaffeineAmount);
+//            dailyStatisticsService.updateDailyStatistics(user, LocalDate.from(newIntakeTime),
+//                newCaffeineAmount);
 
             intakeRepository.save(intake);
 
-            return new CaffeineIntakeResponse(
-                    intakeId.toString(),
-                    intake.getDrink().getId().toString(),
-                    intake.getDrink().getName(),
-                    newIntakeTime,
-                    newDrinkCount,
-                    newCaffeineAmount
-            );
+//            return new CaffeineIntakeResponse(
+//                    intakeId.toString(),
+//                    intake.getDrink().getId().toString(),
+//                    intake.getDrink().getName(),
+//                    newIntakeTime,
+//                    newDrinkCount,
+//                    newCaffeineAmount
+//            );
 
+            return CaffeineIntakeMapper.toResponse(intake, intake.getDrink());
         }
         catch(Exception e){ // Error 대신 Exception으로 catch 하는 것이 더 일반적입니다.
             log.error("[CaffeineIntakeService.updateCaffeineIntake] 섭취 기록 수정 실패 - intakeId: {}, request: {}", intakeId, request);
@@ -194,6 +196,7 @@ public class CaffeineIntakeService {
         }
     }
 
+    @Transactional
     public void deleteCaffeineIntake(Long intakeId) {
         try{
             // 1. 수정할 섭취 기록 조회
@@ -247,6 +250,8 @@ public class CaffeineIntakeService {
 
         int year = Integer.parseInt(targetYear);
         int month = Integer.parseInt(targetMonth);
+        YearMonth yearMonth = YearMonth.of(year, month);
+
         Map<LocalDate, Float> dailySumMap = intakes.stream()
             .collect(Collectors.groupingBy(
                 intake -> intake.getIntakeTime().toLocalDate(),
@@ -256,7 +261,6 @@ public class CaffeineIntakeService {
             .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().floatValue()));
 
         // 2. 월의 모든 날짜에 대해 리스트 생성 (없는 날은 0)
-        YearMonth yearMonth = YearMonth.of(year, month);
         List<MonthlyCaffeineDiaryResponse.DailyIntake> dailyIntakeList = new ArrayList<>();
         for (int day = 1; day <= yearMonth.lengthOfMonth(); day++) {
             LocalDate date = yearMonth.atDay(day);
@@ -303,5 +307,52 @@ public class CaffeineIntakeService {
                 totalCaffeineMg,
                 intakeList
         );
+    }
+
+    private void applyIntakeUpdates(CaffeineIntake intake, CaffeineIntakeRequest request){
+        if (request.drinkId() != null) {
+            Long drinkId = Long.parseLong(request.drinkId()); // 미리 파싱
+            Drink drink = drinkService.findDrinkById(drinkId);
+            intake.setDrink(drink);
+
+            // drinkId가 변경되었다면 drinkSizeNutrition도 새로 찾아야 할 수 있습니다.
+            if (request.drinkSize() != null) {
+                DrinkSize drinkSize = DrinkSize.valueOf(request.drinkSize());
+                DrinkSizeNutrition drinkSizeNutrition = drinkService.findDrinkSizeNutritionByIdAndSize(drinkId, drinkSize);
+                intake.setDrinkSizeNutrition(drinkSizeNutrition);
+            }
+        } else if (request.drinkSize() != null) { // drinkId는 변경되지 않았지만 drinkSize가 변경된 경우
+            DrinkSize drinkSize = DrinkSize.valueOf(request.drinkSize());
+            DrinkSizeNutrition drinkSizeNutrition = drinkService.findDrinkSizeNutritionByIdAndSize(intake.getDrink().getId(), drinkSize);
+            intake.setDrinkSizeNutrition(drinkSizeNutrition);
+        }
+
+        if (request.intakeTime() != null) {
+            intake.setIntakeTime(request.intakeTime());
+        }
+        if (request.drinkCount() != null) {
+            intake.setDrinkCount(request.drinkCount());
+        }
+        if (request.caffeineAmount() != null) {
+            intake.setCaffeineAmountMg(request.caffeineAmount());
+        }
+    }
+
+    /**
+     * 섭취 기록 수정에 따라 연관된 카페인 잔존량 및 일일 통계를 조정합니다.
+     */
+    private void adjustRelatedCaffeineData(User user, LocalDateTime previousIntakeTime,
+        float previousCaffeineAmount, CaffeineIntake updatedIntake) {
+        // 새로운 값 계산 (수정된 intake 객체에서 가져옴)
+        float newCaffeineAmount = updatedIntake.getCaffeineAmountMg();
+        LocalDateTime newIntakeTime = updatedIntake.getIntakeTime();
+
+        // 1. 이전 기록의 영향 제거
+        caffeineResidualService.modifyResidualAmounts(user.getId(), previousIntakeTime, previousCaffeineAmount);
+        dailyStatisticsService.updateDailyStatistics(user, LocalDate.from(previousIntakeTime), previousCaffeineAmount * -1);
+
+        // 2. 새로운 기록의 영향 반영
+        caffeineResidualService.updateResidualAmounts(user.getId(), newIntakeTime, newCaffeineAmount);
+        dailyStatisticsService.updateDailyStatistics(user, LocalDate.from(newIntakeTime), newCaffeineAmount);
     }
 }

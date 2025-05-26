@@ -120,22 +120,7 @@ public class UserCaffeineInfoService {
                 log.warn("[UserCaffeineInfoService.update] AI 서버 호출 실패 - 기존 허용량 유지 - userId={}", userId);
             }
 
-            List<UserFavoriteDrinkType> favoriteDrinkTypes = Optional.ofNullable(request.userFavoriteDrinks())
-                    .orElse(Collections.emptyList())
-                    .stream()
-                    .filter(StringUtils::hasText)
-                    .map(drinkName -> {
-                        DrinkType drinkType = drinkTypeRepository.findByName(drinkName)
-                                .orElseGet(() -> drinkTypeRepository.save(new DrinkType(drinkName)));
-                        UserFavoriteDrinkType favorite = new UserFavoriteDrinkType();
-                        favorite.setUser(user);
-                        favorite.setDrinkType(drinkType);
-                        return favorite;
-                    }).toList();
-
-            if (!favoriteDrinkTypes.isEmpty()) {
-                user.setFavoriteDrinks(favoriteDrinkTypes);
-            }
+            user.updateFavoriteDrinks(request.userFavoriteDrinks(), drinkTypeRepository);
 
             log.info("[UserCaffeineInfoService.update] 카페인 정보 수정 완료 - userId={}", userId);
 

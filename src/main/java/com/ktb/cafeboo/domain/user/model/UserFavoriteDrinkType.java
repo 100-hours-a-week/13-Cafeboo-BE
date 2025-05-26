@@ -27,9 +27,4 @@ public class UserFavoriteDrinkType {
     @JoinColumn(name = "drink_type_id", nullable = false)
     private DrinkType drinkType;
 
-    public UserFavoriteDrinkType(User user, DrinkType drinkType) {
-        this.user = user;
-        this.drinkType = drinkType;
-        user.getFavoriteDrinks().add(this);
-    }
 }

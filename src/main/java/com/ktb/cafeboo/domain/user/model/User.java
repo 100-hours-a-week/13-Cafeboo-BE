@@ -105,30 +105,8 @@ public class User extends BaseEntity {
         this.refreshToken = newToken;
     }
 
-    public void updateFavoriteDrinks(
-            List<String> drinkNames,
-            DrinkTypeRepository drinkTypeRepository
-    ){
-
-        List<String> newFavoriteDrinks = Optional.ofNullable(drinkNames)
-                .orElse(List.of()).stream()
-                .filter(StringUtils::hasText)
-                .distinct()
-                .toList();
-
-        // 기존 drink 중 요청에 존재하지 않는 항목 삭제
-        favoriteDrinks.removeIf(fav ->
-                !newFavoriteDrinks.contains(fav.getDrinkType().getName()));
-
-        // 기존 drink 가 아닌 요청 drink 추가
-        for(String name : newFavoriteDrinks) {
-            boolean exists = favoriteDrinks.stream()
-                    .anyMatch(fav -> fav.getDrinkType().getName().equals(name));
-            if (!exists) {
-                DrinkType drinkType = drinkTypeRepository.findByName(name)
-                        .orElseGet(()-> drinkTypeRepository.save(new DrinkType(name)));
-                new UserFavoriteDrinkType(this, drinkType);
-            }
-        }
+    public void setFavoriteDrinks(List<UserFavoriteDrinkType> favorites) {
+        this.favoriteDrinks.clear(); // 기존 관계 제거
+        this.favoriteDrinks.addAll(favorites);
     }
 }

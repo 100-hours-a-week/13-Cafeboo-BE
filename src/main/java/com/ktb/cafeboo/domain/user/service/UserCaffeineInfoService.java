@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
@@ -120,21 +121,37 @@ public class UserCaffeineInfoService {
                 log.warn("[UserCaffeineInfoService.update] AI 서버 호출 실패 - 기존 허용량 유지 - userId={}", userId);
             }
 
-            List<UserFavoriteDrinkType> favoriteDrinkTypes = Optional.ofNullable(request.userFavoriteDrinks())
+            List<String> newNames = Optional.ofNullable(request.userFavoriteDrinks())
                     .orElse(Collections.emptyList())
                     .stream()
                     .filter(StringUtils::hasText)
-                    .map(drinkName -> {
-                        DrinkType drinkType = drinkTypeRepository.findByName(drinkName)
-                                .orElseGet(() -> drinkTypeRepository.save(new DrinkType(drinkName)));
-                        UserFavoriteDrinkType favorite = new UserFavoriteDrinkType();
-                        favorite.setUser(user);
-                        favorite.setDrinkType(drinkType);
-                        return favorite;
-                    }).toList();
+                    .distinct()
+                    .toList();
 
-            if (!favoriteDrinkTypes.isEmpty()) {
-                user.setFavoriteDrinks(favoriteDrinkTypes);
+            List<UserFavoriteDrinkType> existing = user.getFavoriteDrinks();
+
+            // 삭제: 기존 중 새 리스트에 없는 엔티티만 제거
+            Iterator<UserFavoriteDrinkType> it = existing.iterator();
+            while (it.hasNext()) {
+                UserFavoriteDrinkType fav = it.next();
+                if (!newNames.contains(fav.getDrinkType().getName())) {
+                    it.remove();  // orphanRemoval에 의해 DELETE
+                }
+            }
+
+            // 추가: 새 리스트 중 기존에 없는 이름만 INSERT
+            for (String name : newNames) {
+                boolean alreadyExists = existing.stream()
+                        .anyMatch(fav -> fav.getDrinkType().getName().equals(name));
+                if (!alreadyExists) {
+                    DrinkType dt = drinkTypeRepository.findByName(name)
+                            .orElseGet(() -> drinkTypeRepository.save(new DrinkType(name)));
+
+                    UserFavoriteDrinkType fav = new UserFavoriteDrinkType();
+                    fav.setUser(user);
+                    fav.setDrinkType(dt);
+                    existing.add(fav);  // Cascade.ALL로 자동 persist
+                }
             }
 
             log.info("[UserCaffeineInfoService.update] 카페인 정보 수정 완료 - userId={}", userId);

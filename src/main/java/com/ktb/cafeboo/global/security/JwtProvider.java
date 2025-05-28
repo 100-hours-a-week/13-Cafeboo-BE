@@ -25,8 +25,6 @@ public class JwtProvider {
     private final long accessTokenValidity = 24 * 60 * 60 * 1000;  // 60분
     private final long refreshTokenValidity = 14 * 24 * 60 * 60 * 1000;  // 14일
 
-    private final TokenBlacklistService tokenBlacklistService;
-
     public String createAccessToken(String userId, String loginType, String role) {
         return createToken(userId, loginType, role, accessTokenValidity);
     }
@@ -47,11 +45,6 @@ public class JwtProvider {
     }
 
     public String validateAccessToken(String token) {
-        // 토큰 블랙리스트 검증
-        if (tokenBlacklistService.isBlacklisted(token)) {
-            throw new CustomApiException(ErrorStatus.ACCESS_TOKEN_BLACKLISTED);
-        }
-
         try {
             String subject = JWT.require(Algorithm.HMAC256(SECRET_KEY))
                     .build()

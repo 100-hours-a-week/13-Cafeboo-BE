@@ -68,24 +68,31 @@ public class AuthController {
 
     @PostMapping("/refresh")
     public ResponseEntity<ApiResponse<TokenRefreshResponse>> refreshAccessToken(
+            @RequestHeader("Authorization") String authHeader,
             @CookieValue(value = "refreshToken", required = false) String refreshToken) {
+
+        String accessToken = authHeader.replace("Bearer ", "");
 
         if (refreshToken == null || refreshToken.isBlank()) {
             throw new CustomApiException(ErrorStatus.REFRESH_TOKEN_INVALID);
         }
 
-        TokenRefreshResponse response = authService.refreshAccessToken(refreshToken);
+        TokenRefreshResponse response = authService.refreshAccessToken(refreshToken, accessToken);
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.TOKEN_REFRESH_SUCCESS, response));
     }
 
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(
             @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestHeader("Authorization") String authHeader,
             HttpServletResponse response) {
 
+        String accessToken = authHeader.replace("Bearer ", "");
+
         Long userId = userDetails.getUserId();
+
         kakaoOauthService.logoutFromKakao(userId);
-        authService.logout(userId);
+        authService.logout(accessToken, userId);
 
         ResponseCookie deleteCookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)

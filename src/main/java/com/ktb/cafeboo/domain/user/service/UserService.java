@@ -1,6 +1,7 @@
 package com.ktb.cafeboo.domain.user.service;
 
 import com.ktb.cafeboo.domain.auth.repository.OauthTokenRepository;
+import com.ktb.cafeboo.domain.auth.service.TokenBlacklistService;
 import com.ktb.cafeboo.domain.user.dto.EmailDuplicationResponse;
 import com.ktb.cafeboo.domain.user.dto.UserProfileResponse;
 import com.ktb.cafeboo.domain.user.model.User;
@@ -8,14 +9,17 @@ import com.ktb.cafeboo.domain.user.repository.UserRepository;
 import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
     private final OauthTokenRepository oauthTokenRepository;
+    private final TokenBlacklistService tokenBlacklistService;
 
     /**
      * 새로운 유저를 저장합니다.
@@ -68,7 +72,7 @@ public class UserService {
     }
 
     @Transactional
-    public void deleteUser(Long userId) {
+    public void deleteUser(String accessToken, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomApiException(ErrorStatus.USER_NOT_FOUND));
 
@@ -89,5 +93,11 @@ public class UserService {
 
         user.delete();
         userRepository.save(user);
+
+        try {
+            tokenBlacklistService.addToBlacklist(accessToken);
+        } catch (Exception e) {
+            log.warn("accessToken 블랙리스트 등록 실패: {}", e.getMessage());
+        }
     }
 }

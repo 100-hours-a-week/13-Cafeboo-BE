@@ -16,8 +16,9 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final JwtProvider jwtProvider;
+    private final TokenBlacklistService tokenBlacklistService;
 
-    public TokenRefreshResponse refreshAccessToken(String refreshToken) {
+    public TokenRefreshResponse refreshAccessToken(String refreshToken, String accessToken) {
         String userId = jwtProvider.validateRefreshToken(refreshToken);
 
         User user = userRepository.findById(Long.parseLong(userId))
@@ -26,6 +27,8 @@ public class AuthService {
         if (!refreshToken.equals(user.getRefreshToken())) {
             throw new CustomApiException(ErrorStatus.REFRESH_TOKEN_MISMATCH);
         }
+
+        tokenBlacklistService.addToBlacklist(accessToken);
 
         String newAccessToken = jwtProvider.createAccessToken(
                 user.getId().toString(),
@@ -40,9 +43,11 @@ public class AuthService {
     }
 
     @Transactional
-    public void logout(Long userId) {
+    public void logout(String accessToken, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomApiException(ErrorStatus.USER_NOT_FOUND));
+
+        tokenBlacklistService.addToBlacklist(accessToken);
 
         user.updateRefreshToken(null);
         userRepository.save(user);

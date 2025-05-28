@@ -161,13 +161,16 @@ public class UserController {
     @DeleteMapping("/{userId}")
     public ResponseEntity<Void> deleteUser(
             @PathVariable Long userId,
+            @RequestHeader("Authorization") String authHeader,
             @AuthenticationPrincipal CustomUserDetails userDetails,
             HttpServletResponse response
     ) {
         AuthChecker.checkOwnership(userId, userDetails.getUserId());
 
+        String accessToken = authHeader.replace("Bearer ", "");
+
         kakaoOauthService.disconnectKakaoAccount(userId);
-        userService.deleteUser(userId);
+        userService.deleteUser(accessToken, userId);
 
         // refreshToken 쿠키 삭제
         ResponseCookie deleteCookie = ResponseCookie.from("refreshToken", "")
@@ -182,5 +185,4 @@ public class UserController {
 
         return ResponseEntity.noContent().build();  // 204 No Content
     }
-
 }

@@ -19,6 +19,7 @@ public enum ErrorStatus implements BaseCode {
     UNSUPPORTED_SOCIAL_LOGIN_TYPE(400, "UNSUPPORTED_SOCIAL_LOGIN_TYPE", "지원하지 않는 소셜 로그인 타입입니다."),
     ACCESS_TOKEN_INVALID(401, "ACCESS_TOKEN_INVALID", "유효한 인증 정보가 필요합니다. 토큰을 확인해주세요."),
     ACCESS_TOKEN_EXPIRED(401, "ACCESS_TOKEN_EXPIRED", "인증 토큰이 만료되었습니다. 토큰을 재발급 받아주세요."),
+    ACCESS_TOKEN_BLACKLISTED(401, "ACCESS_TOKEN_BLACKLISTED", "해당 토큰은 더 이상 유효하지 않습니다. 다시 로그인해 주세요."),
     REFRESH_TOKEN_INVALID(401, "REFRESH_TOKEN_INVALID", "리프레시 토큰이 유효하지 않습니다."),
     REFRESH_TOKEN_EXPIRED(401, "REFRESH_TOKEN_EXPIRED", "리프레시 토큰이 만료되었습니다."),
     REFRESH_TOKEN_MISMATCH(401, "REFRESH_TOKEN_MISMATCH", "리프레시 토큰이 일치하지 않습니다."),

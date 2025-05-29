@@ -5,6 +5,7 @@ import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.domain.user.repository.UserRepository;
 import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
+import com.ktb.cafeboo.global.enums.TokenBlacklistReason;
 import com.ktb.cafeboo.global.security.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -28,7 +29,7 @@ public class AuthService {
             throw new CustomApiException(ErrorStatus.REFRESH_TOKEN_MISMATCH);
         }
 
-        tokenBlacklistService.addToBlacklist(accessToken);
+        tokenBlacklistService.addToBlacklist(accessToken, userId, TokenBlacklistReason.REFRESH);
 
         String newAccessToken = jwtProvider.createAccessToken(
                 user.getId().toString(),
@@ -47,7 +48,7 @@ public class AuthService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomApiException(ErrorStatus.USER_NOT_FOUND));
 
-        tokenBlacklistService.addToBlacklist(accessToken);
+        tokenBlacklistService.addToBlacklist(accessToken, userId.toString(), TokenBlacklistReason.LOGOUT);
 
         user.updateRefreshToken(null);
         userRepository.save(user);

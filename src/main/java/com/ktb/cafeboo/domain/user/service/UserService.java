@@ -8,6 +8,7 @@ import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.domain.user.repository.UserRepository;
 import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
+import com.ktb.cafeboo.global.enums.TokenBlacklistReason;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -95,7 +96,7 @@ public class UserService {
         userRepository.save(user);
 
         try {
-            tokenBlacklistService.addToBlacklist(accessToken);
+            tokenBlacklistService.addToBlacklist(accessToken, userId.toString(), TokenBlacklistReason.WITHDRAWAL);
         } catch (Exception e) {
             log.warn("accessToken 블랙리스트 등록 실패: {}", e.getMessage());
         }

@@ -28,7 +28,8 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers(
-                    "/api/v1/auth/**",
+                    "/api/v1/auth/oauth",
+                    "/api/v1/auth/kakao",
                     "/api/v1/users/email",
                     "/api/v1/reports/weekly/ai_callback",
                     "/v3/api-docs/**",      // OpenAPI 3.0 스펙 JSON/YAML

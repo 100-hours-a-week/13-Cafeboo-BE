@@ -34,6 +34,7 @@ public class UserController {
     @GetMapping("/email")
     public ResponseEntity<ApiResponse<EmailDuplicationResponse>> checkEmailDuplication(
             @RequestParam String email) {
+        log.info("[GET /api/v1/users/email] 이메일 중복 체크 요청 - email={}", email);
         EmailDuplicationResponse response = userService.isEmailDuplicated(email);
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.EMAIL_DUPLICATION_CHECK_SUCCESS, response));
     }
@@ -43,12 +44,12 @@ public class UserController {
             @PathVariable Long userId,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
+        log.info("[GET /api/v1/users/{}/profile] 사용자 프로필 조회 요청 수신", userId);
         AuthChecker.checkOwnership(userId, userDetails.getUserId());
 
         UserProfileResponse response = userService.getUserProfile(userId, userDetails.getUserId());
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.BASIC_PROFILE_FETCH_SUCCESS, response));
     }
-
 
     @PostMapping("/{userId}/health")
     public ResponseEntity<ApiResponse<UserHealthInfoCreateResponse>> createHealthInfo(
@@ -56,6 +57,7 @@ public class UserController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody UserHealthInfoCreateRequest request
     ) {
+        log.info("[POST /api/v1/users/{}/health] 건강 정보 생성 요청 수신", userId);
         AuthChecker.checkOwnership(userId, userDetails.getUserId());
 
         UserHealthInfoCreateResponse response = userHealthInfoService.create(userId, request);
@@ -68,6 +70,7 @@ public class UserController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody UserHealthInfoUpdateRequest request
     ) {
+        log.info("[PATCH /api/v1/users/{}/health] 건강 정보 수정 요청 수신", userId);
         AuthChecker.checkOwnership(userId, userDetails.getUserId());
 
         UserHealthInfoUpdateResponse response = userHealthInfoService.update(userId, request);
@@ -79,6 +82,7 @@ public class UserController {
             @PathVariable Long userId,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
+        log.info("[GET /api/v1/users/{}/health] 건강 정보 조회 요청 수신", userId);
         AuthChecker.checkOwnership(userId, userDetails.getUserId());
 
         UserHealthInfoResponse response = userHealthInfoService.getHealthInfo(userId);
@@ -91,6 +95,7 @@ public class UserController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody UserCaffeineInfoCreateRequest request
     ) {
+        log.info("[POST /api/v1/users/{}/caffeine] 카페인 민감도 정보 생성 요청 수신", userId);
         AuthChecker.checkOwnership(userId, userDetails.getUserId());
 
         UserCaffeineInfoCreateResponse response = userCaffeineInfoService.create(userId, request);
@@ -105,6 +110,7 @@ public class UserController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody UserCaffeineInfoUpdateRequest request
     ) {
+        log.info("[PATCH /api/v1/users/{}/caffeine] 카페인 민감도 정보 수정 요청 수신", userId);
         AuthChecker.checkOwnership(userId, userDetails.getUserId());
 
         UserCaffeineInfoUpdateResponse response = userCaffeineInfoService.update(userId, request);
@@ -116,6 +122,7 @@ public class UserController {
             @PathVariable Long userId,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
+        log.info("[GET /api/v1/users/{}/caffeine] 카페인 민감도 정보 조회 요청 수신", userId);
         AuthChecker.checkOwnership(userId, userDetails.getUserId());
 
         UserCaffeineInfoResponse response = userCaffeineInfoService.getCaffeineInfo(userId);
@@ -128,6 +135,7 @@ public class UserController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody UserAlarmSettingCreateRequest request
     ) {
+        log.info("[POST /api/v1/users/{}/alarm] 알람 설정 생성 요청 수신", userId);
         AuthChecker.checkOwnership(userId, userDetails.getUserId());
 
         UserAlarmSettingCreateResponse response = userAlarmSettingService.create(userId, request);
@@ -141,6 +149,7 @@ public class UserController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody UserAlarmSettingUpdateRequest request
     ) {
+        log.info("[PATCH /api/v1/users/{}/alarm] 알람 설정 수정 요청 수신", userId);
         AuthChecker.checkOwnership(userId, userDetails.getUserId());
 
         UserAlarmSettingUpdateResponse response = userAlarmSettingService.update(userId, request);
@@ -152,6 +161,7 @@ public class UserController {
             @PathVariable Long userId,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
+        log.info("[GET /api/v1/users/{}/alarm] 알람 설정 조회 요청 수신", userId);
         AuthChecker.checkOwnership(userId, userDetails.getUserId());
 
         UserAlarmSettingResponse response = userAlarmSettingService.get(userId);
@@ -165,12 +175,16 @@ public class UserController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             HttpServletResponse response
     ) {
+        log.info("[DELETE /api/v1/users/{}] 회원 탈퇴 요청 수신", userId);
         AuthChecker.checkOwnership(userId, userDetails.getUserId());
 
         String accessToken = authHeader.replace("Bearer ", "");
 
         kakaoOauthService.disconnectKakaoAccount(userId);
+        log.info("[DELETE /api/v1/users/{}] 카카오 계정 연동 해제 완료", userId);
+
         userService.deleteUser(accessToken, userId);
+        log.info("[DELETE /api/v1/users/{}] 사용자 데이터 삭제 완료", userId);
 
         // refreshToken 쿠키 삭제
         ResponseCookie deleteCookie = ResponseCookie.from("refreshToken", "")
@@ -182,6 +196,7 @@ public class UserController {
                 .build();
 
         response.addHeader("Set-Cookie", deleteCookie.toString());
+        log.info("[DELETE /api/v1/users/{}] refreshToken 쿠키 제거 완료", userId);
 
         return ResponseEntity.noContent().build();  // 204 No Content
     }

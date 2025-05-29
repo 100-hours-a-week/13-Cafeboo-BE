@@ -1,8 +1,7 @@
 package com.ktb.cafeboo.domain.report.service;
 
-import com.ktb.cafeboo.domain.caffeinediary.dto.CaffeineIntakeResponse;
 import com.ktb.cafeboo.domain.caffeinediary.model.CaffeineIntake;
-import com.ktb.cafeboo.domain.report.dto.CoffeeTimeStats;
+import com.ktb.cafeboo.domain.report.dto.MonthlyCaffeineReportResponse;
 import com.ktb.cafeboo.domain.report.dto.WeeklyCaffeineReportResponse;
 import com.ktb.cafeboo.domain.report.model.DailyStatistics;
 import com.ktb.cafeboo.domain.report.model.MonthlyReport;
@@ -15,21 +14,19 @@ import com.ktb.cafeboo.domain.user.service.UserService;
 import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import com.ktb.cafeboo.global.infra.ai.client.AiServerClient;
-import com.ktb.cafeboo.global.infra.ai.dto.CreateWeeklyReportRequest;
-import com.ktb.cafeboo.global.infra.ai.dto.CreateWeeklyReportResponse;
+import com.ktb.cafeboo.global.infra.ai.dto.ReceiveWeeklyAnalysisRequest;
 import jakarta.transaction.Transactional;
+import java.time.DateTimeException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.YearMonth;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.IsoFields;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -57,7 +54,7 @@ public class WeeklyReportService {
                 User user = userService.findUserById(userId);
                 WeeklyReport weeklyReport = WeeklyReport.builder()
                     .user(user)
-                    .monthlyReport(monthlyReport)
+                    .monthlyStatisticsId(monthlyReport)
                     .year(year)
                     .month(month)
                     .weekNum(weekNum)
@@ -72,27 +69,45 @@ public class WeeklyReportService {
             });
     }
 
-    public WeeklyCaffeineReportResponse getWeeklyReport(Long userId, String targetYear, String targetMonth, String targetWeek,  List<DailyStatistics> dailyStats, List<CaffeineIntake> intakes) {
+    public WeeklyCaffeineReportResponse getWeeklyReport(Long userId, String targetYear, String targetMonth, String targetWeek,  List<DailyStatistics> dailyStats) {
         int year = Integer.parseInt(targetYear);
         int month = Integer.parseInt(targetMonth);
         int week = Integer.parseInt(targetWeek);
+
         User user = userService.findUserById(userId);
-        UserHealthInfo userHealthInfo = user.getHealthInfo();
         UserCaffeinInfo userCaffeinInfo = user.getCaffeinInfo();
 
-        // 주어진 year와 month로 해당 달의 첫 번째 날짜를 얻습니다.
-        LocalDate firstDayOfMonth = LocalDate.of(year, month, 1);
+        LocalDate startOfMonth = LocalDate.of(year, month, 1);;
+        DayOfWeek dayOfWeek = startOfMonth.getDayOfWeek();
 
-        // 해당 달의 첫 번째 주 월요일을 찾습니다.
-        LocalDate firstMondayOfMonth = firstDayOfMonth.with(TemporalAdjusters.firstInMonth(DayOfWeek.MONDAY));
+        //ISO 8601 기준은 월요일 기준. 월 ~ 일요일 까지 날짜 중, 과반 수 이상이 포함된 주차로 속하게 됨
+        if (dayOfWeek == DayOfWeek.FRIDAY ||
+            dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
+            startOfMonth = startOfMonth.plusWeeks(1);
+        }
 
-        // 만약 첫 번째 날짜가 월요일보다 앞선다면, 그 주는 이전 달의 마지막 주에 해당할 수 있습니다.
-        // 이를 보정하기 위해 첫 번째 월요일이 없다면 해당 달의 1일로 시작하는 주를 기준으로 합니다.
-        LocalDate firstWeekStart = firstMondayOfMonth.getMonthValue() != month ?
-            firstDayOfMonth : firstMondayOfMonth;
+        LocalDate endOfMonth = LocalDate.of(year, month, 1);
+        dayOfWeek = endOfMonth.getDayOfWeek();
 
-        // 첫 번째 주 시작 날짜에 (weekOfMonth - 1) 주를 더하여 해당 월의 weekOfMonth 번째 주의 시작 날짜를 얻습니다.
-        LocalDate startDate = firstWeekStart.plusWeeks(week - 1);
+        //ISO 8601 기준은 월요일 기준. 월 ~ 일요일 까지 날짜 중, 과반 수 이상이 포함된 주차로 속하게 됨
+        if (dayOfWeek == DayOfWeek.MONDAY ||
+            dayOfWeek == DayOfWeek.TUESDAY || dayOfWeek == DayOfWeek.WEDNESDAY) {
+            endOfMonth = endOfMonth.minusWeeks(1);
+        }
+
+//        // 주어진 year와 month로 해당 달의 첫 번째 날짜를 얻습니다.
+//        LocalDate startOfMonth = LocalDate.of(year, month, 1);
+//
+//        // 해당 달의 첫 번째 주 월요일을 찾습니다.
+//        LocalDate firstMondayOfMonth = firstDayOfMonth.with(TemporalAdjusters.firstInMonth(DayOfWeek.MONDAY));
+//
+//        // 만약 첫 번째 날짜가 월요일보다 앞선다면, 그 주는 이전 달의 마지막 주에 해당할 수 있습니다.
+//        // 이를 보정하기 위해 첫 번째 월요일이 없다면 해당 달의 1일로 시작하는 주를 기준으로 합니다.
+//        LocalDate firstWeekStart = firstMondayOfMonth.getMonthValue() != month ?
+//            firstDayOfMonth : firstMondayOfMonth;
+//
+//        // 첫 번째 주 시작 날짜에 (weekOfMonth - 1) 주를 더하여 해당 월의 weekOfMonth 번째 주의 시작 날짜를 얻습니다.
+        LocalDate startDate = startOfMonth.plusWeeks(week - 1).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         LocalDate endDate = startDate.plusDays(6);
 
         int isoWeekNum = startDate.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
@@ -108,7 +123,7 @@ public class WeeklyReportService {
                 .dailyCaffeineAvgMg(0f)
                 .overIntakeDays(0)
                 .aiMessage("주간 카페인 섭취 리포트 생성을 위해 1주간 섭취 내역을 등록해주세요!")
-                .monthlyReport(null) // 필요시 null 또는 적절한 값
+                .monthlyStatisticsId(null) // 필요시 null 또는 적절한 값
                 .build());
 
         float weeklyTotal = weeklyReport.getTotalCaffeineMg();
@@ -117,41 +132,41 @@ public class WeeklyReportService {
         float dailyAvg = weeklyReport.getDailyCaffeineAvgMg();
 
         List<WeeklyCaffeineReportResponse.DailyIntakeTotal> dailyIntakeTotals = dailyStats.stream()
-            .map(stat -> WeeklyCaffeineReportResponse.DailyIntakeTotal.builder()
-                .date(stat.getDate().toString())
-                .caffeineMg(Math.round(stat.getTotalCaffeineMg()))
-                .build())
+            .map(stat -> new WeeklyCaffeineReportResponse.DailyIntakeTotal(
+                    stat.getDate().toString(),
+                    Math.round(stat.getTotalCaffeineMg())
+            ))
             .collect(Collectors.toList());
 
         for (int i = 0; i < 7; i++) {
             LocalDate d = startDate.plusDays(i);
-            boolean exists = dailyIntakeTotals.stream().anyMatch(t -> t.getDate().equals(d.toString()));
+            boolean exists = dailyIntakeTotals.stream().anyMatch(t -> t.date().equals(d.toString()));
             if (!exists) {
                 dailyIntakeTotals.add(
-                    WeeklyCaffeineReportResponse.DailyIntakeTotal.builder()
-                        .date(d.toString())
-                        .caffeineMg(0)
-                        .build()
+                    new WeeklyCaffeineReportResponse.DailyIntakeTotal(
+                            d.toString(),
+                            0
+                    )
                 );
             }
         }
 
-        return WeeklyCaffeineReportResponse.builder()
-            .filter(WeeklyCaffeineReportResponse.Filter.builder()
-                .year(String.valueOf(year))
-                .month(String.valueOf(month))
-                .week(week + "주차")
-                .build())
-            .isoWeek(isoWeek)
-            .startDate(startDate.toString())
-            .endDate(endDate.toString())
-            .weeklyCaffeineTotal(weeklyTotal)
-            .dailyCaffeineLimit((int)userCaffeinInfo.getDailyCaffeineLimitMg())
-            .overLimitDays(overLimitDays)
-            .dailyCaffeineAvg(dailyAvg)
-            .dailyIntakeTotals(dailyIntakeTotals)
-            .aiMessage(weeklyReport.getAiMessage())
-            .build();
+        return new WeeklyCaffeineReportResponse(
+            new WeeklyCaffeineReportResponse.Filter(
+                    String.valueOf(year),
+                    String.valueOf(month),
+                    week + "주차"
+            ),
+            isoWeek,
+            startDate.toString(),
+            endDate.toString(),
+            weeklyTotal,
+            (int) userCaffeinInfo.getDailyCaffeineLimitMg(),
+            overLimitDays,
+            dailyAvg,
+            dailyIntakeTotals,
+            weeklyReport.getAiMessage()
+        );
     }
 
     public void updateWeeklyReport(Long userId, WeeklyReport weeklyReport, Float additionalCaffeine){
@@ -165,18 +180,32 @@ public class WeeklyReportService {
         float dailyAverage = newTotalCaffeine / 7.0f;
         weeklyReport.setDailyCaffeineAvgMg(dailyAverage);
 
-        // 4. 허용치 초과 여부 판단 및 overIntakeDays 증가
-        Float caffeineLimit = 400F; //
-        if (dailyAverage > caffeineLimit) {
-            // 기존 overIntakeDays 값이 null일 수 있으니 0으로 처리
-            int overIntakeDays = weeklyReport.getOverIntakeDays() != null ? weeklyReport.getOverIntakeDays() : 0;
-            weeklyReport.setOverIntakeDays(overIntakeDays + 1);
+        // 4. overLimitDays 구하기
+        List<DailyStatistics> dailyStatistics = weeklyReport.getDailyStatistics();
+        int overIntakeDays = 0;
+        float userCaffeineLimit = user.getCaffeinInfo().getDailyCaffeineLimitMg();
+
+        if(dailyStatistics != null){
+            for(DailyStatistics dailyStatistic : dailyStatistics){
+                if(dailyStatistic.getTotalCaffeineMg() >= userCaffeineLimit)
+                    overIntakeDays++;
+            }
         }
+        weeklyReport.setOverIntakeDays(overIntakeDays);
 
         weeklyReportRepository.save(weeklyReport);
     }
 
-    public List<WeeklyReport> getWeeklyStatisticsForMonth(Long userId, YearMonth yearMonth){
+    public MonthlyCaffeineReportResponse getWeeklyStatisticsForMonth(Long userId, String givenYear, String givenMonth){
+        YearMonth yearMonth;
+
+        try {
+            yearMonth = YearMonth.of(Integer.parseInt(givenYear), Integer.parseInt(givenMonth));
+        } catch (DateTimeException e) {
+            throw new CustomApiException(ErrorStatus.BAD_REQUEST);
+        }
+
+
         int year = yearMonth.getYear();
         int month = yearMonth.getMonthValue();
 
@@ -186,17 +215,10 @@ public class WeeklyReportService {
         LocalDate startOfMonth = yearMonth.atDay(1);
         LocalDate endOfMonth = yearMonth.atEndOfMonth();
 
-        // ISO 기준 주차/연도
-        int startWeek = startOfMonth.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
-        int endWeek = endOfMonth.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
-
-        int startYear = startOfMonth.get(IsoFields.WEEK_BASED_YEAR);
-        int endYear = endOfMonth.get(IsoFields.WEEK_BASED_YEAR);
-
         List<WeeklyReport> weeklyStats = weeklyReportRepository.findByUserIdAndYearAndMonth(userId, year, month);
 
         // 3. (year, week) → WeeklyReport Map
-        Map<String, WeeklyReport> reportMap = weeklyStats.stream()
+        Map<String, WeeklyReport> weeklyReportMaps = weeklyStats.stream()
             .collect(Collectors.toMap(
                 r -> r.getYear() + "-" + r.getWeekNum(),
                 Function.identity()
@@ -211,7 +233,7 @@ public class WeeklyReportService {
             int weekYear = cursor.get(IsoFields.WEEK_BASED_YEAR);
 
             String key = weekYear + "-" + weekNum;
-            WeeklyReport report = reportMap.get(key);
+            WeeklyReport report = weeklyReportMaps.get(key);
 
             if (report != null) {
                 result.add(report);
@@ -229,6 +251,122 @@ public class WeeklyReportService {
             }
             cursor = cursor.plusWeeks(1);
         }
-        return result;
+
+        int resolvedYear = yearMonth.getYear();
+        int resolvedMonth = yearMonth.getMonthValue();
+
+        startOfMonth = yearMonth.atDay(1);
+        LocalDate startDate = startOfMonth;
+        DayOfWeek dayOfWeek = startOfMonth.getDayOfWeek();
+
+        //ISO 8601 기준은 월요일 기준. 월 ~ 일요일 까지 날짜 중, 과반 수 이상이 포함된 주차로 속하게 됨
+        if (dayOfWeek == DayOfWeek.FRIDAY ||
+            dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
+            startOfMonth = startOfMonth.plusWeeks(1);
+        }
+
+        endOfMonth = yearMonth.atEndOfMonth();
+        LocalDate endDate = endOfMonth;
+        dayOfWeek = endOfMonth.getDayOfWeek();
+
+        //ISO 8601 기준은 월요일 기준. 월 ~ 일요일 까지 날짜 중, 과반 수 이상이 포함된 주차로 속하게 됨
+        if (dayOfWeek == DayOfWeek.MONDAY ||
+            dayOfWeek == DayOfWeek.TUESDAY || dayOfWeek == DayOfWeek.WEDNESDAY) {
+            endOfMonth = endOfMonth.minusWeeks(1);
+        }
+
+
+        Set<Integer> weekNums = new TreeSet<>();
+        cursor = startOfMonth.with(DayOfWeek.MONDAY);
+        while (!cursor.isAfter(endOfMonth)) {
+            weekNums.add(cursor.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR));
+            cursor = cursor.plusWeeks(1);
+        }
+
+        Map<Integer, WeeklyReport> reportMap = weeklyStats.stream()
+            .collect(Collectors.toMap(WeeklyReport::getWeekNum, Function.identity()));
+
+//        List<MonthlyCaffeineReportResponse.weeklyIntakeTotal> weeklyIntakeTotals = weekNums.stream()
+//            .map(weekNum -> {
+//                WeeklyReport report = reportMap.get(weekNum);
+//                if (report != null) {
+//                    return MonthlyCaffeineReportResponse.weeklyIntakeTotal.builder()
+//                        .isoWeek(String.format("%d-W%02d", report.getYear(), report.getWeekNum()))
+//                        .totalCaffeineMg(Math.round(report.getTotalCaffeineMg()))
+//                        .build();
+//                } else {
+//                    // 없는 주차는 0으로 채움
+//                    return MonthlyCaffeineReportResponse.weeklyIntakeTotal.builder()
+//                        .isoWeek(String.format("%d-W%02d", resolvedYear, weekNum))
+//                        .totalCaffeineMg(0)
+//                        .build();
+//                }
+//            })
+//            .collect(Collectors.toList());
+//
+//        float sum = (float) weeklyIntakeTotals.stream()
+//            .mapToDouble(MonthlyCaffeineReportResponse.weeklyIntakeTotal::getTotalCaffeineMg)
+//            .sum();
+//
+//        float avg = weeklyIntakeTotals.isEmpty() ? 0f : sum / weeklyIntakeTotals.size();
+//
+//        MonthlyCaffeineReportResponse response = MonthlyCaffeineReportResponse.builder()
+//            .filter(MonthlyCaffeineReportResponse.Filter.builder()
+//                .year(String.valueOf(resolvedYear))
+//                .month(String.valueOf(resolvedMonth))
+//                .build()
+//            )
+//            .startDate(startDate.toString())
+//            .endDate(endDate.toString())
+//            .monthlyCaffeineTotal(sum)
+//            .weeklyCaffeineAvg(avg)
+//            .weeklyIntakeTotals(weeklyIntakeTotals)
+//            .build();
+        MonthlyCaffeineReportResponse response = MonthlyCaffeineReportResponse.create(
+            resolvedYear, resolvedMonth, startDate, endDate, reportMap, weekNums
+        );
+
+        return response;
+    }
+
+    public void saveReport(WeeklyReport weeklyReport){
+        weeklyReportRepository.save(weeklyReport);
+    }
+
+    public void updateWeeklyReportAfterUpdate(Long userId, WeeklyReport weeklyReport){
+        User user = userService.findUserById(userId);
+
+        // 1. 바뀐 개인별 카페인 권장량을 바탕으로 overLimitDays 구하기
+        List<DailyStatistics> dailyStatistics = weeklyReport.getDailyStatistics();
+        int overIntakeDays = 0;
+        float userCaffeineLimit = user.getCaffeinInfo().getDailyCaffeineLimitMg();
+
+        if(dailyStatistics != null){
+            for(DailyStatistics dailyStatistic : dailyStatistics){
+                if(dailyStatistic.getTotalCaffeineMg() >= userCaffeineLimit)
+                    overIntakeDays++;
+            }
+        }
+        weeklyReport.setOverIntakeDays(overIntakeDays);
+
+        weeklyReportRepository.save(weeklyReport);
+    }
+
+    public void updateAiMessage(List<ReceiveWeeklyAnalysisRequest.ReportDto> receivedReports){
+        LocalDate yesterday = LocalDate.now().minusDays(1);
+        int weekNum = yesterday.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
+        int year = yesterday.getYear();
+
+        for(ReceiveWeeklyAnalysisRequest.ReportDto report : receivedReports) {
+            Long userId = Long.valueOf(report.getUserId());
+            String WeeklyReportAnalysis = report.getReport();
+
+            WeeklyReport weeklyReport = weeklyReportRepository.findByUserIdAndYearAndWeekNum(userId, year, weekNum)
+                .orElseThrow(() -> new CustomApiException(ErrorStatus.REPORT_NOT_FOUND));
+
+            weeklyReport.setAiMessage(WeeklyReportAnalysis);
+
+            weeklyReportRepository.save(weeklyReport);
+        }
     }
 }

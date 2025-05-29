@@ -48,8 +48,11 @@ public enum SuccessStatus implements BaseCode {
   
     //카페인 다이어리 조회 관련 응답
     MONTHLY_CAFFEINE_CALENDAR_SUCCESS(200, "MONTHLY_CAFFEINE_CALENDAR_SUCCESS", "다이어리 월간 카페인 섭취 기록이 정상적으로 조회되었습니다."),
-    DAILY_CAFFEINE_CALENDAR_SUCCESS(200, "DAILY_CAFFEINE_CALENDAR_SUCCESS", "다이어리 일일 카페인 섭취 기록이 정상적으로 조회되었습니다.");
+    DAILY_CAFFEINE_CALENDAR_SUCCESS(200, "DAILY_CAFFEINE_CALENDAR_SUCCESS", "다이어리 일일 카페인 섭취 기록이 정상적으로 조회되었습니다."),
 
+    //AI 리포트 생성 관련 응답
+    REPORT_GENERATION_SUCCESS(200, "AI_GENERATION_REPORT", "AI 리포트 생성 요청 성공"),
+    ;
     private final int status;
     private final String code;
     private final String message;

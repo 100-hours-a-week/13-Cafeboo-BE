@@ -6,12 +6,8 @@ import com.ktb.cafeboo.domain.caffeinediary.model.CaffeineResidual;
 import com.ktb.cafeboo.domain.caffeinediary.service.CaffeineResidualService;
 import com.ktb.cafeboo.domain.report.model.DailyStatistics;
 import com.ktb.cafeboo.domain.user.model.User;
-import com.ktb.cafeboo.domain.user.model.UserCaffeinInfo;
-import com.ktb.cafeboo.domain.user.model.UserHealthInfo;
 import com.ktb.cafeboo.domain.user.service.UserService;
 import com.ktb.cafeboo.global.infra.ai.client.AiServerClient;
-import com.ktb.cafeboo.global.infra.ai.dto.PredictCanIntakeCaffeineRequest;
-import com.ktb.cafeboo.global.infra.ai.dto.PredictCanIntakeCaffeineResponse;
 import jakarta.transaction.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -20,9 +16,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -61,16 +55,18 @@ public class DailyReportService {
         List<CaffeineResidual> residuals = residualService.getCaffeineResidualsByTimeRange(user,
             currentDateTime);
 
-
-        return DailyCaffeineReportResponse.builder()
-            .nickname(user.getNickname())
-            .dailyCaffeineLimit(user.getCaffeinInfo().getDailyCaffeineLimitMg())
-            .dailyCaffeineIntakeMg(dailyStatistics.getTotalCaffeineMg())
-            .dailyCaffeineIntakeRate(calculateIntakeRate(dailyStatistics.getTotalCaffeineMg(), user.getCaffeinInfo().getDailyCaffeineLimitMg()))
-            .intakeGuide(dailyStatistics.getAiMessage())
-            .sleepSensitiveThreshold(100F)
-            .caffeineByHour(createHourlyCaffeineInfo(residuals, currentDateTime))
-            .build();
+        return new DailyCaffeineReportResponse(
+            user.getNickname(),
+            user.getCaffeinInfo().getDailyCaffeineLimitMg(),
+            dailyStatistics.getTotalCaffeineMg(),
+            calculateIntakeRate(
+                    dailyStatistics.getTotalCaffeineMg(),
+                    user.getCaffeinInfo().getDailyCaffeineLimitMg()
+            ),
+            dailyStatistics.getAiMessage(),
+            100F,
+            createHourlyCaffeineInfo(residuals, currentDateTime)
+        );
     }
 
     private int calculateIntakeRate(float dailyTotal, float userDailyLimit) {
@@ -100,16 +96,10 @@ public class DailyReportService {
         int count = 0;
 
         LocalDateTime residualTime = residual.getTargetDate().plusHours(residual.getHour());
-        log.info("residualTime : {}, timePoint : {}\n", residualTime, timePoint);
         // 시간 비교를 단순화: 년, 월, 일, 시간 비교
         if (residualTime.isEqual(timePoint)) {
-            log.info("Matching residual: timePoint={}, residualTime={}, amount={}", timePoint,
-                residualTime, residual.getResidueAmountMg());
             totalCaffeine += residual.getResidueAmountMg();
             count++;
-        } else {
-            log.info("Not Matching residual: timePoint={}, residualTime={}, amount={}", timePoint,
-                residualTime, residual.getResidueAmountMg());
         }
         return count > 0 ? totalCaffeine / count : 0f;
     }

@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import java.util.Comparator;
 
 @Service
 @RequiredArgsConstructor
@@ -32,24 +33,36 @@ public class CaffeineResidualService {
     private double k = Math.log(2) / DEFAULT_HALF_LIFE_HOUR;
 
     public void modifyResidualAmounts(Long userId, LocalDateTime previousIntakeTime, float previousCaffeineAmount) {
-        final LocalDateTime previousTargetTime = previousIntakeTime.toLocalDate().atStartOfDay();
+        final LocalDateTime previousTargetTime = previousIntakeTime.minusHours(17).toLocalDate().atStartOfDay();
         final LocalDateTime previousEndTime = previousIntakeTime.plusHours(24);
 
         User user = userService.findUserById(userId);
-
+        LocalDateTime previousIntakeHour = previousIntakeTime.truncatedTo(ChronoUnit.HOURS);
+        log.info("[CaffeineResidualService.modifyResidualAmounts] 수정 대상 기준 섭취 시간(hour 단위) - previousIntakeHour={}", previousIntakeHour);
         // 1. 섭취 내역 수정으로 인해 영향을 받는 잔존량 데이터 조회 (24hour)
         List<CaffeineResidual> residualsToModify = residualRepository.findByUserAndTargetDateBetween(user, previousTargetTime, previousEndTime);
 
+        // Comparator를 사용하여 정렬
+        Comparator<CaffeineResidual> comparator = Comparator
+            .comparing(CaffeineResidual::getTargetDate) // targetDate의 날짜 부분으로 먼저 비교
+            .thenComparing(CaffeineResidual::getHour); // 그 다음 hour 값으로 비교
+
+        // 리스트 정렬
+        residualsToModify.sort(comparator);
+
+        int hoursSincePreviousIntake = 0;
         // 2. 섭취 내역 수정으로 인해 영향을 받는 잔존량 데이터에 대해 이전 카페인 섭취량의 영향 제거
         for (CaffeineResidual residual : residualsToModify) {
             LocalDateTime residualDateTime = LocalDateTime.of(
                 LocalDate.from(residual.getTargetDate()), LocalTime.of(residual.getHour(), 0));
 
             // 해당 시점이 이전 섭취 시간과 새로운 섭취 시간 사이에 있는 경우에만 처리
-            if (residualDateTime.isAfter(previousIntakeTime) || residualDateTime.isEqual(previousIntakeTime)) {
+            if (residualDateTime.isAfter(previousIntakeHour) || residualDateTime.isEqual(previousIntakeHour)) {
                 // 이전 섭취로 인한 잔존량 계산
-                double hoursSincePreviousIntake = ChronoUnit.HOURS.between(previousIntakeTime,
-                    residualDateTime);
+                log.info("[modifyResidualAmounts] 잔존량 계산 대상 시간 비교 - residualDateTime={}, 기준섭취시간={}, isAfter={}, isEqual={}",
+                        residualDateTime, previousIntakeHour,
+                        residualDateTime.isAfter(previousIntakeHour),
+                        residualDateTime.isEqual(previousIntakeHour));
                 double previousResidualAmount =
                     previousCaffeineAmount * Math.exp(-k * hoursSincePreviousIntake);
 
@@ -61,6 +74,8 @@ public class CaffeineResidualService {
                 updatedAmount = Math.max(0, updatedAmount);
 
                 residual.setResidueAmountMg(updatedAmount);
+
+                hoursSincePreviousIntake++;
             }
         }
 
@@ -68,14 +83,13 @@ public class CaffeineResidualService {
         try {
             residualRepository.saveAll(residualsToModify);
         } catch (Exception e) {
+            log.error("[CaffeineResidualService.modifyResidualAmounts] 잔존량 수정 저장 실패 - userId={}, message={}", userId, e.getMessage(), e);
             throw new RuntimeException("카페인 잔존량 저장 중 오류가 발생했습니다.", e);
         }
     }
 
     public void updateResidualAmounts(Long userId, LocalDateTime intakeTime, float initialCaffeineAmount) {
         User user = userService.findUserById(userId);
-
-        LocalDateTime endTime = intakeTime.plusHours(24);
 
         List<CaffeineResidual> residuals = new ArrayList<>();
         for (int hourOffset = 0; hourOffset <= 24; hourOffset++) {
@@ -109,7 +123,12 @@ public class CaffeineResidualService {
                 residuals.add(residual);
             }
         }
-        residualRepository.saveAll(residuals);
+        try {
+            residualRepository.saveAll(residuals);
+        } catch (Exception e) {
+            log.error("[CaffeineResidualService.updateResidualAmounts] 잔존량 갱신 저장 실패 - userId={}, message={}", userId, e.getMessage(), e);
+            throw new RuntimeException("카페인 잔존량 갱신 중 오류가 발생했습니다.", e);
+        }
     }
 
     /**
@@ -122,10 +141,8 @@ public class CaffeineResidualService {
         User user,
         LocalDateTime currentDateTime) {
 
-        LocalDateTime startTime = currentDateTime.minusHours(17);
-        LocalDateTime endTime = currentDateTime.plusHours(17);
-
-        log.info("startHour: {}, startTime: {}, endTime : {}", currentDateTime.getHour(), startTime, endTime);
+        LocalDateTime startTime = currentDateTime.minusHours(HOURS_RANGE);
+        LocalDateTime endTime = currentDateTime.plusHours(HOURS_RANGE);
 
         List<CaffeineResidual> residuals = residualRepository.findResidualsByTimeRange(
             user,
@@ -137,12 +154,13 @@ public class CaffeineResidualService {
         Map<String, CaffeineResidual> residualMap = residuals.stream()
             .collect(Collectors.toMap(
                 r -> r.getTargetDate().toLocalDate().toString() + "-" + r.getHour(),
-                Function.identity()
+                Function.identity(),
+                (r1, r2) -> r2  // 중복된 경우 나중 값으로 덮어쓰기
             ));
 
         // 3. 35시간 구간의 모든 시간 포인트 생성 및 매핑
         List<CaffeineResidual> result = new ArrayList<>();
-        for (int i = -17; i <= 17; i++) {
+        for (int i = -1 * HOURS_RANGE; i <= HOURS_RANGE; i++) {
             LocalDateTime timePoint = currentDateTime.plusHours(i);
             String key = timePoint.toLocalDate().toString() + "-" + timePoint.getHour();
             CaffeineResidual residual = residualMap.get(key);

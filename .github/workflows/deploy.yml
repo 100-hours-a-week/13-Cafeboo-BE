@@ -1,0 +1,52 @@
+name: Deploy to GCP Private VM
+
+on:
+  push:
+    branches: [ dev ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: elevated-valve-459107-h8
+          version: latest
+
+      - name: Configure Docker to use Artifact Registry
+        run: gcloud auth configure-docker asia-northeast3-docker.pkg.dev
+
+      - name: Build Docker Image
+        run: |
+          docker build -t asia-northeast3-docker.pkg.dev/elevated-valve-459107-h8/backend/cafeboo-back:latest .
+
+      - name: Push Docker Image
+        run: |
+          docker push asia-northeast3-docker.pkg.dev/elevated-valve-459107-h8/backend/cafeboo-back:latest 
+
+      - name: SSH into GCP VM via IAP and Deploy
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
+        run: |
+            gcloud compute ssh dev-private-vm \
+            --project=elevated-valve-459107-h8 \
+            --zone=asia-northeast3-a \
+            --tunnel-through-iap \
+            --command="sudo docker stop cafeboo-back || true && \
+            sudo docker rm cafeboo-back || true && \
+            sudo docker pull asia-northeast3-docker.pkg.dev/elevated-valve-459107-h8/backend/cafeboo-back:latest && \
+            sudo docker run -d --name cafeboo-back --network host \
+              -e JWT_SECRET='${JWT_SECRET}' \
+              -e SPRING_DATASOURCE_PASSWORD='${SPRING_DATASOURCE_PASSWORD}' \
+              -e KAKAO_CLIENT_ID='9333a34b6c9de8d1db66955c4b396b21' \
+              asia-northeast3-docker.pkg.dev/elevated-valve-459107-h8/backend/cafeboo-back:latest"

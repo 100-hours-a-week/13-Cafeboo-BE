@@ -1,6 +1,7 @@
 package com.ktb.cafeboo.global.config;
 
 import com.ktb.cafeboo.global.security.JwtAuthenticationFilter;
+import java.util.Arrays;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -8,6 +9,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -23,19 +26,30 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        List<RequestMatcher> permitAllMatchers = Arrays.asList(
+            new AntPathRequestMatcher("/api/v1/auth/oauth"),
+            new AntPathRequestMatcher("/api/v1/auth/kakao"),
+            new AntPathRequestMatcher("/api/v1/users/email"),
+            new AntPathRequestMatcher("/api/v1/reports/weekly/ai_callback"),
+            new AntPathRequestMatcher("/v3/api-docs/**"),
+            new AntPathRequestMatcher("/swagger-ui/**"),
+            new AntPathRequestMatcher("/swagger-ui.html"),
+            new AntPathRequestMatcher("/index.html"),
+            new AntPathRequestMatcher("/ws/**"),
+            new AntPathRequestMatcher("/css/**"),
+            new AntPathRequestMatcher("/js/**"),
+            new AntPathRequestMatcher("/images/**"), // 이미지가 있다면 추가
+            new AntPathRequestMatcher("/favicon.ico"),
+            new AntPathRequestMatcher("/webjars/**"), // SockJS, STOMP.js가 webjars를 통해 제공된다면 필요// 웹소켓 엔드포인트
+            new AntPathRequestMatcher("/api/chat/**"),
+            new AntPathRequestMatcher("/api/chatrooms/**")
+        );
+
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource())) // CORS 적용
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers(
-                    "/api/v1/auth/oauth",
-                    "/api/v1/auth/kakao",
-                    "/api/v1/users/email",
-                    "/api/v1/reports/weekly/ai_callback",
-                    "/v3/api-docs/**",      // OpenAPI 3.0 스펙 JSON/YAML
-                    "/swagger-ui/**",       // Swagger UI HTML, JS, CSS 파일
-                    "/swagger-ui.html"      // Swagger UI 메인 페이지
-                ).permitAll()
+                .requestMatchers(permitAllMatchers.toArray(RequestMatcher[]::new)).permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

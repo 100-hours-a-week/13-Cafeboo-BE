@@ -1,12 +1,14 @@
 package com.ktb.cafeboo.domain.user.service;
 
 import com.ktb.cafeboo.domain.auth.repository.OauthTokenRepository;
+import com.ktb.cafeboo.domain.auth.service.TokenBlacklistService;
 import com.ktb.cafeboo.domain.user.dto.EmailDuplicationResponse;
 import com.ktb.cafeboo.domain.user.dto.UserProfileResponse;
 import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.domain.user.repository.UserRepository;
 import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
+import com.ktb.cafeboo.global.enums.TokenBlacklistReason;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final OauthTokenRepository oauthTokenRepository;
+    private final TokenBlacklistService tokenBlacklistService;
 
     public User findUserById(Long id){
         return userRepository.findById(id)
@@ -60,9 +63,9 @@ public class UserService {
     }
 
     @Transactional
-    public void deleteUser(Long userId) {
+    public void deleteUser(String accessToken, Long userId) {
         log.info("[UserService.deleteUser] 회원 탈퇴 처리 시작 - userId={}", userId);
-
+      
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> {
                     log.warn("[UserService.deleteUser] 존재하지 않는 사용자 - userId={}", userId);
@@ -91,6 +94,13 @@ public class UserService {
 
         user.delete();
         userRepository.save(user);
+
+        try {
+            tokenBlacklistService.addToBlacklist(accessToken, userId.toString(), TokenBlacklistReason.WITHDRAWAL);
+        } catch (Exception e) {
+            log.warn("accessToken 블랙리스트 등록 실패: {}", e.getMessage());
+        }
+      
         log.info("[UserService.deleteUser] 사용자 soft delete 완료 - userId={}", userId);
     }
 }

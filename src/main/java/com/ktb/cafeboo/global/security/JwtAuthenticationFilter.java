@@ -1,5 +1,6 @@
 package com.ktb.cafeboo.global.security;
 
+import com.ktb.cafeboo.domain.auth.service.TokenBlacklistService;
 import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.domain.user.repository.UserRepository;
 import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
@@ -20,7 +21,7 @@ import java.io.IOException;
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-
+    private final TokenBlacklistService tokenBlacklistService;
     private final JwtProvider jwtProvider;
     private final UserRepository userRepository;
 
@@ -39,6 +40,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 if (userIdStr == null || !userIdStr.matches("\\d+")) {
                     throw new CustomApiException(ErrorStatus.ACCESS_TOKEN_INVALID);
+                }
+
+                // 토큰 블랙리스트 검증
+                if (tokenBlacklistService.isBlacklisted(accessToken)) {
+                    throw new CustomApiException(ErrorStatus.ACCESS_TOKEN_BLACKLISTED);
                 }
 
                 Long userIdLong = Long.parseLong(userIdStr);

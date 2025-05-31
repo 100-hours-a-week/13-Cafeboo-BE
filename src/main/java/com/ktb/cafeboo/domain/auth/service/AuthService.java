@@ -5,6 +5,7 @@ import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.domain.user.repository.UserRepository;
 import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
+import com.ktb.cafeboo.global.enums.TokenBlacklistReason;
 import com.ktb.cafeboo.global.security.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,8 +19,9 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final JwtProvider jwtProvider;
+    private final TokenBlacklistService tokenBlacklistService;
 
-    public TokenRefreshResponse refreshAccessToken(String refreshToken) {
+    public TokenRefreshResponse refreshAccessToken(String refreshToken, String accessToken) {
         log.info("[AuthService.refreshAccessToken] accessToken 갱신 시작");
 
         String userId = jwtProvider.validateRefreshToken(refreshToken);
@@ -36,6 +38,8 @@ public class AuthService {
             throw new CustomApiException(ErrorStatus.REFRESH_TOKEN_MISMATCH);
         }
 
+        tokenBlacklistService.addToBlacklist(accessToken, userId, TokenBlacklistReason.REFRESH);
+
         String newAccessToken = jwtProvider.createAccessToken(
                 user.getId().toString(),
                 user.getLoginType().name(),
@@ -48,7 +52,7 @@ public class AuthService {
     }
 
     @Transactional
-    public void logout(Long userId) {
+    public void logout(String accessToken, Long userId) {
         log.info("[AuthService.logout] 로그아웃 처리 시작");
 
         User user = userRepository.findById(userId)
@@ -56,6 +60,8 @@ public class AuthService {
                     log.warn("[AuthService.logout] 존재하지 않는 사용자 - userId={}", userId);
                     return new CustomApiException(ErrorStatus.USER_NOT_FOUND);
                 });
+
+        tokenBlacklistService.addToBlacklist(accessToken, userId.toString(), TokenBlacklistReason.LOGOUT);
 
         user.updateRefreshToken(null);
         userRepository.save(user);

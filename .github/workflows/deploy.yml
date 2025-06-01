@@ -22,6 +22,10 @@ jobs:
           project_id: elevated-valve-459107-h8
           version: latest
 
+      - name: Use dev application.properties
+        run: |
+          cp src/main/resources/application-dev.properties src/main/resources/application.properties
+
       - name: Configure Docker to use Artifact Registry
         run: gcloud auth configure-docker asia-northeast3-docker.pkg.dev
 

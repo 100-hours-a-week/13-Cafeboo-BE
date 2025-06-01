@@ -23,10 +23,6 @@ jobs:
           project_id: elevated-valve-459107-h8
           version: latest
 
-      - name: Use dev application.properties
-        run: |
-          cp src/main/resources/application-dev.properties src/main/resources/application.properties
-
       - name: Configure Docker to use Artifact Registry
         run: gcloud auth configure-docker asia-northeast3-docker.pkg.dev
 
@@ -58,6 +54,7 @@ jobs:
             sudo docker rm cafeboo-back || true && \
             sudo docker pull asia-northeast3-docker.pkg.dev/elevated-valve-459107-h8/backend/cafeboo-back:latest && \
             sudo docker run -d --name cafeboo-back --network host \
+              -e SPRING_PROFILES_ACTIVE=dev \
               -e JWT_SECRET='${JWT_SECRET}' \
               -e DEV_DB_URL='${DEV_DB_URL}' \
               -e DEV_DB_USERNAME='${DEV_DB_USERNAME}' \

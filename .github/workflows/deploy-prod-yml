@@ -1,0 +1,96 @@
+name: Deploy Backend to PROD MIG
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: elevated-valve-459107-h8
+          version: latest
+
+      - name: Configure Docker to use Artifact Registry
+        run: |
+          gcloud auth configure-docker asia-northeast3-docker.pkg.dev
+
+      - name: Build and Push Docker Image
+        run: |
+          docker build -t asia-northeast3-docker.pkg.dev/elevated-valve-459107-h8/backend/cafeboo-back:${{ github.sha }} .
+          docker push asia-northeast3-docker.pkg.dev/elevated-valve-459107-h8/backend/cafeboo-back:${{ github.sha }}
+
+      - name: Generate Startup Script
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          PROD_DB_URL: ${{ secrets.PROD_DB_URL }}
+          PROD_DB_USERNAME: ${{ secrets.PROD_DB_USERNAME }}
+          PROD_DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
+          PROD_KAKAO_REDIRECT_URI: ${{ secrets.PROD_KAKAO_REDIRECT_URI }}
+          PROD_AI_BASE_URL: ${{ secrets.PROD_AI_BASE_URL }}
+          PROD_REDIS_HOST: ${{ secrets.PROD_REDIS_HOST }}
+          PROD_REDIS_PORT: ${{ secrets.PROD_REDIS_PORT }}
+          KAKAO_CLIENT_ID: ${{ secrets.KAKAO_CLIENT_ID }}
+        run: |
+          cat <<EOF > startup.sh
+          #!/bin/bash
+          set -e
+
+          apt-get update
+          apt-get install -y docker.io
+
+          gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://asia-northeast3-docker.pkg.dev
+
+          docker pull asia-northeast3-docker.pkg.dev/elevated-valve-459107-h8/backend/cafeboo-back:${GITHUB_SHA}
+
+          docker stop cafeboo-back || true
+          docker rm cafeboo-back || true
+          docker run -d --name cafeboo-back --network host \
+            -e SPRING_PROFILES_ACTIVE=prod \
+            -e JWT_SECRET="${JWT_SECRET}" \
+            -e PROD_DB_URL="${PROD_DB_URL}" \
+            -e PROD_DB_USERNAME="${PROD_DB_USERNAME}" \
+            -e PROD_DB_PASSWORD="${PROD_DB_PASSWORD}" \
+            -e PROD_KAKAO_REDIRECT_URI="${PROD_KAKAO_REDIRECT_URI}" \
+            -e PROD_AI_BASE_URL="${PROD_AI_BASE_URL}" \
+            -e PROD_REDIS_HOST="${PROD_REDIS_HOST}" \
+            -e PROD_REDIS_PORT="${PROD_REDIS_PORT}" \
+            -e KAKAO_CLIENT_ID="${KAKAO_CLIENT_ID}" \
+            asia-northeast3-docker.pkg.dev/elevated-valve-459107-h8/backend/cafeboo-back:${GITHUB_SHA}
+          EOF
+
+      - name: Create New Instance Template
+        run: |
+          gcloud compute instance-templates create backend-template-${{ github.run_id }} \
+            --project=elevated-valve-459107-h8 \
+            --machine-type=e2-small \
+            --region=asia-northeast3 \
+            --subnet=projects/elevated-valve-459107-h8/regions/asia-northeast3/subnetworks/v2-prod-vpc-private-be-a \
+            --tags=backend \
+            --metadata-from-file startup-script=startup.sh \
+            --no-address \
+            --boot-disk-size=10GB \
+            --boot-disk-type=pd-balanced \
+            --image-family=ubuntu-2204-lts \
+            --image-project=ubuntu-os-cloud \
+            --service-account=328167857357-compute@developer.gserviceaccount.com \
+            --scopes=https://www.googleapis.com/auth/cloud-platform
+
+      - name: Rolling Update MIG with New Template
+        run: |
+          gcloud compute instance-groups managed rolling-action start-update backend-mig \
+            --region=asia-northeast3 \
+            --version=template=backend-template-${{ github.run_id }}

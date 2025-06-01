@@ -1,4 +1,4 @@
-name: Deploy to GCP Private VM
+name: Deploy to GCP Private VM (Dev)
 
 on:
   push:
@@ -7,6 +7,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -40,7 +41,14 @@ jobs:
       - name: SSH into GCP VM via IAP and Deploy
         env:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
+          DEV_DB_URL: ${{ secrets.DEV_DB_URL }}
+          DEV_DB_USERNAME: ${{ secrets.DEV_DB_USERNAME }}
+          DEV_DB_PASSWORD: ${{ secrets.DEV_DB_PASSWORD }}
+          KAKAO_CLIENT_ID: ${{ secrets.KAKAO_CLIENT_ID }}
+          DEV_KAKAO_REDIRECT_URI: ${{ secrets.DEV_KAKAO_REDIRECT_URI }}
+          DEV_AI_BASE_URL: ${{ secrets.DEV_AI_BASE_URL }}
+          DEV_REDIS_HOST: ${{ secrets.DEV_REDIS_HOST }}
+          DEV_REDIS_PORT: ${{ secrets.DEV_REDIS_PORT }}
         run: |
             gcloud compute ssh dev-private-vm \
             --project=elevated-valve-459107-h8 \
@@ -51,6 +59,12 @@ jobs:
             sudo docker pull asia-northeast3-docker.pkg.dev/elevated-valve-459107-h8/backend/cafeboo-back:latest && \
             sudo docker run -d --name cafeboo-back --network host \
               -e JWT_SECRET='${JWT_SECRET}' \
-              -e SPRING_DATASOURCE_PASSWORD='${SPRING_DATASOURCE_PASSWORD}' \
-              -e KAKAO_CLIENT_ID='9333a34b6c9de8d1db66955c4b396b21' \
+              -e DEV_DB_URL='${DEV_DB_URL}' \
+              -e DEV_DB_USERNAME='${DEV_DB_USERNAME}' \
+              -e DEV_DB_PASSWORD='${DEV_DB_PASSWORD}' \
+              -e KAKAO_CLIENT_ID='${KAKAO_CLIENT_ID}' \
+              -e DEV_KAKAO_REDIRECT_URI='${DEV_KAKAO_REDIRECT_URI}' \
+              -e DEV_AI_BASE_URL='${DEV_AI_BASE_URL}' \
+              -e DEV_REDIS_HOST='${DEV_REDIS_HOST}' \
+              -e DEV_REDIS_PORT='${DEV_REDIS_PORT}' \
               asia-northeast3-docker.pkg.dev/elevated-valve-459107-h8/backend/cafeboo-back:latest"

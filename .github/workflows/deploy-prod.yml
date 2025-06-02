@@ -43,6 +43,7 @@ jobs:
           PROD_AI_BASE_URL: ${{ secrets.PROD_AI_BASE_URL }}
           PROD_REDIS_HOST: ${{ secrets.PROD_REDIS_HOST }}
           PROD_REDIS_PORT: ${{ secrets.PROD_REDIS_PORT }}
+          PROD_REDIS_PASSWORD: ${{ secrets.PROD_REDIS_PASSWORD }}
           KAKAO_CLIENT_ID: ${{ secrets.KAKAO_CLIENT_ID }}
         run: |
           cat <<EOF > startup.sh

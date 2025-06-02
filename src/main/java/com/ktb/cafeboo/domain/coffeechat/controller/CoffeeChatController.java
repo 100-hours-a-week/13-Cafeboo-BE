@@ -1,7 +1,7 @@
 package com.ktb.cafeboo.domain.coffeechat.controller;
 
 
-import com.ktb.cafeboo.domain.coffeechat.model.Message;
+import com.ktb.cafeboo.domain.coffeechat.model.CoffeechatMessage;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChat;
 import com.ktb.cafeboo.domain.coffeechat.repository.CoffeeChatRepository;
 import com.ktb.cafeboo.global.enums.MessageType;
@@ -53,7 +53,7 @@ public class CoffeeChatController {
 
     // 특정 채팅방의 이전 메시지 이력 조회 (Redis Stream에서 가져옴)
     @GetMapping("/{roomId}/messages")
-    public ResponseEntity<List<Message>> getChatRoomMessages(@PathVariable String roomId,
+    public ResponseEntity<List<CoffeechatMessage>> getChatRoomMessages(@PathVariable String roomId,
         @RequestParam(defaultValue = "0-0") String startId,
         @RequestParam(defaultValue = "100") long count) {
         String chatRoomStreamKey = "coffeechat:" + roomId + ":stream";
@@ -65,12 +65,12 @@ public class CoffeeChatController {
             StreamOffset.create(chatRoomStreamKey, ReadOffset.from(startId)) // 시작 오프셋
         );
 //
-        List<Message> chatMessages = records.stream()
+        List<CoffeechatMessage> chatMessages = records.stream()
             .map(record -> {
                 // MapRecord의 payload는 Map<Object, Object> 형태로 반환될 수 있음
                 // 이를 ChatMessage 객체로 다시 매핑합니다.
                 Map<Object, Object> rawData = record.getValue();
-                return new Message(
+                return new CoffeechatMessage(
                     (String) rawData.get("senderId"),
                     (String) rawData.get("roomId"),
                     (String) rawData.get("content"),

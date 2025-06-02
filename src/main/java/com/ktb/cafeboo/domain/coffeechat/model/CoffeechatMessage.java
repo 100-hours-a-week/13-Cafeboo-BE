@@ -13,7 +13,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Message extends BaseEntity {
+public class CoffeechatMessage extends BaseEntity {
     private String userId;  //테스트용, erd의 Messages 테이블의 user_id. 이후에는 BaseEntity의 id로 대체
     private String roomId;  //테스트용, erd의 Messages 테이블의 id. 이후에는 CoffeChat Entity의 id로 대체
     private String content;

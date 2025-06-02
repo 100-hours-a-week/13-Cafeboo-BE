@@ -68,6 +68,7 @@ jobs:
             -e PROD_AI_BASE_URL="${PROD_AI_BASE_URL}" \
             -e PROD_REDIS_HOST="${PROD_REDIS_HOST}" \
             -e PROD_REDIS_PORT="${PROD_REDIS_PORT}" \
+            -e PROD_REDIS_PASSWORD="${PROD_REDIS_PASSWORD}" \
             -e KAKAO_CLIENT_ID="${KAKAO_CLIENT_ID}" \
             asia-northeast3-docker.pkg.dev/elevated-valve-459107-h8/backend/cafeboo-back:${GITHUB_SHA}
           EOF

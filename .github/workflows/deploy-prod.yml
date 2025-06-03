@@ -74,9 +74,15 @@ jobs:
             asia-northeast3-docker.pkg.dev/elevated-valve-459107-h8/backend/cafeboo-back:${GITHUB_SHA}
           EOF
 
+      - name: Delete Old Instance Template (if exists)
+        run: |
+          gcloud compute instance-templates delete backend-template-${{ github.sha }} \
+            --project=elevated-valve-459107-h8 \
+            --quiet || true
+
       - name: Create New Instance Template
         run: |
-          gcloud compute instance-templates create backend-template-${{ github.run_id }} \
+          gcloud compute instance-templates create backend-template-${{ github.sha }} \
             --project=elevated-valve-459107-h8 \
             --machine-type=e2-small \
             --region=asia-northeast3 \
@@ -95,4 +101,4 @@ jobs:
         run: |
           gcloud compute instance-groups managed rolling-action start-update backend-mig \
             --region=asia-northeast3 \
-            --version=template=backend-template-${{ github.run_id }}
+            --version=template=backend-template-${{ github.sha }}

@@ -95,7 +95,8 @@ jobs:
             --image-family=ubuntu-2204-lts \
             --image-project=ubuntu-os-cloud \
             --service-account=328167857357-compute@developer.gserviceaccount.com \
-            --scopes=https://www.googleapis.com/auth/cloud-platform
+            --scopes=https://www.googleapis.com/auth/cloud-platform \
+            --labels=managed-by-mig=true
 
       - name: Rolling Update MIG with New Template
         run: |

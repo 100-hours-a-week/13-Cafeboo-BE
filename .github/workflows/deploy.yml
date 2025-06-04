@@ -43,8 +43,10 @@ jobs:
           KAKAO_CLIENT_ID: ${{ secrets.KAKAO_CLIENT_ID }}
           DEV_KAKAO_REDIRECT_URI: ${{ secrets.DEV_KAKAO_REDIRECT_URI }}
           DEV_AI_BASE_URL: ${{ secrets.DEV_AI_BASE_URL }}
-          DEV_REDIS_HOST: ${{ secrets.DEV_REDIS_HOST }}
-          DEV_REDIS_PORT: ${{ secrets.DEV_REDIS_PORT }}
+          #DEV_REDIS_HOST: ${{ secrets.DEV_REDIS_HOST }}
+          #DEV_REDIS_PORT: ${{ secrets.DEV_REDIS_PORT }}
+          DEV_REDIS_HOST: localhost      
+          DEV_REDIS_PORT: 6379       
         run: |
             gcloud compute ssh dev-private-vm \
             --project=elevated-valve-459107-h8 \

@@ -75,9 +75,6 @@ jobs:
               --restart=always \
               -e SPRING_PROFILES_ACTIVE=dev \
               -e JWT_SECRET='${JWT_SECRET}' \
-              #-e DEV_DB_URL='${DEV_DB_URL}' \
-              #-e DEV_DB_USERNAME='${DEV_DB_USERNAME}' \
-              #-e DEV_DB_PASSWORD='${DEV_DB_PASSWORD}' \
               -e KAKAO_CLIENT_ID='${KAKAO_CLIENT_ID}' \
               -e DEV_KAKAO_REDIRECT_URI='${DEV_KAKAO_REDIRECT_URI}' \
               -e DEV_AI_BASE_URL='${DEV_AI_BASE_URL}' \

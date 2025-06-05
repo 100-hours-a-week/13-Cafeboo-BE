@@ -1,6 +1,5 @@
 package com.ktb.cafeboo.domain.coffeechat.model;
 
-import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.global.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -10,7 +9,7 @@ import org.hibernate.annotations.Where;
 @Table(
     name = "coffee_chat_reviews",
     uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"room_id", "user_id"})
+        @UniqueConstraint(columnNames = {"chat_member_id"})
     }
 )
 @Getter
@@ -25,8 +24,8 @@ public class CoffeeChatReview extends BaseEntity {
     private CoffeeChat coffeeChat;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User writer;
+    @JoinColumn(name = "chat_member_id", nullable = false)
+    private CoffeeChatMember writer;
 
     @Column(name = "content_text", nullable = false, columnDefinition = "TEXT")
     private String contentText;
@@ -34,7 +33,7 @@ public class CoffeeChatReview extends BaseEntity {
     @Column(name = "content_img_url", length = 255)
     private String contentImgUrl;
 
-    public static CoffeeChatReview of(CoffeeChat chat, User writer, String text, String imgUrl) {
+    public static CoffeeChatReview of(CoffeeChat chat, CoffeeChatMember writer, String text, String imgUrl) {
         return CoffeeChatReview.builder()
                 .coffeeChat(chat)
                 .writer(writer)

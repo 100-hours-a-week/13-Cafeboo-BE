@@ -52,6 +52,12 @@ public enum SuccessStatus implements BaseCode {
 
     //AI 리포트 생성 관련 응답
     REPORT_GENERATION_SUCCESS(200, "AI_GENERATION_REPORT", "AI 리포트 생성 요청 성공"),
+
+    //커피챗 관련 응답
+    COFFEECHAT_CREATE_SUCCESS(201, "COFFEECHAT_CREATE_SUCCESS", "커피챗이 성공적으로 생성되었습니다."),
+    COFFEECHAT_LIST_LOAD_SUCCESS(200, "COFFEECHAT_LIST_LOAD_SUCCESS", "커피챗 목록을 성공적으로 조회했습니다."),
+    COFFEECHAT_LOAD_SUCCESS(200, "COFFEECHAT_LOAD_SUCCESS", "커피챗 상세내용을 성공적으로 조회했습니다."),
+    COFFEECHAT_JOIN_SUCCESS(201, "COFFEECHAT_JOIN_SUCCESS", "커피챗에 성공적으로 참여하였습니다.")
     ;
     private final int status;
     private final String code;

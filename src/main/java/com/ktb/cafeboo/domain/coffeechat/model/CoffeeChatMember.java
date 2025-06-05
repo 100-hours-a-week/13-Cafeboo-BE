@@ -31,11 +31,11 @@ public class CoffeeChatMember extends BaseEntity {
     @Column(name = "is_evaluated", nullable = false)
     private boolean isEvaluated;
 
-    public static CoffeeChatMember of(CoffeeChat chat, User user, CoffeeChatMemberStatus status) {
+    public static CoffeeChatMember of(CoffeeChat chat, User user) {
         return CoffeeChatMember.builder()
                 .coffeeChat(chat)
                 .user(user)
-                .status(status)
+                .status(CoffeeChatMemberStatus.JOINED)
                 .isEvaluated(false)
                 .build();
     }

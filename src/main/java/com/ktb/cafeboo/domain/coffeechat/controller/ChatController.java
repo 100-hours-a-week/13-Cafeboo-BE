@@ -1,6 +1,8 @@
 package com.ktb.cafeboo.domain.coffeechat.controller;
 
+import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChat;
 import com.ktb.cafeboo.domain.coffeechat.model.Message;
+import com.ktb.cafeboo.domain.user.model.User;
 import jakarta.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,16 +38,19 @@ public class ChatController {
     @MessageMapping("/chatrooms/{roomId}")
     public void handleCoffeeChatMessage(@DestinationVariable String roomId, @Payload Message chatMessage, SimpMessageHeaderAccessor headerAccessor) {
         // 클라이언트에서 보낸 메시지 로그
+        User sender = chatMessage.getSender();
+        CoffeeChat coffeeChat = chatMessage.getChat();
+
         log.info("[ChatController.handleCoffeeChatMessage] - 유저 {}로부터 커피챗 {}에 보내는 메시지를 받았습니다: {}",
-            chatMessage.getUserId(), roomId,
+            sender.getId(), roomId,
             chatMessage.getContent());
 
         String coffeeChatStreamKey = "coffeechat:" + roomId + ":stream";
 
         // ChatMessage 객체를 Map<String, String>으로 변환
         Map<String, String> messageMap = new HashMap<>();
-        messageMap.put("userId", chatMessage.getUserId());
-        messageMap.put("roomId", chatMessage.getRoomId());
+        messageMap.put("userId", sender.getId().toString());
+        messageMap.put("roomId", coffeeChat.getId().toString());
         messageMap.put("content", chatMessage.getContent());
         messageMap.put("type", chatMessage.getType().name()); // Enum은 String으로 변환
         //messageMap.put("timestamp", String.valueOf(chatMessage.getTimestamp())); // long은 String으로 변환

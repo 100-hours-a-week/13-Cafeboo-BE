@@ -1,6 +1,7 @@
 package com.ktb.cafeboo.domain.user.model;
 
 import com.ktb.cafeboo.domain.caffeinediary.model.*;
+import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChat;
 import com.ktb.cafeboo.domain.report.model.*;
 import com.ktb.cafeboo.global.infra.kakao.dto.KakaoUserResponse;
 import com.ktb.cafeboo.global.BaseEntity;
@@ -36,6 +37,9 @@ public class User extends BaseEntity {
 
     @Column(nullable = false, length = 10)
     private String nickname;
+
+    @Column
+    private String profileImageUrl;
 
     @Column(nullable = true, length = 512)
     private String refreshToken;
@@ -83,6 +87,9 @@ public class User extends BaseEntity {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<YearlyReport> yearlyReports = new ArrayList<>();
+
+    @OneToMany(mappedBy = "writer", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CoffeeChat> coffeeChats = new ArrayList<>();
 
     public static User fromKakao(KakaoUserResponse kakaoUser) {
         User user = new User();

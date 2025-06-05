@@ -1,13 +1,17 @@
 package com.ktb.cafeboo.domain.coffeechat.model;
 
+import com.ktb.cafeboo.domain.tag.model.CoffeeChatTag;
 import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.global.BaseEntity;
+import com.ktb.cafeboo.global.enums.CoffeeChatStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Where;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -23,7 +27,14 @@ public class CoffeeChat extends BaseEntity {
     private User writer;
 
     @Column(name = "name", nullable = false)
-    private String name; // 채팅방 이름 (예: "자유 채팅방", "스터디 그룹")
+    private String name;
+
+    @Column(name = "content", nullable = false, columnDefinition = "TEXT")
+    private String content;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private CoffeeChatStatus status;
 
     @Column(name = "meeting_time", nullable = false)
     private LocalDateTime meetingTime;
@@ -43,30 +54,43 @@ public class CoffeeChat extends BaseEntity {
     @Column(name = "longitude", precision = 10, scale = 7)
     private BigDecimal longitude;
 
-    @Column(name = "kakao_place_url", columnDefinition = "TEXT")
+    @Column(name = "kakao_place_url", length = 512)
     private String kakaoPlaceUrl;
 
-    public static CoffeeChat of(
-            User writer,
-            String name,
-            LocalDateTime meetingTime,
-            int maxMemberCount,
-            int currentMemberCount,
-            String address,
-            BigDecimal latitude,
-            BigDecimal longitude,
-            String kakaoPlaceUrl
-    ) {
-        return CoffeeChat.builder()
-                .writer(writer)
-                .name(name)
-                .meetingTime(meetingTime)
-                .maxMemberCount(maxMemberCount)
-                .currentMemberCount(currentMemberCount)
-                .address(address)
-                .latitude(latitude)
-                .longitude(longitude)
-                .kakaoPlaceUrl(kakaoPlaceUrl)
-                .build();
+    @OneToMany(mappedBy = "coffeeChat", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CoffeeChatMember> members = new ArrayList<>();
+
+    @OneToMany(mappedBy = "coffeeChat", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Message> messages = new ArrayList<>();
+
+    @OneToMany(mappedBy = "coffeeChat", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CoffeeChatReview> reviews = new ArrayList<>();
+
+    @OneToMany(mappedBy = "coffeeChat", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CoffeeChatTag> coffeeChatTags = new ArrayList<>();
+
+    public void addMember(CoffeeChatMember member) {
+        this.members.add(member);
+        this.currentMemberCount = this.members.size();
+    }
+
+    public void removeMember(CoffeeChatMember member) {
+        this.members.remove(member);
+        this.currentMemberCount = this.members.size();
+    }
+
+    public boolean isJoinedBy(Long userId) {
+        return members.stream().anyMatch(m -> m.getUser().getId().equals(userId));
+    }
+
+    public boolean isReviewedBy(Long userId) {
+        return reviews.stream()
+                .anyMatch(r -> r.getWriter().getUser().getId().equals(userId));
+    }
+
+    public List<String> getTagNames() {
+        return coffeeChatTags.stream()
+                .map(coffeeChatTag -> coffeeChatTag.getTag().getName())
+                .toList();
     }
 }

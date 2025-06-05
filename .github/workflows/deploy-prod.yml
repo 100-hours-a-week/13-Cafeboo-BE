@@ -23,13 +23,16 @@ jobs:
           project_id: elevated-valve-459107-h8
 
       - name: Configure Docker to use Artifact Registry
-        run: |
-          gcloud auth configure-docker asia-northeast3-docker.pkg.dev
+        run: gcloud auth configure-docker asia-northeast3-docker.pkg.dev
 
       - name: Build and Push Docker Image
         run: |
           docker build -t asia-northeast3-docker.pkg.dev/elevated-valve-459107-h8/backend/cafeboo-back:${{ github.sha }} .
           docker push asia-northeast3-docker.pkg.dev/elevated-valve-459107-h8/backend/cafeboo-back:${{ github.sha }}
+
+      - name: Compute Unique Template Name
+        run: |
+          echo "TEMPLATE_NAME=backend-template-$(date +%s)" >> $GITHUB_ENV
 
       - name: Generate Startup Script
         env:
@@ -57,10 +60,11 @@ jobs:
 
           docker pull asia-northeast3-docker.pkg.dev/elevated-valve-459107-h8/backend/cafeboo-back:${GITHUB_SHA}
 
-          # 백엔드 실행
           docker stop cafeboo-back || true
           docker rm cafeboo-back || true
+
           docker run -d --name cafeboo-back --network host \
+            --label app=cafeboo-back \
             -e SPRING_PROFILES_ACTIVE=prod \
             -e JWT_SECRET="${JWT_SECRET}" \
             -e PROD_DB_URL="${PROD_DB_URL}" \
@@ -74,11 +78,12 @@ jobs:
             -e KAKAO_CLIENT_ID="${KAKAO_CLIENT_ID}" \
             asia-northeast3-docker.pkg.dev/elevated-valve-459107-h8/backend/cafeboo-back:${GITHUB_SHA}
 
-          # Promtail 설정 파일 생성
           mkdir -p /opt/promtail
           touch /opt/promtail/positions.yaml
           chown 65534:65534 /opt/promtail/positions.yaml
           
+          INSTANCE_NAME=$(curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/name)
+
           cat <<EOC > /opt/promtail/promtail-config.yaml
           server:
             http_listen_port: 9080
@@ -88,18 +93,21 @@ jobs:
           clients:
             - url: http://${LOKI_VM_IP}:3100/loki/api/v1/push
           scrape_configs:
-            - job_name: system
+            - job_name: cafeboo-back
               static_configs:
                 - targets:
-                    - localhost
+                  - localhost
                   labels:
-                    job: varlogs
-                    __path__: /var/log/*.log
+                    job: back
+                    app: cafeboo
+                    instance: "${HOSTNAME}"
+                    __path__: /var/lib/docker/containers/*/*.log
           EOC
 
-          # Promtail 컨테이너 실행
+          docker stop promtail || true
+          docker rm promtail || true
+
           docker run -d --name promtail --network host \
-            -v /var/log:/var/log \
             -v /var/lib/docker/containers:/var/lib/docker/containers:ro \
             -v /opt/promtail/promtail-config.yaml:/etc/promtail/promtail.yaml \
             -v /opt/promtail:/etc/promtail \
@@ -107,21 +115,9 @@ jobs:
             -config.file=/etc/promtail/promtail.yaml
           EOF
 
-      - name: Compute Unique Template Name
-        run: |
-          # 예: 1749108030 같은 초 단위 타임스탬프를 얻는다
-          TS=$(date +%s)
-          echo "TEMPLATE_NAME=backend-template-${TS}" >> $GITHUB_ENV
-
-      - name: Delete Old Template (if exists)
-        run: |
-          gcloud compute instance-templates delete "$TEMPLATE_NAME" \
-            --project=elevated-valve-459107-h8 \
-            --quiet || true
-
       - name: Create New Instance Template
         run: |
-          gcloud compute instance-templates create "$TEMPLATE_NAME" \
+          gcloud compute instance-templates create "${{ env.TEMPLATE_NAME }}" \
             --project=elevated-valve-459107-h8 \
             --machine-type=e2-small \
             --region=asia-northeast3 \
@@ -141,4 +137,4 @@ jobs:
         run: |
           gcloud compute instance-groups managed rolling-action start-update backend-mig \
             --region=asia-northeast3 \
-            --version=template="$TEMPLATE_NAME"
+            --version=template="${{ env.TEMPLATE_NAME }}"

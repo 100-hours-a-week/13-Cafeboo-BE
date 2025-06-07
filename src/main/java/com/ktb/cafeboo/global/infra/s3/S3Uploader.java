@@ -81,8 +81,12 @@ public class S3Uploader {
         return s3Presigner.presignGetObject(presignRequest).url().toString();
     }
 
-
     private String generatePublicUrl(String key) {
         return String.format("https://%s.s3.amazonaws.com/%s", s3Properties.getBucket(), key);
     }
+
+    public String getDefaultProfileImageUrl() {
+        return s3Properties.getDefaultProfileImageUrl();
+    }
+
 }

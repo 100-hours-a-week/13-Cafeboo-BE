@@ -1,5 +1,7 @@
 package com.ktb.cafeboo.domain.coffeechat.dto;
 
+import com.ktb.cafeboo.domain.coffeechat.dto.common.WriterDto;
+
 import java.util.List;
 
 public record CoffeeChatListResponse(
@@ -14,7 +16,7 @@ public record CoffeeChatListResponse(
             int currentMemberCount,
             List<String> tags,
             String address,
-            Writer writer,
+            WriterDto writer,
 
             // 조건부 필드
             Boolean isJoined,
@@ -33,13 +35,14 @@ public record CoffeeChatListResponse(
                     chat.getCurrentMemberCount(),
                     chat.getTagNames(),
                     chat.getAddress(),
-                    new Writer(chat.getWriter().getNickname(), chat.getWriter().getProfileImageUrl()),
+                    new WriterDto(
+                            chat.getWriter().getNickname(),
+                            chat.getWriter().getProfileImageUrl()
+                    ),
                     isJoined,
                     isReviewed
             );
         }
-
-        public record Writer(String name, String profileImageUrl) {}
     }
 }
 

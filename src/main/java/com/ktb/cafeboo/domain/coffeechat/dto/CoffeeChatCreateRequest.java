@@ -1,5 +1,7 @@
 package com.ktb.cafeboo.domain.coffeechat.dto;
 
+import com.ktb.cafeboo.domain.coffeechat.dto.common.LocationDto;
+
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
@@ -11,5 +13,5 @@ public record CoffeeChatCreateRequest(
         LocalTime time,
         int memberCount,
         List<String> tags,
-        Location location
+        LocationDto location
 ) {}

@@ -1,8 +1,8 @@
-package com.ktb.cafeboo.domain.coffeechat.dto;
+package com.ktb.cafeboo.domain.coffeechat.dto.common;
 
 import java.math.BigDecimal;
 
-public record Location(
+public record LocationDto(
         String address,
         BigDecimal latitude,
         BigDecimal longitude,

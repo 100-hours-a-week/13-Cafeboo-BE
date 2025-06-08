@@ -1,5 +1,7 @@
 package com.ktb.cafeboo.domain.coffeechat.dto;
 
+import com.ktb.cafeboo.domain.coffeechat.dto.common.LocationDto;
+import com.ktb.cafeboo.domain.coffeechat.dto.common.WriterDto;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChat;
 
 import java.util.List;
@@ -12,22 +14,10 @@ public record CoffeeChatDetailResponse(
         int maxMemberCount,
         int currentMemberCount,
         List<String> tags,
-        Location location,
-        Writer writer,
+        LocationDto location,
+        WriterDto writer,
         Boolean isJoined
 ) {
-    public record Location(
-            String address,
-            double latitude,
-            double longitude,
-            String kakaoPlaceUrl
-    ) {}
-
-    public record Writer(
-            String name,
-            String profileImageUrl
-    ) {}
-
     public static CoffeeChatDetailResponse from(CoffeeChat chat, Long userId) {
 
         return new CoffeeChatDetailResponse(
@@ -38,18 +28,17 @@ public record CoffeeChatDetailResponse(
                 chat.getMaxMemberCount(),
                 chat.getCurrentMemberCount(),
                 chat.getTagNames(),
-                new Location(
+                new LocationDto(
                         chat.getAddress(),
-                        chat.getLatitude().doubleValue(),
-                        chat.getLongitude().doubleValue(),
+                        chat.getLatitude(),
+                        chat.getLongitude(),
                         chat.getKakaoPlaceUrl()
                 ),
-                new Writer(
+                new WriterDto(
                         chat.getWriter().getNickname(),
                         chat.getWriter().getProfileImageUrl()
                 ),
                 chat.isJoinedBy(userId)
         );
     }
-
 }

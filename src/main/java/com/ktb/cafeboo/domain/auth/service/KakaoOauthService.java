@@ -15,6 +15,7 @@ import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.domain.user.repository.UserRepository;
 import com.ktb.cafeboo.domain.user.service.UserService;
 import com.ktb.cafeboo.global.enums.LoginType;
+import com.ktb.cafeboo.global.infra.s3.S3Uploader;
 import com.ktb.cafeboo.global.security.JwtProvider;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -37,6 +42,7 @@ public class KakaoOauthService {
     private final JwtProvider jwtProvider;
     private final UserService userService;
     private final UserAlarmSettingService userAlarmSettingService;
+    private final S3Uploader s3Uploader;
 
     @Value("${spring.security.oauth2.client.registration.kakao.client-id}")
     private String clientId;
@@ -155,10 +161,53 @@ public class KakaoOauthService {
 
     private User getOrCreateUser(KakaoUserResponse kakaoUser) {
         return userRepository.findByOauthIdAndLoginType(kakaoUser.getId(), LoginType.KAKAO)
+                .map(user -> {
+                    // 기존 유저인데 profileImageUrl이 비어있다면
+                    if (user.getProfileImageUrl() == null) {
+                        String kakaoImageUrl = kakaoUser.getKakaoAccount().getProfile().getProfileImageUrl();
+                        log.info("kakaoImageUrl={}", kakaoImageUrl);
+
+                        String profileImageUrl;
+
+                        if (kakaoImageUrl != null && !kakaoImageUrl.isBlank()) {
+                            try (InputStream is = new URL(kakaoImageUrl).openStream()) {
+                                long contentLength = is.available();
+                                String contentType = URLConnection.guessContentTypeFromStream(is);
+                                profileImageUrl = s3Uploader.uploadProfileImage(is, contentLength, contentType);
+                            } catch (IOException e) {
+                                profileImageUrl = s3Uploader.getDefaultProfileImageUrl();
+                            }
+                        } else {
+                            profileImageUrl = s3Uploader.getDefaultProfileImageUrl();
+                        }
+                        user.updateProfileImage(profileImageUrl);
+                        userRepository.save(user);
+                    }
+
+                    return user;
+                })
                 .orElseGet(() -> {
-                    User newUser = userRepository.save(User.fromKakao(kakaoUser));
+                    String kakaoImageUrl = kakaoUser.getKakaoAccount().getProfile().getProfileImageUrl();
+                    String profileImageUrl;
+
+                    if (kakaoImageUrl != null && !kakaoImageUrl.isBlank()) {
+                        try (InputStream is = new URL(kakaoImageUrl).openStream()) {
+                            long contentLength = is.available();
+                            String contentType = URLConnection.guessContentTypeFromStream(is);
+                            profileImageUrl = s3Uploader.uploadProfileImage(is, contentLength, contentType);
+                        } catch (IOException e) {
+                            profileImageUrl = s3Uploader.getDefaultProfileImageUrl();
+                        }
+                    } else {
+                        profileImageUrl = s3Uploader.getDefaultProfileImageUrl();
+                    }
+                    log.info("kakaoImageUrl={}", kakaoImageUrl);
+                    log.info("profileImageUrl={}", profileImageUrl);
+                    User newUser = User.fromKakao(kakaoUser, profileImageUrl);
+
+                    User savedUser = userRepository.save(newUser);
                     userAlarmSettingService.create(
-                            newUser.getId(),
+                            savedUser.getId(),
                             new UserAlarmSettingCreateRequest(false, false, false)
                     );
                     return newUser;

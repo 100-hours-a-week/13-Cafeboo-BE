@@ -15,4 +15,6 @@ public interface CoffeeChatMemberRepository extends JpaRepository<CoffeeChatMemb
     List<CoffeeChatMember> findAllByCoffeeChat(CoffeeChat chat);
 
     boolean existsByCoffeeChatAndUser(CoffeeChat chat, User user);
+
+    boolean existsByCoffeeChatIdAndChatNickname(Long chatId, String chatNickname);
 }

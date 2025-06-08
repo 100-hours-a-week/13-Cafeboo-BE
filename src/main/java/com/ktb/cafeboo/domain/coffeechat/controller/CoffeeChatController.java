@@ -5,7 +5,6 @@ import com.ktb.cafeboo.domain.coffeechat.service.CoffeeChatService;
 import com.ktb.cafeboo.global.apiPayload.ApiResponse;
 import com.ktb.cafeboo.global.apiPayload.code.status.SuccessStatus;
 import com.ktb.cafeboo.global.security.userdetails.CustomUserDetails;
-import com.ktb.cafeboo.global.util.AuthChecker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -60,9 +59,14 @@ public class CoffeeChatController {
     @PostMapping("/{coffeechatId}/member")
     public ResponseEntity<ApiResponse<CoffeeChatJoinResponse>> joinCoffeeChat(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long coffeechatId
+            @PathVariable Long coffeechatId,
+            @RequestBody CoffeeChatJoinRequest request
     ) {
-        CoffeeChatJoinResponse response = coffeeChatService.join(userDetails.getUserId(), coffeechatId);
+        CoffeeChatJoinResponse response = coffeeChatService.join(
+                userDetails.getUserId(),
+                coffeechatId,
+                request
+        );
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.of(SuccessStatus.COFFEECHAT_JOIN_SUCCESS, response));
     }

@@ -64,6 +64,7 @@ public enum ErrorStatus implements BaseCode {
     INVALID_COFFEECHAT_FILTER(401, ",INVALID_COFFEECHAT_FILTER", "요청한 커피챗 필터 값이 유효하지 않습니다. 필터는 'all', 'joined', 'completed' 중 하나여야 합니다."),
     COFFEECHAT_ALREADY_JOINED(409, ",COFFEECHAT_ALREADY_JOINED", "이미 해당 커피챗에 참여한 사용자입니다."),
     COFFEECHAT_CAPACITY_EXCEEDED(409, "COFFEECHAT_CAPACITY_EXCEEDED", "해당 커피챗은 이미 정원이 초과되어 더 이상 참여할 수 없습니다."),
+    CHAT_NICKNAME_ALREADY_EXISTS(409, "CHAT_NICKNAME_ALREADY_EXISTS", "이미 사용 중인 채팅방 닉네임입니다."),
     CANNOT_LEAVE_CHAT_OWNER(400, "CANNOT_LEAVE_CHAT_OWNER", "작성자는 채팅방에서 나갈 수 없습니다.")
     ;
 

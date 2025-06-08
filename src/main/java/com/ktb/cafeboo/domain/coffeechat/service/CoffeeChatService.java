@@ -4,7 +4,7 @@ import com.ktb.cafeboo.domain.coffeechat.dto.*;
 import com.ktb.cafeboo.domain.coffeechat.dto.common.LocationDto;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChat;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChatMember;
-import com.ktb.cafeboo.domain.coffeechat.model.Message;
+import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChatMessage;
 import com.ktb.cafeboo.domain.coffeechat.repository.CoffeeChatMemberRepository;
 import com.ktb.cafeboo.domain.coffeechat.repository.CoffeeChatRepository;
 import com.ktb.cafeboo.domain.tag.service.TagService;
@@ -183,7 +183,7 @@ public class CoffeeChatService {
             throw new CustomApiException(ErrorStatus.COFFEECHAT_NOT_ACTIVE);
         }
 
-        for (Message message : chat.getMessages()) {
+        for (CoffeeChatMessage message : chat.getMessages()) {
             message.delete();
         }
 

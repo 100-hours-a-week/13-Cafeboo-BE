@@ -61,7 +61,7 @@ public class CoffeeChat extends BaseEntity {
     private List<CoffeeChatMember> members = new ArrayList<>();
 
     @OneToMany(mappedBy = "coffeeChat", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Message> messages = new ArrayList<>();
+    private List<CoffeeChatMessage> messages = new ArrayList<>();
 
     @OneToMany(mappedBy = "coffeeChat", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CoffeeChatReview> reviews = new ArrayList<>();

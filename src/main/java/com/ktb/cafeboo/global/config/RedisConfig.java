@@ -1,6 +1,6 @@
 package com.ktb.cafeboo.global.config;
 
-import com.ktb.cafeboo.domain.coffeechat.model.Message;
+import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChatMessage;
 import java.time.Duration;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -77,7 +77,7 @@ public class RedisConfig {
                 .batchSize(10) // 한 번에 처리할 메시지 수
                 .executor(taskExecutor) // 사용할 스레드 풀
                 .pollTimeout(Duration.ofSeconds(1)) // 메시지가 없을 때 폴링 타임아웃
-                .targetType(Message.class) // 메시지 역직렬화 대상 타입
+                .targetType(CoffeeChatMessage.class) // 메시지 역직렬화 대상 타입
                 .build();
 
         StreamMessageListenerContainer<String, ?>container = StreamMessageListenerContainer.create(connectionFactory, options);

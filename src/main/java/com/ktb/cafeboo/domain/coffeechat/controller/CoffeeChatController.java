@@ -1,6 +1,7 @@
 package com.ktb.cafeboo.domain.coffeechat.controller;
 
 import com.ktb.cafeboo.domain.coffeechat.dto.*;
+import com.ktb.cafeboo.domain.coffeechat.service.CoffeeChatMessageService;
 import com.ktb.cafeboo.domain.coffeechat.service.CoffeeChatService;
 import com.ktb.cafeboo.global.apiPayload.ApiResponse;
 import com.ktb.cafeboo.global.apiPayload.code.status.SuccessStatus;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 public class CoffeeChatController {
 
     private final CoffeeChatService coffeeChatService;
+    private final CoffeeChatMessageService coffeeChatMessageService;
 
     @PostMapping
     public ResponseEntity<ApiResponse<CoffeeChatCreateResponse>> createCoffeeChat(
@@ -48,12 +50,12 @@ public class CoffeeChatController {
     }
 
     @GetMapping("/{coffeechatId}")
-    public ApiResponse<CoffeeChatDetailResponse> getCoffeeChatDetail(
+    public ResponseEntity<ApiResponse<CoffeeChatDetailResponse>> getCoffeeChatDetail(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long coffeechatId
     ) {
         CoffeeChatDetailResponse response = coffeeChatService.getDetail(coffeechatId, userDetails.getUserId());
-        return ApiResponse.of(SuccessStatus.COFFEECHAT_LOAD_SUCCESS, response);
+        return ResponseEntity.ok(ApiResponse.of(SuccessStatus.COFFEECHAT_LOAD_SUCCESS, response));
     }
 
     @PostMapping("/{coffeechatId}/member")
@@ -91,5 +93,27 @@ public class CoffeeChatController {
 
         coffeeChatService.delete(coffeechatId, userId);
         return ResponseEntity.noContent().build(); // 204 No Content
+    }
+
+    @GetMapping("/{coffeechatId}/messages")
+    public ResponseEntity<ApiResponse<CoffeeChatMessagesResponse>> getMessages(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long coffeechatId,
+            @RequestParam String cursor,
+            @RequestParam(defaultValue = "20") int limit,
+            @RequestParam(defaultValue = "desc") String order
+    ) {
+        log.info("[CoffeeChatMessageController.getMessages] 메시지 조회 요청 - userId={}, coffeechatId={}, cursor={}, limit={}, order={}",
+                userDetails.getUserId(), coffeechatId, cursor, limit, order);
+
+        CoffeeChatMessagesResponse response = coffeeChatMessageService.getMessages(
+                userDetails.getUserId(),
+                coffeechatId,
+                cursor,
+                limit,
+                order
+        );
+
+        return ResponseEntity.ok(ApiResponse.of(SuccessStatus.COFFEECHAT_MESSAGES_LOAD_SUCCESS, response));
     }
 }

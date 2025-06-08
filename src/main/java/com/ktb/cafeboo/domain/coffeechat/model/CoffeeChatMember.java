@@ -32,7 +32,6 @@ public class CoffeeChatMember extends BaseEntity {
     @Column(name = "profile_image_type", nullable = false, length = 10)
     private ProfileImageType profileImageType;
 
-
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 10)
     private CoffeeChatMemberStatus status;

@@ -10,7 +10,7 @@ import java.util.Optional;
 
 public interface CoffeeChatMemberRepository extends JpaRepository<CoffeeChatMember, Long> {
 
-    Optional<CoffeeChatMember> findByCoffeeChatAndUser(CoffeeChat chat, User user);
+    Optional<CoffeeChatMember> findByCoffeeChatIdAndUserId(Long chatId, Long userId);
 
     List<CoffeeChatMember> findAllByCoffeeChat(CoffeeChat chat);
 

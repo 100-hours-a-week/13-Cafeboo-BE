@@ -1,21 +1,15 @@
 package com.ktb.cafeboo.domain.coffeechat.controller;
 
 
+import com.ktb.cafeboo.domain.coffeechat.dto.JoinRoomRequest;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeechatMessage;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChat;
 import com.ktb.cafeboo.domain.coffeechat.repository.CoffeeChatRepository;
-import com.ktb.cafeboo.global.enums.MessageType;
-import jakarta.annotation.PostConstruct;
+import com.ktb.cafeboo.domain.coffeechat.service.ChatService;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.connection.stream.MapRecord;
-import org.springframework.data.redis.connection.stream.ReadOffset;
-import org.springframework.data.redis.connection.stream.StreamOffset;
-import org.springframework.data.redis.connection.stream.StreamReadOptions;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.StreamOperations;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,16 +18,10 @@ import java.util.Collection;
 @RestController
 @RequestMapping("/api/chatrooms")
 @RequiredArgsConstructor// HTTP 엔드포인트
+@Slf4j
 public class CoffeeChatController {
-
     private final CoffeeChatRepository chatRoomRepository;
-    private final RedisTemplate<String, Object> redisTemplate; // `Object` 대신 `String`으로 변경할 수도 있음
-    private StreamOperations<String, Object, Object> streamOperations; // `Object` 대신 `String, String`으로 변경할 수도 있음
-
-    @PostConstruct
-    public void init (){
-        this.streamOperations = redisTemplate.opsForStream();
-    }
+    private final ChatService chatService;
 
     // 모든 채팅방 목록 조회
     @GetMapping
@@ -51,33 +39,45 @@ public class CoffeeChatController {
         return ResponseEntity.notFound().build();
     }
 
+    @PostMapping("/{roomId}/member")
+    public ResponseEntity<String> joinCoffeechat(@PathVariable String roomId /*@AuthenticationPrincipal CustomUserDetails userDetails*/
+        , @RequestBody JoinRoomRequest request
+    ){
+//        if (userDetails == null) {
+//            log.warn("인증되지 않은 사용자가 CoffeeChat {} 에 가입을 시도했습니다.", roomId);
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("인증이 필요합니다.");
+//        }
+
+        //userDetails.getUserId();
+        String userId = request.getUserId();
+
+        log.info("[CoffeeChatController.joinCoffeechat] - User {}가 CoffeeChat {}에 가입 시도.\n", userId, roomId);
+        try {
+            // ChatService의 startListeningToRoom() 호출
+            chatService.startListeningToRoom(roomId, userId);
+            log.info("User {} successfully started listening to room {}", userId, roomId);
+            return ResponseEntity.ok("Successfully joined chat room " + roomId);
+        } catch (Exception e) {
+            log.error("Failed to join chat room {} for user {}: {}", roomId, userId, e.getMessage(), e);
+            // 클라이언트에게 오류 응답 (HTTP)
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to join chat room: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/{roomId}/members/{userId}")
+    public ResponseEntity<Boolean> isUserJoinedRoom(@PathVariable String roomId, @PathVariable String userId) {
+        boolean isJoined = chatService.isUserJoinedRoom(roomId, userId);
+        log.info("Checking if user {} is joined to room {}: {}", userId, roomId, isJoined);
+        return ResponseEntity.ok(isJoined);
+    }
+
     // 특정 채팅방의 이전 메시지 이력 조회 (Redis Stream에서 가져옴)
     @GetMapping("/{roomId}/messages")
     public ResponseEntity<List<CoffeechatMessage>> getChatRoomMessages(@PathVariable String roomId,
-        @RequestParam(defaultValue = "0-0") String startId,
+        @RequestParam(defaultValue = "+") String startId,
         @RequestParam(defaultValue = "100") long count) {
-        String chatRoomStreamKey = "coffeechat:" + roomId + ":stream";
-
-
-        // MapRecord를 읽도록 명시적으로 지정
-        List<MapRecord<String, Object, Object>> records = streamOperations.read(
-            StreamReadOptions.empty().count(count), // 메시지 개수 제한 옵션
-            StreamOffset.create(chatRoomStreamKey, ReadOffset.from(startId)) // 시작 오프셋
-        );
-//
-        List<CoffeechatMessage> chatMessages = records.stream()
-            .map(record -> {
-                // MapRecord의 payload는 Map<Object, Object> 형태로 반환될 수 있음
-                // 이를 ChatMessage 객체로 다시 매핑합니다.
-                Map<Object, Object> rawData = record.getValue();
-                return new CoffeechatMessage(
-                    (String) rawData.get("senderId"),
-                    (String) rawData.get("roomId"),
-                    (String) rawData.get("content"),
-                    MessageType.valueOf((String) rawData.get("type"))
-                );
-            })
-            .collect(Collectors.toList());
+        log.info("[CoffeeChatController.getChatRoomMessages] - startId: {}, count: {}\n", startId, count);
+        List<CoffeechatMessage> chatMessages = chatService.getChatRoomMessages(roomId, startId, count);
 
         return ResponseEntity.ok(chatMessages);
     }

@@ -87,9 +87,9 @@ public class KakaoOauthService {
         boolean requiresOnboarding = !userService.hasCompletedOnboarding(user);
 
         if (requiresOnboarding) {
-            log.info("[KakaoOauthService.login] 신규 사용자 가입 - userId={}", user.getId());
+            log.info("[KakaoOauthService.login] 온보딩 필요 - userId={}", user.getId());
         } else {
-            log.info("[KakaoOauthService.login] 기존 사용자 로그인 - userId={}", user.getId());
+            log.info("[KakaoOauthService.login] 온보딩 완료 - userId={}", user.getId());
         }
 
         String accessToken = generateAccessToken(user);
@@ -151,66 +151,35 @@ public class KakaoOauthService {
         }
     }
 
-    private KakaoTokenResponse getKakaoToken(String code) {
-        return kakaoTokenClient.getToken(code, clientId, redirectUri, grantType);
-    }
-
-    private KakaoUserResponse getKakaoUserInfo(String accessToken) {
-        return kakaoUserClient.getUserInfo(accessToken);
-    }
-
     private User getOrCreateUser(KakaoUserResponse kakaoUser) {
+        String kakaoImageUrl = kakaoUser.getKakaoAccount().getProfile().getProfileImageUrl();
+
         return userRepository.findByOauthIdAndLoginType(kakaoUser.getId(), LoginType.KAKAO)
                 .map(user -> {
-                    // 기존 유저인데 profileImageUrl이 비어있다면
+                    // 기존 유저인데 프로필 이미지가 없는 경우
                     if (user.getProfileImageUrl() == null) {
-                        String kakaoImageUrl = kakaoUser.getKakaoAccount().getProfile().getProfileImageUrl();
-                        log.info("kakaoImageUrl={}", kakaoImageUrl);
+                        String profileImageUrl = (kakaoImageUrl != null && !kakaoImageUrl.isBlank())
+                                ? fetchKakaoProfileImage(kakaoImageUrl)
+                                : s3Uploader.getDefaultProfileImageUrl();
 
-                        String profileImageUrl;
-
-                        if (kakaoImageUrl != null && !kakaoImageUrl.isBlank()) {
-                            try (InputStream is = new URL(kakaoImageUrl).openStream()) {
-                                long contentLength = is.available();
-                                String contentType = URLConnection.guessContentTypeFromStream(is);
-                                profileImageUrl = s3Uploader.uploadProfileImage(is, contentLength, contentType);
-                            } catch (IOException e) {
-                                profileImageUrl = s3Uploader.getDefaultProfileImageUrl();
-                            }
-                        } else {
-                            profileImageUrl = s3Uploader.getDefaultProfileImageUrl();
-                        }
                         user.updateProfileImage(profileImageUrl);
                         userRepository.save(user);
                     }
-
                     return user;
                 })
                 .orElseGet(() -> {
-                    String kakaoImageUrl = kakaoUser.getKakaoAccount().getProfile().getProfileImageUrl();
-                    String profileImageUrl;
+                    String profileImageUrl = (kakaoImageUrl != null && !kakaoImageUrl.isBlank())
+                            ? fetchKakaoProfileImage(kakaoImageUrl)
+                            : s3Uploader.getDefaultProfileImageUrl();
 
-                    if (kakaoImageUrl != null && !kakaoImageUrl.isBlank()) {
-                        try (InputStream is = new URL(kakaoImageUrl).openStream()) {
-                            long contentLength = is.available();
-                            String contentType = URLConnection.guessContentTypeFromStream(is);
-                            profileImageUrl = s3Uploader.uploadProfileImage(is, contentLength, contentType);
-                        } catch (IOException e) {
-                            profileImageUrl = s3Uploader.getDefaultProfileImageUrl();
-                        }
-                    } else {
-                        profileImageUrl = s3Uploader.getDefaultProfileImageUrl();
-                    }
-                    log.info("kakaoImageUrl={}", kakaoImageUrl);
-                    log.info("profileImageUrl={}", profileImageUrl);
                     User newUser = User.fromKakao(kakaoUser, profileImageUrl);
-
                     User savedUser = userRepository.save(newUser);
+
                     userAlarmSettingService.create(
                             savedUser.getId(),
                             new UserAlarmSettingCreateRequest(false, false, false)
                     );
-                    return newUser;
+                    return savedUser;
                 });
     }
 
@@ -263,4 +232,21 @@ public class KakaoOauthService {
             action.accept(newAccessToken);
         }
     }
+
+    private String fetchKakaoProfileImage(String imageUrl) {
+        try {
+            URL url = new URL(imageUrl);
+            URLConnection connection = url.openConnection();
+            long contentLength = connection.getContentLengthLong(); // 더 정확함
+            String contentType = connection.getContentType(); // 직접 추출
+
+            try (InputStream is = connection.getInputStream()) {
+                return s3Uploader.uploadProfileImage(is, contentLength, contentType);
+            }
+        } catch (IOException e) {
+            log.warn("[fetchKakaoProfileImage] 카카오 이미지 업로드 실패: {}", e.getMessage());
+            return s3Uploader.getDefaultProfileImageUrl();
+        }
+    }
+
 }

@@ -25,44 +25,43 @@ public class S3Uploader {
     private final S3Presigner s3Presigner;
     private final S3Properties s3Properties;
 
-    public String uploadProfileImage(InputStream inputStream, long contentLength, String contentType) {
-        String fileName = String.format("%s/profile-images/%s", s3Properties.getDir(), UUID.randomUUID());
+    private String upload(String directory, InputStream inputStream, long contentLength, String contentType) {
+        String fileName = String.format("%s/%s/%s", s3Properties.getDir(), directory, UUID.randomUUID());
+
+        log.info("[S3Uploader.upload] 업로드 시작 - key: {}, contentLength: {}, contentType: {}", fileName, contentLength, contentType);
+
         try {
             PutObjectRequest request = PutObjectRequest.builder()
                     .bucket(s3Properties.getBucket())
                     .key(fileName)
                     .contentType(contentType)
-                    .acl("public-read")
                     .build();
 
             s3Client.putObject(request, RequestBody.fromInputStream(inputStream, contentLength));
 
             String uploadedUrl = generatePublicUrl(fileName);
-            log.info("[S3Uploader.uploadProfileImageOrDefault] 업로드 성공: {}", uploadedUrl);
+            log.info("[S3Uploader.upload] 업로드 성공 - URL: {}", uploadedUrl);
             return uploadedUrl;
         } catch (Exception e) {
-            log.warn("[S3Uploader.uploadProfileImageOrDefault] 업로드 실패, 기본 이미지 사용: {}", e.getMessage());
+            log.error("[S3Uploader.upload] 업로드 실패 - key: {}, 이유: {}", fileName, e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    public String uploadProfileImage(InputStream inputStream, long contentLength, String contentType) {
+        try {
+            return upload("profile-uploads", inputStream, contentLength, contentType);
+        } catch (Exception e) {
+            log.warn("[S3Uploader.uploadProfileImage] 프로필 이미지 업로드 실패. 기본 이미지로 대체합니다. reason={}", e.getMessage());
             return s3Properties.getDefaultProfileImageUrl();
         }
     }
 
     public String uploadReviewImage(InputStream inputStream, long contentLength, String contentType) {
-        String fileName = String.format("%s/review-images/%s", s3Properties.getDir(), UUID.randomUUID());
         try {
-            PutObjectRequest request = PutObjectRequest.builder()
-                    .bucket(s3Properties.getBucket())
-                    .key(fileName)
-                    .contentType(contentType)
-                    .acl("public-read")
-                    .build();
-
-            s3Client.putObject(request, RequestBody.fromInputStream(inputStream, contentLength));
-
-            String uploadedUrl = generatePublicUrl(fileName);
-            log.info("[S3Uploader.uploadReviewImage] 업로드 성공: {}", uploadedUrl);
-            return uploadedUrl;
+            return upload("review-uploads", inputStream, contentLength, contentType);
         } catch (Exception e) {
-            log.error("[S3Uploader.uploadReviewImage] 업로드 실패", e);
+            log.error("[S3Uploader.uploadReviewImage] 리뷰 이미지 업로드 실패. reason={}", e.getMessage(), e);
             throw new CustomApiException(ErrorStatus.S3_REVIEW_IMAGE_UPLOAD_FAILED);
         }
     }

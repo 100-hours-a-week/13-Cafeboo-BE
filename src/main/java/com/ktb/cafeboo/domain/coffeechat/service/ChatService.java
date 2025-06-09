@@ -126,7 +126,7 @@ public class ChatService {
     /**
      * 채팅방마다 Redis Stream의 listener를 설정
      */
-    public void startListeningToRoom(String roomId, String userId){
+    public void startListeningToRoom(String roomId, Long userId){
         String streamKey = CHAT_STREAM_PREFIX + roomId;
         String consumerGroupName = CHAT_CONSUMER_GROUP_PREFIX + userId; // 사용자 ID를 컨슈머 그룹으로 사용
         String consumerName = redisConfig.getConsumerName();

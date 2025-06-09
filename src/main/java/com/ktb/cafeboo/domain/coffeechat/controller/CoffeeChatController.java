@@ -6,11 +6,13 @@ import com.ktb.cafeboo.domain.coffeechat.model.CoffeechatMessage;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChat;
 import com.ktb.cafeboo.domain.coffeechat.repository.CoffeeChatRepository;
 import com.ktb.cafeboo.domain.coffeechat.service.ChatService;
+import com.ktb.cafeboo.global.security.userdetails.CustomUserDetails;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
@@ -40,16 +42,14 @@ public class CoffeeChatController {
     }
 
     @PostMapping("/{roomId}/member")
-    public ResponseEntity<String> joinCoffeechat(@PathVariable String roomId /*@AuthenticationPrincipal CustomUserDetails userDetails*/
-        , @RequestBody JoinRoomRequest request
+    public ResponseEntity<String> joinCoffeechat(@PathVariable String roomId, @AuthenticationPrincipal CustomUserDetails userDetails
     ){
-//        if (userDetails == null) {
-//            log.warn("인증되지 않은 사용자가 CoffeeChat {} 에 가입을 시도했습니다.", roomId);
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("인증이 필요합니다.");
-//        }
+        if (userDetails == null) {
+            log.warn("인증되지 않은 사용자가 CoffeeChat {} 에 가입을 시도했습니다.", roomId);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("인증이 필요합니다.");
+        }
 
-        //userDetails.getUserId();
-        String userId = request.getUserId();
+        Long userId = userDetails.getUserId();
 
         log.info("[CoffeeChatController.joinCoffeechat] - User {}가 CoffeeChat {}에 가입 시도.\n", userId, roomId);
         try {

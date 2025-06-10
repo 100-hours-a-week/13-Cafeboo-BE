@@ -57,15 +57,19 @@ public class CoffeeChat extends BaseEntity {
     @Column(name = "kakao_place_url", length = 512)
     private String kakaoPlaceUrl;
 
+    @Builder.Default
     @OneToMany(mappedBy = "coffeeChat", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CoffeeChatMember> members = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "coffeeChat", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CoffeeChatMessage> messages = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "coffeeChat", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CoffeeChatReview> reviews = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "coffeeChat", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CoffeeChatTag> coffeeChatTags = new ArrayList<>();
 

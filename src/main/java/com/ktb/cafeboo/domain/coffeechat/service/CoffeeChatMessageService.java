@@ -86,7 +86,7 @@ public class CoffeeChatMessageService {
         PageRequest pageRequest = PageRequest.of(0, limit + 1);
 
         if (cursor == null) {
-            return messageRepository.findByChatId(chatId)
+            return messageRepository.findByCoffeeChatId(chatId)
                     .stream()
                     .sorted(order.equalsIgnoreCase("asc")
                             ? java.util.Comparator.comparing(CoffeeChatMessage::getId)
@@ -103,9 +103,9 @@ public class CoffeeChatMessageService {
         }
 
         if (order.equalsIgnoreCase("asc")) {
-            return messageRepository.findByChatIdAndIdGreaterThanOrderByIdAsc(chatId, cursorId, pageRequest);
+            return messageRepository.findByCoffeeChatIdAndIdGreaterThanOrderByIdAsc(chatId, cursorId, pageRequest);
         } else {
-            return messageRepository.findByChatIdAndIdLessThanOrderByIdDesc(chatId, cursorId, pageRequest);
+            return messageRepository.findByCoffeeChatIdAndIdLessThanOrderByIdDesc(chatId, cursorId, pageRequest);
         }
     }
 }

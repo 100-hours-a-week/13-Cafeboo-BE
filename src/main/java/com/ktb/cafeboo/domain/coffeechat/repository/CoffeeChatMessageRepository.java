@@ -7,9 +7,9 @@ import java.util.List;
 
 public interface CoffeeChatMessageRepository extends JpaRepository<CoffeeChatMessage, Long> {
 
-    List<CoffeeChatMessage> findByChatId(Long chatId);
+    List<CoffeeChatMessage> findByCoffeeChatId(Long coffeeChatId);
 
-    List<CoffeeChatMessage> findByChatIdAndIdLessThanOrderByIdDesc(Long chatId, Long cursor, org.springframework.data.domain.Pageable pageable);
+    List<CoffeeChatMessage> findByCoffeeChatIdAndIdLessThanOrderByIdDesc(Long coffeeChatId, Long cursor, org.springframework.data.domain.Pageable pageable);
 
-    List<CoffeeChatMessage> findByChatIdAndIdGreaterThanOrderByIdAsc(Long chatId, Long cursor, org.springframework.data.domain.Pageable pageable);
+    List<CoffeeChatMessage> findByCoffeeChatIdAndIdGreaterThanOrderByIdAsc(Long coffeeChatId, Long cursor, org.springframework.data.domain.Pageable pageable);
 }

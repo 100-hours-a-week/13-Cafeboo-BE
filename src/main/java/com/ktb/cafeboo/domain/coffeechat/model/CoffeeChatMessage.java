@@ -1,6 +1,5 @@
 package com.ktb.cafeboo.domain.coffeechat.model;
 
-import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.global.BaseEntity;
 import com.ktb.cafeboo.global.enums.MessageType;
 import jakarta.persistence.*;
@@ -17,8 +16,8 @@ public class CoffeeChatMessage extends BaseEntity {
     private String messageUuid; // 클라이언트가 생성한 UUID 메시지 ID
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "chat_id", nullable = false)
-    private CoffeeChat chat;
+    @JoinColumn(name = "coffee_chat_id", nullable = false)
+    private CoffeeChat coffeeChat;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
@@ -33,7 +32,7 @@ public class CoffeeChatMessage extends BaseEntity {
 
     public static CoffeeChatMessage of(CoffeeChat chat, CoffeeChatMember sender, String content, MessageType type) {
         return CoffeeChatMessage.builder()
-            .chat(chat)
+            .coffeeChat(chat)
             .sender(sender)
             .content(content)
             .type(type)

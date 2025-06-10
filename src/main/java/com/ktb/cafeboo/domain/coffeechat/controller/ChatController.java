@@ -1,6 +1,7 @@
 package com.ktb.cafeboo.domain.coffeechat.controller;
 
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChat;
+import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChatMember;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChatMessage;
 import com.ktb.cafeboo.domain.user.model.User;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -31,6 +32,7 @@ public class ChatController {
     private final SimpMessagingTemplate messagingTemplate; // 메시지 브로커로 메시지를 라우팅하는 역할
     private final RedisTemplate<String, Object> redisTemplate; // RedisTemplate 주입
     private StreamOperations<String, Object, Object> streamOperations; // StreamOperations 선언
+    private final ChatService chatService;
 
     @PostConstruct
     private void init() {
@@ -44,11 +46,11 @@ public class ChatController {
         log.info("[ChatController.handleCoffeeChatMessage] - handleCoffeeChatMessage 호출");
 
         // 클라이언트에서 보낸 메시지 로그
-        User sender = chatMessage.getSender();
+        CoffeeChatMember sender = chatMessage.getSender();
         CoffeeChat coffeeChat = chatMessage.getChat();
 
         log.info("[ChatController.handleCoffeeChatMessage] - 유저 {}로부터 커피챗 {}에 보내는 메시지를 받았습니다: {}",
-            sender.getId(), roomId,
+            sender.getId(), coffeeChat.getId(),
             chatMessage.getContent());
 
         String sessionId = headerAccessor.getSessionId();

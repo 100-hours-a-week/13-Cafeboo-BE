@@ -1,6 +1,8 @@
 package com.ktb.cafeboo.domain.coffeechat.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChat;
+import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChatMember;
 import com.ktb.cafeboo.domain.coffeechat.repository.CoffeeChatRepository;
 import com.ktb.cafeboo.global.config.RedisConfig;
 import com.ktb.cafeboo.global.enums.MessageType;
@@ -105,11 +107,22 @@ public class ChatService {
             System.out.println("[ChatService.handleNewMessage] - " + message.getSender().getId());
             System.out.println("[ChatService.handleNewMessage] - " + message.getChat().getId());
             System.out.println("[ChatService.handleNewMessage] - " + message.getContent());
+//            System.out.println("[ChatService.handleNewMessage] - " + message.getSenderId());
+//            System.out.println("[ChatService.handleNewMessage] - " + message.getCoffeechatId());
+//            System.out.println("[ChatService.handleNewMessage] - " + message.getMessage());
             System.out.println("[ChatService.handleNewMessage] - " + message.getType().name());
 
-            messageMap.put("senderId", message.getUserId());
-            messageMap.put("coffeechatId", message.getRoomId());
+            CoffeeChatMember sender = message.getSender();
+            String senderId = String.valueOf(sender.getId());
+            CoffeeChat coffeeChat = message.getChat();
+            String coffeechatId = String.valueOf(coffeeChat.getId());
+
+            messageMap.put("senderId", senderId);
+            messageMap.put("coffeechatId", coffeechatId);
             messageMap.put("content", message.getContent());
+//            messageMap.put("userId", message.getSenderId());
+//            messageMap.put("roomId", message.getCoffeechatId());
+//            messageMap.put("content", message.getMessage());
             messageMap.put("type", message.getType().name());
             RecordId recordId = redisTemplate.opsForStream().add(streamKey, messageMap);
             log.info("[ChatService.handleNewMessage] - Stream {}에 추가된 메시지: {}", streamKey, recordId.getValue());
@@ -118,7 +131,7 @@ public class ChatService {
         }
         //메시지 직렬화 오류. 순환 참조가 있거나, ObjectMapper가 처리할 수 없는 커스텀 객체가 필드로 포함된 경우
         catch (Exception e){
-            log.error("[ChatService.handleNewMessage] - 메시지 전송 오류. roomId: {}, message: {}", message.getRoomId(), e.getMessage(), e);
+            log.error("[ChatService.handleNewMessage] - 메시지 전송 오류. roomId: {}, message: {}", message.getChat().getId(), e.getMessage(), e);
             throw e;
         }
     }
@@ -195,7 +208,7 @@ public class ChatService {
     }
 
     // ✨ 기존 CoffeeChatController에 있던 getChatRoomMessages 로직을 여기로 이동
-    public List<CoffeeChatMessage> getChatRoomMessages(String roomId, String startId, long count) {
+    public List<CoffeeChatMessage> getCoffeechatMessages(String roomId, String startId, long count) {
         String chatRoomStreamKey = "coffeechat:room:" + roomId;
 
         if (count <= 0) {
@@ -222,10 +235,20 @@ public class ChatService {
                 // MapRecord의 payload는 Map<Object, Object> 형태로 반환될 수 있음
                 // 이를 ChatMessage 객체로 다시 매핑합니다.
                 Map<Object, Object> rawData = record.getValue();
-//                return new CoffeeChatMessage(
-//                    (String) rawData.get("userId"),
-//                    (String) rawData.get("roomId"),
-//                    (String) rawData.get("content"),
+
+                return CoffeeChatMessage.builder()// Enum이라면 String에서 Enum으로 변환 필요
+                    // 예: CoffeeChatMessageType.valueOf(rawData.get("messageType"))
+                    .sender((CoffeeChatMember) rawData.get("sender"))
+                    .chat((CoffeeChat) rawData.get("chat"))
+                    .content((String) rawData.get("content"))
+                    .type(MessageType.valueOf((String) rawData.get("type")))
+                    .build();
+
+//  before
+//                return new CoffeechatMessage(
+//                    (String) rawData.get("senderId"),
+//                    (String) rawData.get("coffeechatId"),
+//                    (String) rawData.get("message"),
 //                    MessageType.valueOf((String) rawData.get("type"))
 //                );
             })

@@ -90,8 +90,8 @@ public class User extends BaseEntity {
 
     @OneToMany(mappedBy = "writer", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CoffeeChat> coffeeChats = new ArrayList<>();
-
-    public static User fromKakao(KakaoUserResponse kakaoUser) {
+  
+    public static User fromKakao(KakaoUserResponse kakaoUser, String profileImageUrl) {
         User user = new User();
         user.setOauthId(kakaoUser.getId());
         user.setLoginType(LoginType.KAKAO);
@@ -100,6 +100,7 @@ public class User extends BaseEntity {
         user.setRole(UserRole.USER);
         user.setDarkMode(false);
         user.setCoffeeBean(0);
+        user.setProfileImageUrl(profileImageUrl);
         return user;
     }
 
@@ -110,5 +111,11 @@ public class User extends BaseEntity {
     public void setFavoriteDrinks(List<UserFavoriteDrinkType> favorites) {
         this.favoriteDrinks.clear(); // 기존 관계 제거
         this.favoriteDrinks.addAll(favorites);
+    }
+
+    public void updateProfileImage(String profileImageUrl) {
+        if (this.profileImageUrl == null) {
+            this.profileImageUrl = profileImageUrl;
+        }
     }
 }

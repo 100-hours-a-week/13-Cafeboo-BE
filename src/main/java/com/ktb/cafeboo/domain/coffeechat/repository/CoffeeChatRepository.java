@@ -31,6 +31,17 @@ public interface CoffeeChatRepository extends JpaRepository<CoffeeChat, Long> {
     """)
     List<CoffeeChat> findCompletedChats(Long userId);
 
+    @Query("""
+        SELECT c FROM CoffeeChat c
+        JOIN CoffeeChatMember m ON c.id = m.coffeeChat.id
+        WHERE m.user.id = :userId
+        AND c.meetingTime < CURRENT_TIMESTAMP
+        AND c.deletedAt IS NULL
+        ORDER BY c.meetingTime DESC
+    """)
+    List<CoffeeChat> findReviewableChats(Long userId);
+
+
     // 모든 활성화된 채팅방 목록 (ALL)
     @Query("""
         SELECT c FROM CoffeeChat c

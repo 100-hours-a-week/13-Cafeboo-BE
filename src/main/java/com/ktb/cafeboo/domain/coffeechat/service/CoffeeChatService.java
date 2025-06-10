@@ -198,8 +198,9 @@ public class CoffeeChatService {
     private List<CoffeeChat> getChatsByFilter(CoffeeChatFilterType filter, Long userId) {
         return switch (filter) {
             case JOINED -> coffeeChatRepository.findJoinedChats(userId);
-            case COMPLETED -> coffeeChatRepository.findCompletedChats(userId);
+            case ENDED -> coffeeChatRepository.findCompletedChats(userId);
             case ALL -> coffeeChatRepository.findAllActiveChats();
+            case REVIEWABLE -> coffeeChatRepository.findReviewableChats(userId);
         };
     }
 

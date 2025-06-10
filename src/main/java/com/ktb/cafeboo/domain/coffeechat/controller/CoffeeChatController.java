@@ -116,4 +116,17 @@ public class CoffeeChatController {
 
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.COFFEECHAT_MESSAGES_LOAD_SUCCESS, response));
     }
+
+    @GetMapping("/{coffeechatId}/members")
+    public ResponseEntity<ApiResponse<CoffeeChatMembersResponse>> getCoffeeChatMembers(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long coffeechatId
+    ) {
+        Long userId = userDetails.getUserId();
+        log.info("[GET /api/v1/coffee-chats/{}/members] userId: {} 커피챗 참여자 목록 조회 요청 수신", coffeechatId, userId);
+
+        CoffeeChatMembersResponse response = coffeeChatService.getCoffeeChatMembers(coffeechatId);
+
+        return ResponseEntity.ok(ApiResponse.of(SuccessStatus.COFFEECHAT_MEMBER_LOAD_SUCCESS, response));
+    }
 }

@@ -58,7 +58,8 @@ public enum SuccessStatus implements BaseCode {
     COFFEECHAT_LIST_LOAD_SUCCESS(200, "COFFEECHAT_LIST_LOAD_SUCCESS", "커피챗 목록을 성공적으로 조회했습니다."),
     COFFEECHAT_LOAD_SUCCESS(200, "COFFEECHAT_LOAD_SUCCESS", "커피챗 상세내용을 성공적으로 조회했습니다."),
     COFFEECHAT_JOIN_SUCCESS(201, "COFFEECHAT_JOIN_SUCCESS", "커피챗에 성공적으로 참여하였습니다."),
-    COFFEECHAT_MESSAGES_LOAD_SUCCESS(200, "COFFEECHAT_MESSAGES_LOAD_SUCCESS", "커피챗 메시지를 성공적으로 조회했습니다.")
+    COFFEECHAT_MESSAGES_LOAD_SUCCESS(200, "COFFEECHAT_MESSAGES_LOAD_SUCCESS", "커피챗 메시지를 성공적으로 조회했습니다."),
+    COFFEECHAT_MEMBER_LOAD_SUCCESS(200, "COFFEECHAT_MEMBER_LOAD_SUCCESS", "커피챗 참여자 목록을 성공적으로 조회했습니다.")
     ;
     private final int status;
     private final String code;

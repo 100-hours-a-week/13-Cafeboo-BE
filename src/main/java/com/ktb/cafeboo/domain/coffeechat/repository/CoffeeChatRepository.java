@@ -3,8 +3,10 @@ package com.ktb.cafeboo.domain.coffeechat.repository;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChat;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface CoffeeChatRepository extends JpaRepository<CoffeeChat, Long> {
 
@@ -50,4 +52,8 @@ public interface CoffeeChatRepository extends JpaRepository<CoffeeChat, Long> {
         ORDER BY c.createdAt DESC
     """)
     List<CoffeeChat> findAllActiveChats();
+
+    // N+1 문제 방지
+    @Query("SELECT c FROM CoffeeChat c JOIN FETCH c.members m WHERE c.id = :coffeeChatId")
+    Optional<CoffeeChat> findByIdWithMembers(@Param("coffeeChatId") Long coffeeChatId);
 }

@@ -2,6 +2,7 @@ package com.ktb.cafeboo.domain.coffeechat.service;
 
 import com.ktb.cafeboo.domain.coffeechat.dto.*;
 import com.ktb.cafeboo.domain.coffeechat.dto.common.LocationDto;
+import com.ktb.cafeboo.domain.coffeechat.dto.common.MemberDto;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChat;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChatMember;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChatMessage;
@@ -24,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -206,6 +208,28 @@ public class CoffeeChatService {
 
         chat.delete();
         coffeeChatRepository.save(chat);
+    }
+
+    @Transactional(readOnly = true)
+    public CoffeeChatMembersResponse getCoffeeChatMembers(Long coffeechatId) {
+        CoffeeChat coffeeChat = coffeeChatRepository.findByIdWithMembers(coffeechatId)
+                .orElseThrow(() -> new CustomApiException(ErrorStatus.COFFEECHAT_NOT_FOUND));
+
+        List<MemberDto> memberDtos = coffeeChat.getMembers().stream()
+                .map(cm -> new MemberDto(
+                        String.valueOf(cm.getUser().getId()),
+                        cm.getChatNickname(),
+                        cm.getProfileImageUrl(),
+                        cm.isHost()
+                ))
+                .sorted((m1, m2) -> Boolean.compare(m2.isHost(), m1.isHost()))
+                .collect(Collectors.toList());
+
+        return new CoffeeChatMembersResponse(
+                String.valueOf(coffeeChat.getId()),
+                memberDtos.size(),
+                memberDtos
+        );
     }
 
     private List<CoffeeChat> getChatsByFilter(CoffeeChatFilterType filter, Long userId) {

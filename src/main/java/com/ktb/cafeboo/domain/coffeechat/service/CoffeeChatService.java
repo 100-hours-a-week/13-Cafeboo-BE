@@ -14,6 +14,8 @@ import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import com.ktb.cafeboo.global.enums.CoffeeChatFilterType;
 import com.ktb.cafeboo.global.enums.CoffeeChatStatus;
+import com.ktb.cafeboo.global.enums.ProfileImageType;
+import com.ktb.cafeboo.global.infra.s3.S3Properties;
 import com.ktb.cafeboo.global.util.AuthChecker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +34,7 @@ public class CoffeeChatService {
     private final CoffeeChatMemberRepository coffeeChatMemberRepository;
     private final UserRepository userRepository;
     private final TagService tagService;
+    private final S3Properties s3Properties;
 
     @Transactional
     public CoffeeChatCreateResponse create(Long userId, CoffeeChatCreateRequest request) {
@@ -57,11 +60,15 @@ public class CoffeeChatService {
                 .kakaoPlaceUrl(loc.kakaoPlaceUrl())
                 .build();
 
+        String profileImageUrl = (request.profileImageType() == ProfileImageType.DEFAULT)
+                ? s3Properties.getDefaultProfileImageUrl()
+                : user.getProfileImageUrl();
+
         CoffeeChatMember hostMember = CoffeeChatMember.of(
                 chat,
                 user,
                 request.chatNickname(),
-                request.profileImageType()
+                profileImageUrl
         );
         chat.addMember(hostMember);
 
@@ -69,7 +76,7 @@ public class CoffeeChatService {
 
         tagService.saveTagsToCoffeeChat(saved, request.tags());
 
-        return new CoffeeChatCreateResponse(saved.getId());
+        return new CoffeeChatCreateResponse(saved.getId().toString());
     }
 
     @Transactional(readOnly = true)
@@ -134,11 +141,15 @@ public class CoffeeChatService {
 
         validateDuplicateNickname(coffeechatId, request.chatNickname());
 
+        String profileImageUrl = (request.profileImageType() == ProfileImageType.DEFAULT)
+                ? s3Properties.getDefaultProfileImageUrl()
+                : user.getProfileImageUrl();
+
         CoffeeChatMember member = CoffeeChatMember.of(
                 chat,
                 user,
                 request.chatNickname(),
-                request.profileImageType()
+                profileImageUrl
         );
         chat.addMember(member);
 

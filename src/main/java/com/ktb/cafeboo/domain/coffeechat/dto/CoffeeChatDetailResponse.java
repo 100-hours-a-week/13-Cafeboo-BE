@@ -3,11 +3,14 @@ package com.ktb.cafeboo.domain.coffeechat.dto;
 import com.ktb.cafeboo.domain.coffeechat.dto.common.LocationDto;
 import com.ktb.cafeboo.domain.coffeechat.dto.common.WriterDto;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChat;
+import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChatMember;
+import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
+import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 
 import java.util.List;
 
 public record CoffeeChatDetailResponse(
-        Long coffechatId,
+        String coffechatId,
         String title,
         String content,
         String time,
@@ -19,9 +22,13 @@ public record CoffeeChatDetailResponse(
         Boolean isJoined
 ) {
     public static CoffeeChatDetailResponse from(CoffeeChat chat, Long userId) {
+        CoffeeChatMember writerMember = chat.getMembers().stream()
+                .filter(m -> m.getUser().getId().equals(chat.getWriter().getId()))
+                .findFirst()
+                .orElseThrow(() -> new CustomApiException(ErrorStatus.COFFEECHAT_MEMBER_NOT_FOUND));
 
         return new CoffeeChatDetailResponse(
-                chat.getId(),
+                chat.getId().toString(),
                 chat.getName(),
                 chat.getContent(),
                 chat.getMeetingTime().toLocalTime().toString(),
@@ -35,8 +42,9 @@ public record CoffeeChatDetailResponse(
                         chat.getKakaoPlaceUrl()
                 ),
                 new WriterDto(
-                        chat.getWriter().getNickname(),
-                        chat.getWriter().getProfileImageUrl()
+                        writerMember.getId().toString(),
+                        writerMember.getChatNickname(),
+                        writerMember.getProfileImageUrl()
                 ),
                 chat.isJoinedBy(userId)
         );

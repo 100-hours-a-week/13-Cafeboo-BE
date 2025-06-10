@@ -1,6 +1,9 @@
 package com.ktb.cafeboo.domain.coffeechat.dto;
 
 import com.ktb.cafeboo.domain.coffeechat.dto.common.WriterDto;
+import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChatMember;
+import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
+import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 
 import java.util.List;
 
@@ -9,7 +12,7 @@ public record CoffeeChatListResponse(
         List<CoffeeChatSummary> coffeechats
 ) {
     public record CoffeeChatSummary(
-            Long coffechatId,
+            String coffechatId,
             String title,
             String time,
             int maxMemberCount,
@@ -27,8 +30,13 @@ public record CoffeeChatListResponse(
                 boolean isJoined,
                 boolean isReviewed
         ) {
+            CoffeeChatMember writerMember = chat.getMembers().stream()
+                    .filter(m -> m.getUser().getId().equals(chat.getWriter().getId()))
+                    .findFirst()
+                    .orElseThrow(() -> new CustomApiException(ErrorStatus.COFFEECHAT_MEMBER_NOT_FOUND));
+
             return new CoffeeChatSummary(
-                    chat.getId(),
+                    chat.getId().toString(),
                     chat.getName(),
                     chat.getMeetingTime().toLocalTime().toString(),
                     chat.getMaxMemberCount(),
@@ -36,8 +44,9 @@ public record CoffeeChatListResponse(
                     chat.getTagNames(),
                     chat.getAddress(),
                     new WriterDto(
-                            chat.getWriter().getNickname(),
-                            chat.getWriter().getProfileImageUrl()
+                            writerMember.getId().toString(),
+                            writerMember.getChatNickname(),
+                            writerMember.getProfileImageUrl()
                     ),
                     isJoined,
                     isReviewed

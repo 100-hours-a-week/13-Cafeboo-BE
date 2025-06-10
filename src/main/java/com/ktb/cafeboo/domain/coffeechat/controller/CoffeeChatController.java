@@ -24,8 +24,8 @@ public class CoffeeChatController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<CoffeeChatCreateResponse>> createCoffeeChat(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestBody CoffeeChatCreateRequest request
+        @AuthenticationPrincipal CustomUserDetails userDetails,
+        @RequestBody CoffeeChatCreateRequest request
     ) {
         Long userId = userDetails.getUserId();
         log.info("[POST /api/v1/coffee-chats] userId: {} 커피챗 생성 요청 수신", userId);
@@ -33,14 +33,14 @@ public class CoffeeChatController {
         CoffeeChatCreateResponse response = coffeeChatService.create(userId, request);
 
         return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(ApiResponse.of(SuccessStatus.COFFEECHAT_CREATE_SUCCESS, response));
+            .status(HttpStatus.CREATED)
+            .body(ApiResponse.of(SuccessStatus.COFFEECHAT_CREATE_SUCCESS, response));
     }
 
     @GetMapping
     public ResponseEntity<ApiResponse<CoffeeChatListResponse>> getCoffeeChatList(
-            @RequestParam("status") String status,
-            @AuthenticationPrincipal CustomUserDetails userDetails
+        @RequestParam("status") String status,
+        @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         Long userId = userDetails.getUserId();
         log.info("[GET /api/v1/coffee-chats?status={}] 커피챗 목록 조회 요청 수신 - userId: {}", status, userId);
@@ -51,8 +51,8 @@ public class CoffeeChatController {
 
     @GetMapping("/{coffeechatId}")
     public ResponseEntity<ApiResponse<CoffeeChatDetailResponse>> getCoffeeChatDetail(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long coffeechatId
+        @AuthenticationPrincipal CustomUserDetails userDetails,
+        @PathVariable Long coffeechatId
     ) {
         CoffeeChatDetailResponse response = coffeeChatService.getDetail(coffeechatId, userDetails.getUserId());
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.COFFEECHAT_LOAD_SUCCESS, response));
@@ -60,24 +60,24 @@ public class CoffeeChatController {
 
     @PostMapping("/{coffeechatId}/member")
     public ResponseEntity<ApiResponse<CoffeeChatJoinResponse>> joinCoffeeChat(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long coffeechatId,
-            @RequestBody CoffeeChatJoinRequest request
+        @AuthenticationPrincipal CustomUserDetails userDetails,
+        @PathVariable Long coffeechatId,
+        @RequestBody CoffeeChatJoinRequest request
     ) {
         CoffeeChatJoinResponse response = coffeeChatService.join(
-                userDetails.getUserId(),
-                coffeechatId,
-                request
+            userDetails.getUserId(),
+            coffeechatId,
+            request
         );
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.of(SuccessStatus.COFFEECHAT_JOIN_SUCCESS, response));
+            .body(ApiResponse.of(SuccessStatus.COFFEECHAT_JOIN_SUCCESS, response));
     }
 
     @DeleteMapping("/{coffeechatId}/member/{memberId}")
     public ResponseEntity<Void> leaveChat(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long coffeechatId,
-            @PathVariable Long memberId
+        @AuthenticationPrincipal CustomUserDetails userDetails,
+        @PathVariable Long coffeechatId,
+        @PathVariable Long memberId
     ) {
         coffeeChatService.leaveChat(coffeechatId, memberId, userDetails.getUserId());
         return ResponseEntity.noContent().build();
@@ -85,8 +85,8 @@ public class CoffeeChatController {
 
     @DeleteMapping("/{coffeechatId}")
     public ResponseEntity<Void> deleteCoffeeChat(
-            @PathVariable Long coffeechatId,
-            @AuthenticationPrincipal CustomUserDetails userDetails
+        @PathVariable Long coffeechatId,
+        @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         Long userId = userDetails.getUserId();
         log.info("[DELETE /api/v1/coffee-chats/{}] userId: {} 커피챗 삭제 요청 수신", coffeechatId, userId);
@@ -97,21 +97,21 @@ public class CoffeeChatController {
 
     @GetMapping("/{coffeechatId}/messages")
     public ResponseEntity<ApiResponse<CoffeeChatMessagesResponse>> getMessages(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long coffeechatId,
-            @RequestParam String cursor,
-            @RequestParam(defaultValue = "20") int limit,
-            @RequestParam(defaultValue = "desc") String order
+        @AuthenticationPrincipal CustomUserDetails userDetails,
+        @PathVariable Long coffeechatId,
+        @RequestParam String cursor,
+        @RequestParam(defaultValue = "20") int limit,
+        @RequestParam(defaultValue = "desc") String order
     ) {
         log.info("[CoffeeChatMessageController.getMessages] 메시지 조회 요청 - userId={}, coffeechatId={}, cursor={}, limit={}, order={}",
-                userDetails.getUserId(), coffeechatId, cursor, limit, order);
+            userDetails.getUserId(), coffeechatId, cursor, limit, order);
 
         CoffeeChatMessagesResponse response = coffeeChatMessageService.getMessages(
-                userDetails.getUserId(),
-                coffeechatId,
-                cursor,
-                limit,
-                order
+            userDetails.getUserId(),
+            coffeechatId,
+            cursor,
+            limit,
+            order
         );
 
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.COFFEECHAT_MESSAGES_LOAD_SUCCESS, response));

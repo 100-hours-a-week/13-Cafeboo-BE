@@ -68,7 +68,8 @@ public class CoffeeChatService {
                 chat,
                 user,
                 request.chatNickname(),
-                profileImageUrl
+                profileImageUrl,
+                true
         );
         chat.addMember(hostMember);
 
@@ -149,7 +150,8 @@ public class CoffeeChatService {
                 chat,
                 user,
                 request.chatNickname(),
-                profileImageUrl
+                profileImageUrl,
+                false
         );
         chat.addMember(member);
 

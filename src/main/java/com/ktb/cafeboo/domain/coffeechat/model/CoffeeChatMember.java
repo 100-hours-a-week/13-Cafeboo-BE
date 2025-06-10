@@ -25,6 +25,9 @@ public class CoffeeChatMember extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Column(name = "is_host", nullable = false)
+    private boolean isHost;
+
     @Column(name = "chat_nickname", nullable = false, length = 20)
     private String chatNickname;
 
@@ -42,7 +45,8 @@ public class CoffeeChatMember extends BaseEntity {
             CoffeeChat chat,
             User user,
             String chatNickname,
-            String profileImageUrl
+            String profileImageUrl,
+            boolean isHost
     ) {
         return CoffeeChatMember.builder()
                 .coffeeChat(chat)
@@ -51,6 +55,7 @@ public class CoffeeChatMember extends BaseEntity {
                 .profileImageUrl(profileImageUrl)
                 .status(CoffeeChatMemberStatus.JOINED)
                 .isEvaluated(false)
+                .isHost(isHost)
                 .build();
     }
 }

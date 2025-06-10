@@ -1,6 +1,6 @@
 package com.ktb.cafeboo.domain.coffeechat.dto;
 
-import com.ktb.cafeboo.domain.coffeechat.dto.common.WriterDto;
+import com.ktb.cafeboo.domain.coffeechat.dto.common.MemberDto;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChatMember;
 import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
@@ -19,7 +19,7 @@ public record CoffeeChatListResponse(
             int currentMemberCount,
             List<String> tags,
             String address,
-            WriterDto writer,
+            MemberDto writer,
 
             // 조건부 필드
             Boolean isJoined,
@@ -43,10 +43,11 @@ public record CoffeeChatListResponse(
                     chat.getCurrentMemberCount(),
                     chat.getTagNames(),
                     chat.getAddress(),
-                    new WriterDto(
+                    new MemberDto(
                             writerMember.getId().toString(),
                             writerMember.getChatNickname(),
-                            writerMember.getProfileImageUrl()
+                            writerMember.getProfileImageUrl(),
+                            writerMember.isHost()
                     ),
                     isJoined,
                     isReviewed

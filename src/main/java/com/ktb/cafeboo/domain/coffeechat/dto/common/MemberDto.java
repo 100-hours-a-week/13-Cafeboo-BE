@@ -1,7 +1,8 @@
 package com.ktb.cafeboo.domain.coffeechat.dto.common;
 
-public record SenderDto(
+public record MemberDto(
         String memberId,
         String chatNickname,
-        String profileImageUrl
+        String profileImageUrl,
+        boolean isHost
 ) {}

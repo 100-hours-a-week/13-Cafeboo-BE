@@ -1,7 +1,7 @@
 package com.ktb.cafeboo.domain.coffeechat.dto;
 
 import com.ktb.cafeboo.domain.coffeechat.dto.common.LocationDto;
-import com.ktb.cafeboo.domain.coffeechat.dto.common.WriterDto;
+import com.ktb.cafeboo.domain.coffeechat.dto.common.MemberDto;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChat;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChatMember;
 import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
@@ -18,7 +18,7 @@ public record CoffeeChatDetailResponse(
         int currentMemberCount,
         List<String> tags,
         LocationDto location,
-        WriterDto writer,
+        MemberDto writer,
         Boolean isJoined
 ) {
     public static CoffeeChatDetailResponse from(CoffeeChat chat, Long userId) {
@@ -41,10 +41,11 @@ public record CoffeeChatDetailResponse(
                         chat.getLongitude(),
                         chat.getKakaoPlaceUrl()
                 ),
-                new WriterDto(
+                new MemberDto(
                         writerMember.getId().toString(),
                         writerMember.getChatNickname(),
-                        writerMember.getProfileImageUrl()
+                        writerMember.getProfileImageUrl(),
+                        writerMember.isHost()
                 ),
                 chat.isJoinedBy(userId)
         );

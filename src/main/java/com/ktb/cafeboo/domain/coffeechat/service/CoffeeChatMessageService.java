@@ -2,7 +2,7 @@ package com.ktb.cafeboo.domain.coffeechat.service;
 
 import com.ktb.cafeboo.domain.coffeechat.dto.CoffeeChatMessagesResponse;
 import com.ktb.cafeboo.domain.coffeechat.dto.common.MessageDto;
-import com.ktb.cafeboo.domain.coffeechat.dto.common.SenderDto;
+import com.ktb.cafeboo.domain.coffeechat.dto.common.MemberDto;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChat;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChatMember;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChatMessage;
@@ -56,10 +56,11 @@ public class CoffeeChatMessageService {
 
                     return new MessageDto(
                             m.getMessageUuid(),
-                            new SenderDto(
+                            new MemberDto(
                                     sender.getId().toString(),
                                     sender.getChatNickname(),
-                                    profileImageUrl
+                                    profileImageUrl,
+                                    sender.isHost()
                             ),
                             m.getContent(),
                             m.getCreatedAt()

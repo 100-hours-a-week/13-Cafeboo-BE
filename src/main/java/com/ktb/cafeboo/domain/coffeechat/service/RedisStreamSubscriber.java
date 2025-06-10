@@ -41,12 +41,12 @@ public class RedisStreamSubscriber {
                         CoffeeChatMessage message = CoffeeChatMessage.builder()// Enum이라면 String에서 Enum으로 변환 필요
                             // 예: CoffeeChatMessageType.valueOf(rawData.get("messageType"))
                             .sender((CoffeeChatMember) data.get("sender"))
-                            .chat((CoffeeChat) data.get("chat"))
+                            .coffeeChat((CoffeeChat) data.get("chat"))
                             .content((String) data.get("content"))
                             .type(MessageType.valueOf((String) data.get("type")))
                             .build();
 
-                        messagingTemplate.convertAndSend("/topic/chatrooms/" + message.getChat().getId(), message);
+                        messagingTemplate.convertAndSend("/topic/chatrooms/" + message.getCoffeeChat().getId(), message);
                     }
                 }
             }

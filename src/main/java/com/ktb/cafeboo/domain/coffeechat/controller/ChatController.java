@@ -1,10 +1,9 @@
 package com.ktb.cafeboo.domain.coffeechat.controller;
 
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChat;
-import com.ktb.cafeboo.domain.coffeechat.model.Message;
+import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChatMessage;
 import com.ktb.cafeboo.domain.user.model.User;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.ktb.cafeboo.domain.coffeechat.model.CoffeechatMessage;
 import com.ktb.cafeboo.domain.coffeechat.service.ChatService;
 import com.ktb.cafeboo.global.security.userdetails.CustomUserDetails;
 import jakarta.annotation.PostConstruct;
@@ -40,7 +39,10 @@ public class ChatController {
 
     // 클라이언트에서 /chatrooms/{roomId}로 메시지를 보내면 이 메서드가 처리
     @MessageMapping("/chatrooms/{roomId}")
-    public void handleCoffeeChatMessage(@DestinationVariable String roomId, @Payload CoffeechatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor) {
+    public void handleCoffeeChatMessage(@DestinationVariable String roomId, @Payload CoffeeChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor) {
+
+        log.info("[ChatController.handleCoffeeChatMessage] - handleCoffeeChatMessage 호출");
+
         // 클라이언트에서 보낸 메시지 로그
         User sender = chatMessage.getSender();
         CoffeeChat coffeeChat = chatMessage.getChat();
@@ -48,7 +50,6 @@ public class ChatController {
         log.info("[ChatController.handleCoffeeChatMessage] - 유저 {}로부터 커피챗 {}에 보내는 메시지를 받았습니다: {}",
             sender.getId(), roomId,
             chatMessage.getContent());
-        log.info("[ChatController.handleCoffeeChatMessage] - handleCoffeeChatMessage 호출");
 
         String sessionId = headerAccessor.getSessionId();
         if (sessionId == null) {

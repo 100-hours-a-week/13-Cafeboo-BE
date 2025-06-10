@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.ktb.cafeboo.domain.coffeechat.model.CoffeechatMessage;
+import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChatMessage;
 import org.springframework.data.redis.connection.Limit;
 import org.springframework.data.domain.Range;
 import org.springframework.data.redis.connection.stream.Consumer;
@@ -47,7 +47,7 @@ public class ChatService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final SimpMessagingTemplate messagingTemplate;
     private final ObjectMapper objectMapper;
-    private final StreamMessageListenerContainer<String, ObjectRecord<String, CoffeechatMessage>> streamMessageListenerContainer;
+    private final StreamMessageListenerContainer<String, ObjectRecord<String, CoffeeChatMessage>> streamMessageListenerContainer;
     private final RedisStreamListener redisStreamListener;
     private final RedisConfig redisConfig;
 
@@ -97,18 +97,18 @@ public class ChatService {
      * 새로운 message를 Redis Stream에 등록
      * @param message
      */
-    public void handleNewMessage(String roomId, CoffeechatMessage message) throws Exception{
+    public void handleNewMessage(String roomId, CoffeeChatMessage message) throws Exception{
         String streamKey = CHAT_STREAM_PREFIX + roomId;
         Map<String, String> messageMap = new HashMap<>();
 
         try{
-            System.out.println("[ChatService.handleNewMessage] - " + message.getUserId());
-            System.out.println("[ChatService.handleNewMessage] - " + message.getRoomId());
+            System.out.println("[ChatService.handleNewMessage] - " + message.getSender().getId());
+            System.out.println("[ChatService.handleNewMessage] - " + message.getChat().getId());
             System.out.println("[ChatService.handleNewMessage] - " + message.getContent());
             System.out.println("[ChatService.handleNewMessage] - " + message.getType().name());
 
-            messageMap.put("userId", message.getUserId());
-            messageMap.put("roomId", message.getRoomId());
+            messageMap.put("senderId", message.getUserId());
+            messageMap.put("coffeechatId", message.getRoomId());
             messageMap.put("content", message.getContent());
             messageMap.put("type", message.getType().name());
             RecordId recordId = redisTemplate.opsForStream().add(streamKey, messageMap);
@@ -195,7 +195,7 @@ public class ChatService {
     }
 
     // ✨ 기존 CoffeeChatController에 있던 getChatRoomMessages 로직을 여기로 이동
-    public List<CoffeechatMessage> getChatRoomMessages(String roomId, String startId, long count) {
+    public List<CoffeeChatMessage> getChatRoomMessages(String roomId, String startId, long count) {
         String chatRoomStreamKey = "coffeechat:room:" + roomId;
 
         if (count <= 0) {
@@ -217,17 +217,17 @@ public class ChatService {
         Collections.reverse(records);
         log.info("[ChatService] - records count: {}", records.size());
 
-        List<CoffeechatMessage> chatMessages = records.stream()
+        List<CoffeeChatMessage> chatMessages = records.stream()
             .map(record -> {
                 // MapRecord의 payload는 Map<Object, Object> 형태로 반환될 수 있음
                 // 이를 ChatMessage 객체로 다시 매핑합니다.
                 Map<Object, Object> rawData = record.getValue();
-                return new CoffeechatMessage(
-                    (String) rawData.get("userId"),
-                    (String) rawData.get("roomId"),
-                    (String) rawData.get("content"),
-                    MessageType.valueOf((String) rawData.get("type"))
-                );
+//                return new CoffeeChatMessage(
+//                    (String) rawData.get("userId"),
+//                    (String) rawData.get("roomId"),
+//                    (String) rawData.get("content"),
+//                    MessageType.valueOf((String) rawData.get("type"))
+//                );
             })
             .collect(Collectors.toList());
 

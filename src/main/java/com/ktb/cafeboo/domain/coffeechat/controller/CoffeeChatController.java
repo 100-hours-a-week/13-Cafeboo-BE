@@ -58,7 +58,7 @@ public class CoffeeChatController {
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.COFFEECHAT_LOAD_SUCCESS, response));
     }
 
-    @PostMapping("/{coffeechatId}/member")
+    @PostMapping("/{coffeechatId}/members")
     public ResponseEntity<ApiResponse<CoffeeChatJoinResponse>> joinCoffeeChat(
         @AuthenticationPrincipal CustomUserDetails userDetails,
         @PathVariable Long coffeechatId,
@@ -73,7 +73,7 @@ public class CoffeeChatController {
             .body(ApiResponse.of(SuccessStatus.COFFEECHAT_JOIN_SUCCESS, response));
     }
 
-    @DeleteMapping("/{coffeechatId:\\d+}/member/{memberId:\\d+}")
+    @DeleteMapping("/{coffeechatId:\\d+}/members/{memberId:\\d+}")
     public ResponseEntity<Void> leaveChat(
         @AuthenticationPrincipal CustomUserDetails userDetails,
         @PathVariable Long coffeechatId,

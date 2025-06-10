@@ -18,7 +18,7 @@ import org.hibernate.annotations.Where;
 public class CoffeeChatMember extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "room_id", nullable = false)
+    @JoinColumn(name = "coffee_chat_id", nullable = false)
     private CoffeeChat coffeeChat;
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -105,7 +105,7 @@ public class ChatService {
 
         try{
             System.out.println("[ChatService.handleNewMessage] - " + message.getSender().getId());
-            System.out.println("[ChatService.handleNewMessage] - " + message.getChat().getId());
+            System.out.println("[ChatService.handleNewMessage] - " + message.getCoffeeChat().getId());
             System.out.println("[ChatService.handleNewMessage] - " + message.getContent());
 //            System.out.println("[ChatService.handleNewMessage] - " + message.getSenderId());
 //            System.out.println("[ChatService.handleNewMessage] - " + message.getCoffeechatId());
@@ -114,7 +114,7 @@ public class ChatService {
 
             CoffeeChatMember sender = message.getSender();
             String senderId = String.valueOf(sender.getId());
-            CoffeeChat coffeeChat = message.getChat();
+            CoffeeChat coffeeChat = message.getCoffeeChat();
             String coffeechatId = String.valueOf(coffeeChat.getId());
 
             messageMap.put("senderId", senderId);
@@ -131,7 +131,7 @@ public class ChatService {
         }
         //메시지 직렬화 오류. 순환 참조가 있거나, ObjectMapper가 처리할 수 없는 커스텀 객체가 필드로 포함된 경우
         catch (Exception e){
-            log.error("[ChatService.handleNewMessage] - 메시지 전송 오류. roomId: {}, message: {}", message.getChat().getId(), e.getMessage(), e);
+            log.error("[ChatService.handleNewMessage] - 메시지 전송 오류. roomId: {}, message: {}", message.getCoffeeChat().getId(), e.getMessage(), e);
             throw e;
         }
     }
@@ -239,7 +239,7 @@ public class ChatService {
                 return CoffeeChatMessage.builder()// Enum이라면 String에서 Enum으로 변환 필요
                     // 예: CoffeeChatMessageType.valueOf(rawData.get("messageType"))
                     .sender((CoffeeChatMember) rawData.get("sender"))
-                    .chat((CoffeeChat) rawData.get("chat"))
+                    .coffeeChat((CoffeeChat) rawData.get("chat"))
                     .content((String) rawData.get("content"))
                     .type(MessageType.valueOf((String) rawData.get("type")))
                     .build();

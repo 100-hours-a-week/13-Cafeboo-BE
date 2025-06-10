@@ -3,18 +3,13 @@ package com.ktb.cafeboo.domain.coffeechat.controller;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChat;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChatMember;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChatMessage;
-import com.ktb.cafeboo.domain.user.model.User;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.ktb.cafeboo.domain.coffeechat.service.ChatService;
-import com.ktb.cafeboo.global.security.userdetails.CustomUserDetails;
 import jakarta.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.connection.stream.MapRecord;
-import org.springframework.data.redis.connection.stream.RecordId;
-import org.springframework.data.redis.connection.stream.StreamRecords;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StreamOperations;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -47,7 +42,7 @@ public class ChatController {
 
         // 클라이언트에서 보낸 메시지 로그
         CoffeeChatMember sender = chatMessage.getSender();
-        CoffeeChat coffeeChat = chatMessage.getChat();
+        CoffeeChat coffeeChat = chatMessage.getCoffeeChat();
 
         log.info("[ChatController.handleCoffeeChatMessage] - 유저 {}로부터 커피챗 {}에 보내는 메시지를 받았습니다: {}",
             sender.getId(), coffeeChat.getId(),

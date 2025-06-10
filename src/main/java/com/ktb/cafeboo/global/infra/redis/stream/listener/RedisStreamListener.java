@@ -22,7 +22,7 @@ public class RedisStreamListener implements StreamListener<String, ObjectRecord<
         String streamKey = message.getStream();
         RecordId recordId = message.getId();
         CoffeeChatMessage coffeechatMessage = message.getValue();
-        String roomId = String.valueOf(coffeechatMessage.getChat().getId());
+        String roomId = String.valueOf(coffeechatMessage.getCoffeeChat().getId());
 
         log.info("[RedisStreamListener.onMessage] - Stream {}에 메시지 {}를 수신받았습니다.", streamKey, coffeechatMessage);
 

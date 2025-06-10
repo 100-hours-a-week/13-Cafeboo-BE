@@ -1,7 +1,12 @@
 package com.ktb.cafeboo.global.config;
 
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChatMessage;
+import jakarta.annotation.PostConstruct;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.time.Duration;
+import java.util.UUID;
+import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,6 +22,7 @@ import org.springframework.data.redis.stream.StreamMessageListenerContainer;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 @Configuration
+@Data
 public class RedisConfig {
     @Value("${spring.data.redis.host}")
     private String host;
@@ -26,6 +32,21 @@ public class RedisConfig {
 
     @Value("${spring.data.redis.password:}")
     private String password;
+
+    private String oddListKey;
+    private String evenListKey;
+    private String oddEvenStream;
+    private String consumerGroupName; // 이 값은 이제 ChatService에서 userId 기반으로 동적으로 생성되므로, 더 이상 사용되지 않을 수 있습니다.
+    private String recordCacheKey;
+    private long streamPollTimeout;
+    private String consumerName; // 개별 컨슈머 이름. @PostConstruct에서 동적으로 생성
+    private String failureListKey;
+
+    @PostConstruct // ApplicationConfig의 @PostConstruct 로직도 여기로 옮깁니다.
+    public void setConsumerName() throws UnknownHostException {
+        // 각 서버 인스턴스에 고유한 컨슈머 이름을 부여
+        consumerName = InetAddress.getLocalHost().getHostName() + "-" + UUID.randomUUID().toString().substring(0, 8);
+    }
 
     /**
      * redis의 연결 정보 설정

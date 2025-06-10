@@ -31,13 +31,10 @@ public enum ErrorStatus implements BaseCode {
     // 유저 관련 오류
     USER_NOT_FOUND(404, "USER_NOT_FOUND", "사용자를 찾을 수 없습니다."),
     ACCESS_DENIED(403, "ACCESS_DENIED", "해당 요청에 대한 권한이 없습니다."),
-
     HEALTH_PROFILE_ALREADY_EXISTS(409, "HEALTH_PROFILE_ALREADY_EXISTS", "이미 건강 정보가 등록되어 있습니다."),
     HEALTH_PROFILE_NOT_FOUND(404, "HEALTH_PROFILE_NOT_FOUND", "건강 정보가 존재하지 않습니다."),
-
     CAFFEINE_PROFILE_ALREADY_EXISTS(409, "CAFFEINE_PROFILE_ALREADY_EXISTS", "이미 카페인 정보가 등록되어 있습니다."),
     CAFFEINE_PROFILE_NOT_FOUND(404, "CAFFEINE_PROFILE_NOT_FOUND", "카페인 정보가 존재하지 않습니다."),
-
     ALARM_SETTING_ALREADY_EXISTS(409, "ALARM_SETTING_ALREADY_EXISTS", "이미 알림 설정이 존재합니다."),
     ALARM_SETTING_NOT_FOUND(404, "ALARM_SETTING_NOT_FOUND", "알림 설정 정보를 찾을 수 없습니다."),
 
@@ -60,6 +57,17 @@ public enum ErrorStatus implements BaseCode {
 
     //파라미터 관련 오류
     INVALID_PARAMETER(400, "INVALID_PARAMETER", "요청 파라미터의 올바르지 않습니다."),
+
+    // 채팅 관련 오류
+    COFFEECHAT_NOT_FOUND(404, "COFFEECHAT_NOT_FOUND", "해당 커피챗을 찾을 수 없습니다."),
+    COFFEECHAT_MEMBER_NOT_FOUND(404, "COFFEECHAT_MEMBER_NOT_FOUND", "해당 커피챗 멤버를 찾을 수 없습니다."),
+    COFFEECHAT_NOT_ACTIVE(409, "COFFEECHAT_NOT_ACTIVE", "해당 커피챗은 더 이상 유효하지 않아 요청을 처리할 수 없습니다."),
+    INVALID_COFFEECHAT_FILTER(401, ",INVALID_COFFEECHAT_FILTER", "요청한 커피챗 필터 값이 유효하지 않습니다. 필터는 'all', 'joined', 'completed' 중 하나여야 합니다."),
+    COFFEECHAT_ALREADY_JOINED(409, ",COFFEECHAT_ALREADY_JOINED", "이미 해당 커피챗에 참여한 사용자입니다."),
+    COFFEECHAT_CAPACITY_EXCEEDED(409, "COFFEECHAT_CAPACITY_EXCEEDED", "해당 커피챗은 이미 정원이 초과되어 더 이상 참여할 수 없습니다."),
+    CHAT_NICKNAME_ALREADY_EXISTS(409, "CHAT_NICKNAME_ALREADY_EXISTS", "이미 사용 중인 채팅방 닉네임입니다."),
+    CANNOT_LEAVE_CHAT_OWNER(400, "CANNOT_LEAVE_CHAT_OWNER", "작성자는 채팅방에서 나갈 수 없습니다."),
+    INVALID_CURSOR(400, "INVALID_CURSOR", "커서 값이 유효하지 않습니다.")
     ;
 
     private final int status;

@@ -1,39 +1,42 @@
 package com.ktb.cafeboo.domain.coffeechat.repository;
 
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChat;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.List;
 
-/**
- * 이후 DB 저장 기능 도입 시 수정될 부분. 현재는 기능 테스트용으로 간단하게 만들어서 진행.
- */
-@Repository
-public class CoffeeChatRepository {
-    private final Map<String, CoffeeChat> chatRooms = new LinkedHashMap<>();
+public interface CoffeeChatRepository extends JpaRepository<CoffeeChat, Long> {
 
-    // 초기 채팅방 생성
-    public CoffeeChatRepository() {
-        createChatRoom("자유 채팅방");
-        createChatRoom("개발 스터디");
-        createChatRoom("게임 토론방");
-    }
+    // 사용자가 참여중인 채팅방 목록 (JOINED)
+    @Query("""
+        SELECT c FROM CoffeeChat c
+        JOIN CoffeeChatMember m ON c.id = m.coffeeChat.id
+        JOIN User u ON m.user.id = u.id
+        WHERE m.user.id = :userId
+        AND c.status = 'ACTIVE'
+        AND c.deletedAt IS NULL
+        ORDER BY c.createdAt DESC
+    """)
+    List<CoffeeChat> findJoinedChats(Long userId);
 
-    public CoffeeChat createChatRoom(String name) {
-        CoffeeChat room = new CoffeeChat(UUID.randomUUID().toString(), name);
-        chatRooms.put(String.valueOf(room.getId()), room);
-        System.out.println("Chat room created: " + room.getName() + " (ID: " + room.getId() + ")");
-        return room;
-    }
+    // 사용자가 참여했고, 시간이 지나 완료된 채팅방 목록 (COMPLETED)
+    @Query("""
+        SELECT c FROM CoffeeChat c
+        JOIN CoffeeChatMember m ON c.id = m.coffeeChat.id
+        WHERE m.user.id = :userId
+        AND c.status = 'ENDED'
+        AND c.deletedAt IS NULL
+        ORDER BY c.createdAt DESC
+    """)
+    List<CoffeeChat> findCompletedChats(Long userId);
 
-    public Collection<CoffeeChat> findAllRooms() {
-        return chatRooms.values();
-    }
-
-    public CoffeeChat findRoomById(String roomId) {
-        return chatRooms.get(roomId);
-    }
+    // 모든 활성화된 채팅방 목록 (ALL)
+    @Query("""
+        SELECT c FROM CoffeeChat c
+        WHERE c.status = 'ACTIVE'
+        AND c.deletedAt IS NULL
+        ORDER BY c.createdAt DESC
+    """)
+    List<CoffeeChat> findAllActiveChats();
 }

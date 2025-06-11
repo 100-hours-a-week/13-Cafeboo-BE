@@ -58,7 +58,7 @@ public enum ErrorStatus implements BaseCode {
     //파라미터 관련 오류
     INVALID_PARAMETER(400, "INVALID_PARAMETER", "요청 파라미터의 올바르지 않습니다."),
 
-    // 채팅 관련 오류
+    // 커피챗 관련 오류
     COFFEECHAT_NOT_FOUND(404, "COFFEECHAT_NOT_FOUND", "해당 커피챗을 찾을 수 없습니다."),
     COFFEECHAT_MEMBER_NOT_FOUND(404, "COFFEECHAT_MEMBER_NOT_FOUND", "해당 커피챗 멤버를 찾을 수 없습니다."),
     COFFEECHAT_NOT_ACTIVE(409, "COFFEECHAT_NOT_ACTIVE", "해당 커피챗은 더 이상 유효하지 않아 요청을 처리할 수 없습니다."),
@@ -67,7 +67,13 @@ public enum ErrorStatus implements BaseCode {
     COFFEECHAT_CAPACITY_EXCEEDED(409, "COFFEECHAT_CAPACITY_EXCEEDED", "해당 커피챗은 이미 정원이 초과되어 더 이상 참여할 수 없습니다."),
     CHAT_NICKNAME_ALREADY_EXISTS(409, "CHAT_NICKNAME_ALREADY_EXISTS", "이미 사용 중인 채팅방 닉네임입니다."),
     CANNOT_LEAVE_CHAT_OWNER(400, "CANNOT_LEAVE_CHAT_OWNER", "작성자는 채팅방에서 나갈 수 없습니다."),
-    INVALID_CURSOR(400, "INVALID_CURSOR", "커서 값이 유효하지 않습니다.")
+    INVALID_CURSOR(400, "INVALID_CURSOR", "커서 값이 유효하지 않습니다."),
+
+    // 커피챗 후기 관련
+    INVALID_IMAGE_COUNT(400, "INVALID_IMAGE_COUNT", "이미지는 최대 3장까지만 첨부할 수 있습니다."),
+    INVALID_REVIEW_TIME(400, "INVALID_REVIEW_TIME", "후기 작성이 가능한 시간이 아닙니다."),
+    MEMBER_NOT_IN_THIS_CHAT(400, "MEMBER_NOT_IN_THIS_CHAT", "해당 커피챗에 속한 멤버가 아닙니다."),
+    ALREADY_REVIEWED(409, "ALREADY_REVIEWED", "이미 후기를 작성한 참여자입니다.")
     ;
 
     private final int status;

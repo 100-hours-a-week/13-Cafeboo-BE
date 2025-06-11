@@ -29,6 +29,7 @@ public class SecurityConfig {
         List<RequestMatcher> permitAllMatchers = Arrays.asList(
             new AntPathRequestMatcher("/api/v1/auth/oauth"),
             new AntPathRequestMatcher("/api/v1/auth/kakao"),
+            new AntPathRequestMatcher("/api/v1/auth/refresh"),
             new AntPathRequestMatcher("/api/v1/users/email"),
             new AntPathRequestMatcher("/api/v1/reports/weekly/ai_callback"),
             new AntPathRequestMatcher("/v3/api-docs/**"),

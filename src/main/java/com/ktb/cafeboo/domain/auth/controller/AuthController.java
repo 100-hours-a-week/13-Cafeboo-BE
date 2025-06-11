@@ -5,6 +5,7 @@ import com.ktb.cafeboo.domain.auth.dto.LoginResponse;
 import com.ktb.cafeboo.domain.auth.dto.TokenRefreshResponse;
 import com.ktb.cafeboo.domain.auth.service.AuthService;
 import com.ktb.cafeboo.domain.auth.service.KakaoOauthService;
+import com.ktb.cafeboo.domain.auth.service.TokenBlacklistService;
 import com.ktb.cafeboo.global.apiPayload.ApiResponse;
 import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.code.status.SuccessStatus;
@@ -31,6 +32,7 @@ public class AuthController {
 
     private final AuthService authService;
     private final KakaoOauthService kakaoOauthService;
+    private final TokenBlacklistService tokenBlacklistService;
 
     @PostMapping("/oauth")
     public ResponseEntity<ApiResponse<String>> redirectToOauth(@RequestParam("type") String type) {

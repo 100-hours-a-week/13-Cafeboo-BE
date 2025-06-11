@@ -30,50 +30,71 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
-        String authorizationHeader = request.getHeader("Authorization");
+        String uri = request.getRequestURI();
+        String accessToken = extractAccessToken(request);
 
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            String accessToken = authorizationHeader.replace("Bearer ", "");
+        // /refresh 요청은 accessToken 만료 허용, 블랙리스트만 체크
+        if (uri.equals("/api/v1/auth/refresh")) {
+            if (accessToken != null && tokenBlacklistService.isBlacklisted(accessToken)) {
+                handleUnauthorized(response, ErrorStatus.ACCESS_TOKEN_BLACKLISTED);
+                return;
+            }
+            filterChain.doFilter(request, response);
+            return;
+        }
 
+        // 일반 인증 처리
+        if (accessToken != null) {
             try {
-                String userIdStr = jwtProvider.validateAccessToken(accessToken);
-
-                if (userIdStr == null || !userIdStr.matches("\\d+")) {
-                    throw new CustomApiException(ErrorStatus.ACCESS_TOKEN_INVALID);
-                }
-
-                // 토큰 블랙리스트 검증
-                if (tokenBlacklistService.isBlacklisted(accessToken)) {
-                    throw new CustomApiException(ErrorStatus.ACCESS_TOKEN_BLACKLISTED);
-                }
-
-                Long userIdLong = Long.parseLong(userIdStr);
-
-                User user = userRepository.findById(userIdLong)
-                        .orElseThrow(() -> new CustomApiException(ErrorStatus.USER_NOT_FOUND));
-
-                CustomUserDetails userDetails = new CustomUserDetails(user);
-
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-
+                authenticateUser(accessToken);
             } catch (CustomApiException e) {
-                logger.warn("[JWT 인증 실패] " + e.getErrorCode().getCode() + ": " + e.getMessage());
-                SecurityContextHolder.clearContext();
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.setContentType("application/json;charset=UTF-8");
-                response.getWriter().write(String.format("""
-                    {
-                        "status": %s
-                        "code": "%s",
-                        "message": "%s"
-                    }
-                    """, e.getErrorCode().getStatus(), e.getErrorCode().getCode(), e.getErrorCode().getMessage()));
+                handleUnauthorized(response, (ErrorStatus) e.getErrorCode());
                 return;
             }
         }
+
         filterChain.doFilter(request, response);
+    }
+
+    private String extractAccessToken(HttpServletRequest request) {
+        String header = request.getHeader("Authorization");
+        if (header != null && header.startsWith("Bearer ")) {
+            return header.substring(7);
+        }
+        return null;
+    }
+
+    private void authenticateUser(String accessToken) {
+        String userIdStr = jwtProvider.validateAccessToken(accessToken); // 만료 시 예외 발생
+        if (userIdStr == null || !userIdStr.matches("\\d+")) {
+            throw new CustomApiException(ErrorStatus.ACCESS_TOKEN_INVALID);
+        }
+
+        if (tokenBlacklistService.isBlacklisted(accessToken)) {
+            throw new CustomApiException(ErrorStatus.ACCESS_TOKEN_BLACKLISTED);
+        }
+
+        Long userId = Long.parseLong(userIdStr);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomApiException(ErrorStatus.USER_NOT_FOUND));
+
+        CustomUserDetails userDetails = new CustomUserDetails(user);
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+    }
+
+    private void handleUnauthorized(HttpServletResponse response, ErrorStatus status) throws IOException {
+        SecurityContextHolder.clearContext();
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json;charset=UTF-8");
+        response.getWriter().write(String.format("""
+        {
+            "status": %s,
+            "code": "%s",
+            "message": "%s"
+        }
+        """, status.getStatus(), status.getCode(), status.getMessage()));
     }
 }

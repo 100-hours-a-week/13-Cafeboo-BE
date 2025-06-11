@@ -56,4 +56,23 @@ public interface CoffeeChatRepository extends JpaRepository<CoffeeChat, Long> {
     // N+1 문제 방지
     @Query("SELECT c FROM CoffeeChat c JOIN FETCH c.members m WHERE c.id = :coffeeChatId")
     Optional<CoffeeChat> findByIdWithMembers(@Param("coffeeChatId") Long coffeeChatId);
+
+    // 사용자가 참여했고, 후기가 있는 커피챗 목록
+    @Query("""
+        SELECT DISTINCT c FROM CoffeeChat c
+        JOIN c.members m
+        JOIN FETCH c.reviews r
+        WHERE m.user.id = :userId
+        AND r.deletedAt IS NULL
+    """)
+    List<CoffeeChat> findChatsWithReviewsByUserId(@Param("userId") Long userId);
+
+    // 후기가 하나 이상 존재하는 모든 커피챗 목록
+    @Query("""
+        SELECT DISTINCT c FROM CoffeeChat c
+        JOIN FETCH c.reviews r
+        WHERE r.deletedAt IS NULL
+    """)
+    List<CoffeeChat> findAllWithReviews();
+
 }

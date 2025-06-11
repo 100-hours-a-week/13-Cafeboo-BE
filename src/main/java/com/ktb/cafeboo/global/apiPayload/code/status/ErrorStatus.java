@@ -62,7 +62,7 @@ public enum ErrorStatus implements BaseCode {
     COFFEECHAT_NOT_FOUND(404, "COFFEECHAT_NOT_FOUND", "해당 커피챗을 찾을 수 없습니다."),
     COFFEECHAT_MEMBER_NOT_FOUND(404, "COFFEECHAT_MEMBER_NOT_FOUND", "해당 커피챗 멤버를 찾을 수 없습니다."),
     COFFEECHAT_NOT_ACTIVE(409, "COFFEECHAT_NOT_ACTIVE", "해당 커피챗은 더 이상 유효하지 않아 요청을 처리할 수 없습니다."),
-    INVALID_COFFEECHAT_FILTER(401, ",INVALID_COFFEECHAT_FILTER", "요청한 커피챗 필터 값이 유효하지 않습니다. 필터는 'all', 'joined', 'completed' 중 하나여야 합니다."),
+    INVALID_COFFEECHAT_FILTER(400, ",INVALID_COFFEECHAT_FILTER", "요청한 커피챗 필터 값이 유효하지 않습니다. 필터는 'all', 'joined', 'completed' 중 하나여야 합니다."),
     COFFEECHAT_ALREADY_JOINED(409, ",COFFEECHAT_ALREADY_JOINED", "이미 해당 커피챗에 참여한 사용자입니다."),
     COFFEECHAT_CAPACITY_EXCEEDED(409, "COFFEECHAT_CAPACITY_EXCEEDED", "해당 커피챗은 이미 정원이 초과되어 더 이상 참여할 수 없습니다."),
     CHAT_NICKNAME_ALREADY_EXISTS(409, "CHAT_NICKNAME_ALREADY_EXISTS", "이미 사용 중인 채팅방 닉네임입니다."),
@@ -73,7 +73,8 @@ public enum ErrorStatus implements BaseCode {
     INVALID_IMAGE_COUNT(400, "INVALID_IMAGE_COUNT", "이미지는 최대 3장까지만 첨부할 수 있습니다."),
     INVALID_REVIEW_TIME(400, "INVALID_REVIEW_TIME", "후기 작성이 가능한 시간이 아닙니다."),
     MEMBER_NOT_IN_THIS_CHAT(400, "MEMBER_NOT_IN_THIS_CHAT", "해당 커피챗에 속한 멤버가 아닙니다."),
-    ALREADY_REVIEWED(409, "ALREADY_REVIEWED", "이미 후기를 작성한 참여자입니다.")
+    ALREADY_REVIEWED(409, "ALREADY_REVIEWED", "이미 후기를 작성한 참여자입니다."),
+    INVALID_REVIEW_FILTER(400, "INVALID_REVIEW_FILTER", "")
     ;
 
     private final int status;

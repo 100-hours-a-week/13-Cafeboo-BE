@@ -3,6 +3,8 @@ package com.ktb.cafeboo.domain.coffeechat.service;
 
 import com.ktb.cafeboo.domain.coffeechat.dto.CoffeeChatReviewCreateRequest;
 import com.ktb.cafeboo.domain.coffeechat.dto.CoffeeChatReviewCreateResponse;
+import com.ktb.cafeboo.domain.coffeechat.dto.CoffeeChatReviewListResponse;
+import com.ktb.cafeboo.domain.coffeechat.dto.common.CoffeeChatReviewPreviewDto;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChat;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChatMember;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChatReview;
@@ -12,6 +14,7 @@ import com.ktb.cafeboo.domain.coffeechat.repository.CoffeeChatRepository;
 import com.ktb.cafeboo.domain.coffeechat.repository.CoffeeChatReviewRepository;
 import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
+import com.ktb.cafeboo.global.enums.ReviewFilterType;
 import com.ktb.cafeboo.global.infra.s3.S3Uploader;
 import com.ktb.cafeboo.global.util.AuthChecker;
 import lombok.RequiredArgsConstructor;
@@ -97,5 +100,41 @@ public class CoffeeChatReviewService {
         CoffeeChatReview savedReview = coffeeChatReviewRepository.save(review);
 
         return new CoffeeChatReviewCreateResponse(savedReview.getId().toString());
+    }
+
+    @Transactional(readOnly = true)
+    public CoffeeChatReviewListResponse getCoffeeChatReviewsByStatus(Long userId, String status) {
+        ReviewFilterType filter = ReviewFilterType.from(status);
+
+        List<CoffeeChat> chats;
+
+        switch (filter) {
+            case MY -> chats = coffeeChatRepository.findChatsWithReviewsByUserId(userId);
+            case ALL -> chats = coffeeChatRepository.findAllWithReviews();
+            default -> throw new CustomApiException(ErrorStatus.INVALID_REVIEW_FILTER);
+        }
+
+        List<CoffeeChatReviewPreviewDto> dtos = chats.stream()
+                .filter(chat -> !chat.getReviews().isEmpty()) // 후기가 하나라도 있는 커피챗만
+                .map(chat -> {
+                    int totalImageCount = chat.getReviews().stream()
+                            .mapToInt(r -> r.getImages().size())
+                            .sum();
+
+                    String previewImageUrl = chat.getReviews().stream()
+                            .filter(r -> !r.getImages().isEmpty())
+                            .findFirst()
+                            .map(r -> r.getImages().get(0).getImageUrl())
+                            .orElse(null);
+
+                    return CoffeeChatReviewPreviewDto.from(chat, totalImageCount, previewImageUrl);
+                })
+                .toList();
+
+        return new CoffeeChatReviewListResponse(
+                filter.name().toLowerCase(),
+                dtos.size(),
+                dtos
+        );
     }
 }

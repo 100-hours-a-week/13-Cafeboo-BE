@@ -73,6 +73,20 @@ public class CoffeeChat extends BaseEntity {
     @OneToMany(mappedBy = "coffeeChat", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CoffeeChatTag> coffeeChatTags = new ArrayList<>();
 
+    @Column(name = "likes_count", nullable = false)
+    private int likesCount = 0;
+
+    @OneToMany(mappedBy = "coffeeChat", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CoffeeChatLike> likes = new ArrayList<>();
+
+    public void increaseLikes() {
+        this.likesCount++;
+    }
+
+    public void decreaseLikes() {
+        if (this.likesCount > 0) this.likesCount--;
+    }
+
     public void addMember(CoffeeChatMember member) {
         this.members.add(member);
         this.currentMemberCount = this.members.size();

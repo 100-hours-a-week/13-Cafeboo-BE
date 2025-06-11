@@ -217,7 +217,7 @@ public class CoffeeChatService {
 
         List<MemberDto> memberDtos = coffeeChat.getMembers().stream()
                 .map(cm -> new MemberDto(
-                        String.valueOf(cm.getUser().getId()),
+                        String.valueOf(cm.getId()),
                         cm.getChatNickname(),
                         cm.getProfileImageUrl(),
                         cm.isHost()

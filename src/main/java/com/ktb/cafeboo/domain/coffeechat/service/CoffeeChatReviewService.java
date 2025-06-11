@@ -49,7 +49,7 @@ public class CoffeeChatReviewService {
 
         CoffeeChatMember writer = coffeeChatMemberRepository.findById(Long.parseLong(request.memberId()))
                 .orElseThrow(() -> new CustomApiException(ErrorStatus.COFFEECHAT_MEMBER_NOT_FOUND));
-        AuthChecker.checkOwnership(writer.getId(), userId);
+        AuthChecker.checkOwnership(writer.getUser().getId(), userId);
 
         if (!writer.getCoffeeChat().getId().equals(coffeechatId)) {
             throw new CustomApiException(ErrorStatus.MEMBER_NOT_IN_THIS_CHAT);

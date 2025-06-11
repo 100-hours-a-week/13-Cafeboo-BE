@@ -1,5 +1,9 @@
 package com.ktb.cafeboo.global.config;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.ktb.cafeboo.domain.coffeechat.dto.StompMessagePublish;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChatMessage;
 import jakarta.annotation.PostConstruct;
 import java.net.InetAddress;
@@ -7,6 +11,7 @@ import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.UUID;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,16 +19,22 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisPassword;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
+import org.springframework.data.redis.connection.stream.MapRecord;
+import org.springframework.data.redis.connection.stream.ObjectRecord;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.data.redis.stream.StreamMessageListenerContainer;
+import org.springframework.data.redis.stream.StreamMessageListenerContainer.StreamMessageListenerContainerOptions;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Configuration
 @Data
+@Slf4j
 public class RedisConfig {
+
     @Value("${spring.data.redis.host}")
     private String host;
 
@@ -77,40 +88,54 @@ public class RedisConfig {
      */
     @Bean
     public RedisTemplate<String, Object> redisTemplate(){
-        RedisTemplate<String, Object> template = new RedisTemplate<>();
-        template.setConnectionFactory(redisConnectionFactory());
+        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setConnectionFactory(redisConnectionFactory());
 
-        GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer();
+        // Key 직렬화 (Stream Key 및 Map Key)
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        redisTemplate.setHashKeySerializer(new StringRedisSerializer());
 
-        template.setKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(serializer);
-        template.setHashKeySerializer(new StringRedisSerializer());
-        template.setHashValueSerializer(serializer);
+        // Value 직렬화 (Stream Value 및 Map Value)
+        // ✨ 이 부분이 가장 중요합니다. StringRedisSerializer를 사용하면 JSON 문자열이 그대로 저장됩니다. ✨
+        GenericJackson2JsonRedisSerializer jsonRedisSerializer = new GenericJackson2JsonRedisSerializer(objectMapper());
+        redisTemplate.setValueSerializer(jsonRedisSerializer);
+        redisTemplate.setHashValueSerializer(jsonRedisSerializer);
 
-        template.afterPropertiesSet();
-        return template;
+        redisTemplate.afterPropertiesSet();
+        return redisTemplate;
     }
 
     @Bean
-    public StreamMessageListenerContainer<String, ?> stringStreamMessageListenerContainer(RedisConnectionFactory connectionFactory){
+    public StreamMessageListenerContainer<String, MapRecord<String, String, String>> streamMessageListenerContainer() {
         ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
-        taskExecutor.setCorePoolSize(5); // 기본 스레드 수
-        taskExecutor.setMaxPoolSize(10); // 최대 스레드 수
-        taskExecutor.setQueueCapacity(200);
+        taskExecutor.setCorePoolSize(1);
+        taskExecutor.setQueueCapacity(0);
         taskExecutor.setThreadNamePrefix("redis-stream-listener-");
         taskExecutor.initialize();
 
-        StreamMessageListenerContainer.StreamMessageListenerContainerOptions<String, ?> options =
-            StreamMessageListenerContainer.StreamMessageListenerContainerOptions.builder()
-                .batchSize(10) // 한 번에 처리할 메시지 수
-                .executor(taskExecutor) // 사용할 스레드 풀
-                .pollTimeout(Duration.ofSeconds(1)) // 메시지가 없을 때 폴링 타임아웃
-                .targetType(CoffeeChatMessage.class) // 메시지 역직렬화 대상 타입
+        StreamMessageListenerContainerOptions<String, MapRecord<String, String, String>> options =
+            StreamMessageListenerContainerOptions.builder()
+                .batchSize(1)
+                .executor(taskExecutor)
+                .pollTimeout(Duration.ofSeconds(1))
+                // MapRecord를 직접 받을 것이므로 serializer와 targetType은 설정하지 않습니다.
+                // Spring Data Redis가 MapRecord의 세 번째 인수를 기반으로 내부적으로 String으로 디코딩하여 제공할 것입니다.
                 .build();
 
-        StreamMessageListenerContainer<String, ?>container = StreamMessageListenerContainer.create(connectionFactory, options);
-        container.start();
+        StreamMessageListenerContainer<String, MapRecord<String, String, String>> container =
+            StreamMessageListenerContainer.create(redisConnectionFactory(), options);
 
+        container.start();
+        log.info("[RedisConfig] - StreamMessageListenerContainer started.");
         return container;
+    }
+
+    @Bean
+    public ObjectMapper objectMapper() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule()); // LocalDateTime 처리 모듈 등록
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        return objectMapper;
     }
 }

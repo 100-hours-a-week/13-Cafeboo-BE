@@ -1,6 +1,7 @@
 package com.ktb.cafeboo.domain.coffeechat.repository;
 
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChat;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -75,4 +76,10 @@ public interface CoffeeChatRepository extends JpaRepository<CoffeeChat, Long> {
     """)
     List<CoffeeChat> findAllWithReviews();
 
+    @Query("SELECT DISTINCT c FROM CoffeeChat c WHERE c.id = :id")
+    @EntityGraph(attributePaths = {
+            "reviews.writer",
+            "coffeeChatTags.tag"
+    })
+    Optional<CoffeeChat> findWithDetailsById(Long id);
 }

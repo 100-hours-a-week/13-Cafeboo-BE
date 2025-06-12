@@ -10,8 +10,7 @@ import org.hibernate.annotations.Where;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Entity
 @Getter
@@ -67,11 +66,12 @@ public class CoffeeChat extends BaseEntity {
 
     @Builder.Default
     @OneToMany(mappedBy = "coffeeChat", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<CoffeeChatReview> reviews = new ArrayList<>();
+    @OrderBy("id ASC")
+    private Set<CoffeeChatReview> reviews = new LinkedHashSet<>();
 
     @Builder.Default
     @OneToMany(mappedBy = "coffeeChat", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<CoffeeChatTag> coffeeChatTags = new ArrayList<>();
+    private Set<CoffeeChatTag> coffeeChatTags = new HashSet<>();
 
     @Column(name = "likes_count", nullable = false)
     private int likesCount = 0;

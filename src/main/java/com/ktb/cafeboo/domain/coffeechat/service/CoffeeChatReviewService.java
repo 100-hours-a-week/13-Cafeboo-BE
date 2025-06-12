@@ -4,7 +4,10 @@ package com.ktb.cafeboo.domain.coffeechat.service;
 import com.ktb.cafeboo.domain.coffeechat.dto.CoffeeChatReviewCreateRequest;
 import com.ktb.cafeboo.domain.coffeechat.dto.CoffeeChatReviewCreateResponse;
 import com.ktb.cafeboo.domain.coffeechat.dto.CoffeeChatReviewListResponse;
+import com.ktb.cafeboo.domain.coffeechat.dto.CoffeeChatReviewResponse;
 import com.ktb.cafeboo.domain.coffeechat.dto.common.CoffeeChatReviewPreviewDto;
+import com.ktb.cafeboo.domain.coffeechat.dto.common.MemberDto;
+import com.ktb.cafeboo.domain.coffeechat.dto.common.ReviewDto;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChat;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChatMember;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChatReview;
@@ -26,6 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -135,6 +139,37 @@ public class CoffeeChatReviewService {
                 filter.name().toLowerCase(),
                 dtos.size(),
                 dtos
+        );
+    }
+
+    public CoffeeChatReviewResponse getReviewByCoffeeChatId(Long coffeeChatId) {
+        CoffeeChat coffeeChat = coffeeChatRepository.findWithDetailsById(coffeeChatId)
+                .orElseThrow(() -> new CustomApiException(ErrorStatus.COFFEECHAT_NOT_FOUND));
+
+        List<ReviewDto> reviewDtos = coffeeChat.getReviews().stream()
+                .map(review -> new ReviewDto(
+                        String.valueOf(review.getId()),
+                        review.getText(),
+                        review.getImages().stream()
+                                .map(CoffeeChatReviewImage::getImageUrl)
+                                .toList(),
+                        new MemberDto(
+                                String.valueOf(review.getWriter().getId()),
+                                review.getWriter().getChatNickname(),
+                                review.getWriter().getProfileImageUrl(),
+                                review.getWriter().isHost()
+                        )
+                ))
+                .toList();
+
+        return new CoffeeChatReviewResponse(
+                String.valueOf(coffeeChat.getId()),
+                coffeeChat.getName(),
+                coffeeChat.getMeetingTime().format(DateTimeFormatter.ofPattern("HH:mm")),
+                coffeeChat.getTagNames(),
+                coffeeChat.getAddress(),
+                coffeeChat.getLikesCount(),
+                reviewDtos
         );
     }
 }

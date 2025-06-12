@@ -10,13 +10,9 @@ import com.ktb.cafeboo.global.security.userdetails.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.util.List;
 
 @Slf4j
 @RestController
@@ -26,7 +22,6 @@ public class CoffeeChatController {
 
     private final CoffeeChatService coffeeChatService;
     private final CoffeeChatMessageService coffeeChatMessageService;
-    private final CoffeeChatReviewService coffeeChatReviewService;
 
     @PostMapping
     public ResponseEntity<ApiResponse<CoffeeChatCreateResponse>> createCoffeeChat(
@@ -136,25 +131,4 @@ public class CoffeeChatController {
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.COFFEECHAT_MEMBER_LOAD_SUCCESS, response));
     }
 
-    @PostMapping(value = "/{coffeechatId}/reviews", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ApiResponse<CoffeeChatReviewCreateResponse>> createCoffeeChatReview(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long coffeechatId,
-            @RequestPart("memberId") String memberId,
-            @RequestPart("text") String text,
-            @RequestPart(value = "images", required = false) List<MultipartFile> images
-    ) {
-        Long userId = userDetails.getUserId();
-        log.info("[POST /api/v1/coffee-chats/{}/reviews] userId: {} 커피챗 후기 작성 요청 수신", coffeechatId, userId);
-
-        CoffeeChatReviewCreateRequest request = new CoffeeChatReviewCreateRequest(memberId, text, images);
-
-        CoffeeChatReviewCreateResponse response = coffeeChatReviewService.createCoffeeChatReview(
-                userId,
-                coffeechatId,
-                request
-        );
-
-        return ResponseEntity.ok(ApiResponse.of(SuccessStatus.COFFEECHAT_REVIEW_CREATE_SUCCESS, response));
-    }
 }

@@ -1,8 +1,11 @@
 package com.ktb.cafeboo.domain.coffeechat.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ktb.cafeboo.domain.coffeechat.dto.StompMessagePublish;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChat;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChatMember;
+import com.ktb.cafeboo.domain.coffeechat.dto.StompMessage;
+import com.ktb.cafeboo.domain.coffeechat.repository.CoffeeChatMemberRepository;
 import com.ktb.cafeboo.domain.coffeechat.repository.CoffeeChatRepository;
 import com.ktb.cafeboo.global.config.RedisConfig;
 import com.ktb.cafeboo.global.enums.MessageType;
@@ -13,6 +16,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -35,8 +39,6 @@ import org.springframework.data.redis.connection.stream.ObjectRecord;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.stream.StreamMessageListenerContainer;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -49,9 +51,12 @@ public class ChatService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final SimpMessagingTemplate messagingTemplate;
     private final ObjectMapper objectMapper;
-    private final StreamMessageListenerContainer<String, ObjectRecord<String, CoffeeChatMessage>> streamMessageListenerContainer;
+    private final StreamMessageListenerContainer<String, MapRecord<String, String, String>> streamMessageListenerContainer;
     private final RedisStreamListener redisStreamListener;
     private final RedisConfig redisConfig;
+    private final CoffeeChatRepository coffeeChatRepository;
+    private final CoffeeChatMemberRepository coffeeChatMemberRepository;
+    private final CoffeeChatMessageService coffeeChatMessageService;
 
     private static final String CHAT_STREAM_PREFIX = "coffeechat:room:";
     private static final String CHAT_CONSUMER_GROUP_PREFIX = "coffeechat:group:";
@@ -65,7 +70,7 @@ public class ChatService {
 
     @PostConstruct
     public void setupPendingMessageProcessor(){
-        pendingMessageProcessor.submit(this::processPendingMessageScheduler);
+        //pendingMessageProcessor.submit(this::processPendingMessageScheduler);
     }
 
     @PostConstruct // 서비스 계층에서 스트림 관련 로직을 초기화하는 것은 자연스럽습니다.
@@ -99,39 +104,75 @@ public class ChatService {
      * 새로운 message를 Redis Stream에 등록
      * @param message
      */
-    public void handleNewMessage(String roomId, CoffeeChatMessage message) throws Exception{
+    public void handleNewMessage(String roomId, StompMessage message) throws Exception{
         String streamKey = CHAT_STREAM_PREFIX + roomId;
         Map<String, String> messageMap = new HashMap<>();
 
         try{
-            System.out.println("[ChatService.handleNewMessage] - " + message.getSender().getId());
-            System.out.println("[ChatService.handleNewMessage] - " + message.getCoffeeChat().getId());
-            System.out.println("[ChatService.handleNewMessage] - " + message.getContent());
+            System.out.println("[ChatService.handleNewMessage] - " + message.getSenderId());
+            System.out.println("[ChatService.handleNewMessage] - " + message.getCoffeechatId());
+            System.out.println("[ChatService.handleNewMessage] - " + message.getMessage());
 //            System.out.println("[ChatService.handleNewMessage] - " + message.getSenderId());
 //            System.out.println("[ChatService.handleNewMessage] - " + message.getCoffeechatId());
 //            System.out.println("[ChatService.handleNewMessage] - " + message.getMessage());
             System.out.println("[ChatService.handleNewMessage] - " + message.getType().name());
 
-            CoffeeChatMember sender = message.getSender();
-            String senderId = String.valueOf(sender.getId());
-            CoffeeChat coffeeChat = message.getCoffeeChat();
-            String coffeechatId = String.valueOf(coffeeChat.getId());
+            String senderId = message.getSenderId();
+            String coffeechatId = message.getCoffeechatId();
 
-            messageMap.put("senderId", senderId);
-            messageMap.put("coffeechatId", coffeechatId);
-            messageMap.put("content", message.getContent());
-//            messageMap.put("userId", message.getSenderId());
-//            messageMap.put("roomId", message.getCoffeechatId());
-//            messageMap.put("content", message.getMessage());
-            messageMap.put("type", message.getType().name());
-            RecordId recordId = redisTemplate.opsForStream().add(streamKey, messageMap);
+            // CoffeeChat 엔티티 조회
+            CoffeeChat chat = coffeeChatRepository.findById(Long.valueOf(coffeechatId))
+                .orElseThrow(() -> new IllegalArgumentException("CoffeeChat not found with ID: " + coffeechatId));
+
+            // CoffeeChatMember (메시지 보낸 사람) 엔티티 조회
+            // userId와 coffeechatId를 이용해 해당 채팅방의 멤버를 찾습니다.
+            CoffeeChatMember sender = coffeeChatMemberRepository.findByCoffeeChatIdAndUserId(Long.valueOf(coffeechatId), Long.valueOf(senderId))
+                .orElseThrow(() -> new IllegalArgumentException("Sender (CoffeeChatMember) not found for user ID: " + senderId + " in chat ID: " + coffeechatId));
+            sender.getId();
+
+            //RDB에 메시지 저장
+            CoffeeChatMessage coffeeChatMessage = CoffeeChatMessage.builder()
+                .messageUuid(UUID.randomUUID().toString()) // 메시지 고유 UUID는 서버에서 생성
+                .coffeeChat(chat)                          // 조회한 CoffeeChat 엔티티
+                .sender(sender)                            // 조회한 CoffeeChatMember 엔티티
+                .content(message.getMessage())      // DTO에서 받은 메시지 내용
+                .type(message.getType())            // DTO에서 받은 메시지 타입 (enum)
+                .build();
+
+            CoffeeChatMessage savedMessage = coffeeChatMessageService.save(coffeeChatMessage);
+
+            StompMessagePublish messagePublish = StompMessagePublish.from(savedMessage, sender);
+
+            //DTO -> JSON 문자열
+            //String chatJson = objectMapper.writeValueAsString(messagePublish);
+
+            //Redis Stream에 메시지 publish
+//            messageMap.put("messageId", savedMessage.getMessageUuid());
+//            messageMap.put("messageType", savedMessage.getType().name());
+//            messageMap.put("content", savedMessage.getContent());
+////            messageMap.put("userId", message.getSenderId());
+////            messageMap.put("roomId", message.getCoffeechatId());
+////            messageMap.put("content", message.getMessage());
+//            messageMap.put("type", message.getType().name());
+
+//            Map<String, Object> streamEntry = new HashMap<>();
+//            streamEntry.put("message", messagePublish); // 전체 JSON 객체를 "message" 키의 값으로 저장
+//
+//            RecordId recordId = redisTemplate.opsForStream().add(streamKey, streamEntry);
+
+            log.info("[ChatService.handleNewMessage] - 직렬화 전 messagePublish 객체 데이터: {}", messagePublish);
+
+            ObjectRecord<String, StompMessagePublish> record =
+                ObjectRecord.create(streamKey, messagePublish); // 스트림 키 지정 (필수)
+
+            RecordId recordId = redisTemplate.opsForStream().add(record);
             log.info("[ChatService.handleNewMessage] - Stream {}에 추가된 메시지: {}", streamKey, recordId.getValue());
-
-            messagingTemplate.convertAndSend("/topic/chatrooms/" + roomId, message);
+            //messagingTemplate.convertAndSend("/topic/chatrooms/" + roomId, messagePublish);
+            //messagingTemplate.convertAndSend("/topic/chatrooms/" + roomId, message);
         }
         //메시지 직렬화 오류. 순환 참조가 있거나, ObjectMapper가 처리할 수 없는 커스텀 객체가 필드로 포함된 경우
         catch (Exception e){
-            log.error("[ChatService.handleNewMessage] - 메시지 전송 오류. roomId: {}, message: {}", message.getCoffeeChat().getId(), e.getMessage(), e);
+            log.error("[ChatService.handleNewMessage] - 메시지 전송 오류. roomId: {}, message: {}", message.getCoffeechatId(), e.getMessage(), e);
             throw e;
         }
     }
@@ -139,9 +180,9 @@ public class ChatService {
     /**
      * 채팅방마다 Redis Stream의 listener를 설정
      */
-    public void startListeningToRoom(String roomId, Long userId){
+    public void startListeningToCoffeeChat(String roomId){
         String streamKey = CHAT_STREAM_PREFIX + roomId;
-        String consumerGroupName = CHAT_CONSUMER_GROUP_PREFIX + userId; // 사용자 ID를 컨슈머 그룹으로 사용
+        String consumerGroupName = CHAT_CONSUMER_GROUP_PREFIX + roomId; // 커피챗 ID를 컨슈머 그룹으로 사용
         String consumerName = redisConfig.getConsumerName();
         log.info("[ChatService.startListeningToRoom] - streamKey: {}, consumerGroupName: {}, consumerName: {}", streamKey, consumerGroupName, consumerName);
 
@@ -152,7 +193,7 @@ public class ChatService {
         }
 
         try{
-            redisTemplate.opsForStream().createGroup(streamKey, consumerGroupName);
+            redisTemplate.opsForStream().createGroup(streamKey, ReadOffset.from("0-0"), consumerGroupName);
             log.info("[ChatService.startListeningToRoom] - Stream {}에 Consumer group {}가 생성되었습니다.", streamKey, consumerGroupName);
         }
         catch (Exception e) {
@@ -260,10 +301,10 @@ public class ChatService {
     /**
      * 메시지 전송 과정에서 문제가 생겨 ACK 되지 않은 상태인 pending 메시지 처리 메서드
      */
-    @Scheduled(fixedDelay = 300000) // 5분 마다 실행
-    @Async
-    public void processPendingMessageScheduler(){
-        log.info("[ChatService.processPendingMessageScheduler] - PENDING 상태의 메서지 처리 진행...");
-
-    }
+//    @Scheduled(fixedDelay = 300000) // 5분 마다 실행
+//    @Async
+//    public void processPendingMessageScheduler(){
+//        log.info("[ChatService.processPendingMessageScheduler] - PENDING 상태의 메서지 처리 진행...");
+//
+//    }
 }

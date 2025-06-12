@@ -9,7 +9,7 @@ public record CoffeeChatListResponse(
         List<CoffeeChatSummary> coffeechats
 ) {
     public record CoffeeChatSummary(
-            Long coffechatId,
+            Long coffeechatId,
             String title,
             String time,
             int maxMemberCount,

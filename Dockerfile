@@ -19,8 +19,9 @@ WORKDIR /app
 COPY --from=build /app/build/libs/*.jar app.jar
 
 # Scouter Agent 설치
-RUN apt-get update && apt-get install -y curl tar && \
-    curl -L -o /tmp/scouter-agent.tar.gz https://github.com/scouter-project/scouter/releases/download/v2.7.0/scouter.agent.java-2.7.0.tar.gz && \
+RUN apt-get update && \
+    apt-get install -y curl tar ca-certificates && \
+    curl -fSL -o /tmp/scouter-agent.tar.gz https://github.com/scouter-project/scouter/releases/download/v2.7.0/scouter.agent.java-2.7.0.tar.gz && \
     mkdir -p /opt/scouter-agent && \
     tar -xzf /tmp/scouter-agent.tar.gz -C /opt/scouter-agent --strip-components=1 && \
     rm /tmp/scouter-agent.tar.gz

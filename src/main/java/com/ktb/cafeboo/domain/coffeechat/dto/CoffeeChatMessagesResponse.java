@@ -7,7 +7,7 @@ import java.util.List;
 
 @Builder
 public record CoffeeChatMessagesResponse(
-        String coffeechatId,
+        String coffeeChatId,
         List<MessageDto> messages,
         String nextCursor,
         boolean hasNext

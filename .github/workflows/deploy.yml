@@ -2,7 +2,7 @@ name: Deploy to GCP Private VM (Dev)
 
 on:
   push:
-    branches: [ scouter-test ]
+    branches: [ dev ]
 
 jobs:
   deploy:

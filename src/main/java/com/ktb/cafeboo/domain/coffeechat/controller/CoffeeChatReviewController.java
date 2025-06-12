@@ -1,6 +1,10 @@
 package com.ktb.cafeboo.domain.coffeechat.controller;
 
-import com.ktb.cafeboo.domain.coffeechat.dto.*;
+import com.ktb.cafeboo.domain.coffeechat.dto.CoffeeChatReviewCreateRequest;
+import com.ktb.cafeboo.domain.coffeechat.dto.CoffeeChatReviewCreateResponse;
+import com.ktb.cafeboo.domain.coffeechat.dto.CoffeeChatReviewLikeResponse;
+import com.ktb.cafeboo.domain.coffeechat.dto.CoffeeChatReviewListResponse;
+import com.ktb.cafeboo.domain.coffeechat.dto.CoffeeChatReviewResponse;
 import com.ktb.cafeboo.domain.coffeechat.service.CoffeeChatLikeService;
 import com.ktb.cafeboo.domain.coffeechat.service.CoffeeChatReviewService;
 import com.ktb.cafeboo.global.apiPayload.ApiResponse;

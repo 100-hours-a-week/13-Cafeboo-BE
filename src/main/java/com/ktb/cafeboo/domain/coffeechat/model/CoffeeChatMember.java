@@ -25,12 +25,14 @@ public class CoffeeChatMember extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Column(name = "is_host", nullable = false)
+    private boolean isHost;
+
     @Column(name = "chat_nickname", nullable = false, length = 20)
     private String chatNickname;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "profile_image_type", nullable = false, length = 10)
-    private ProfileImageType profileImageType;
+    @Column(name = "profile_image_url", nullable = false, length = 512)
+    private String profileImageUrl;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 10)
@@ -43,15 +45,17 @@ public class CoffeeChatMember extends BaseEntity {
             CoffeeChat chat,
             User user,
             String chatNickname,
-            ProfileImageType profileImageType
+            String profileImageUrl,
+            boolean isHost
     ) {
         return CoffeeChatMember.builder()
                 .coffeeChat(chat)
                 .user(user)
                 .chatNickname(chatNickname)
-                .profileImageType(profileImageType)
+                .profileImageUrl(profileImageUrl)
                 .status(CoffeeChatMemberStatus.JOINED)
                 .isEvaluated(false)
+                .isHost(isHost)
                 .build();
     }
 }

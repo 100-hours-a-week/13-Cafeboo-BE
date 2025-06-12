@@ -2,6 +2,7 @@ package com.ktb.cafeboo.domain.coffeechat.controller;
 
 import com.ktb.cafeboo.domain.coffeechat.dto.*;
 import com.ktb.cafeboo.domain.coffeechat.service.CoffeeChatMessageService;
+import com.ktb.cafeboo.domain.coffeechat.service.CoffeeChatReviewService;
 import com.ktb.cafeboo.domain.coffeechat.service.CoffeeChatService;
 import com.ktb.cafeboo.global.apiPayload.ApiResponse;
 import com.ktb.cafeboo.global.apiPayload.code.status.SuccessStatus;
@@ -58,7 +59,7 @@ public class CoffeeChatController {
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.COFFEECHAT_LOAD_SUCCESS, response));
     }
 
-    @PostMapping("/{coffeechatId}/member")
+    @PostMapping("/{coffeechatId}/members")
     public ResponseEntity<ApiResponse<CoffeeChatJoinResponse>> joinCoffeeChat(
         @AuthenticationPrincipal CustomUserDetails userDetails,
         @PathVariable Long coffeechatId,
@@ -73,7 +74,7 @@ public class CoffeeChatController {
             .body(ApiResponse.of(SuccessStatus.COFFEECHAT_JOIN_SUCCESS, response));
     }
 
-    @DeleteMapping("/{coffeechatId}/member/{memberId}")
+    @DeleteMapping("/{coffeechatId:\\d+}/members/{memberId:\\d+}")
     public ResponseEntity<Void> leaveChat(
         @AuthenticationPrincipal CustomUserDetails userDetails,
         @PathVariable Long coffeechatId,
@@ -83,7 +84,7 @@ public class CoffeeChatController {
         return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping("/{coffeechatId}")
+    @DeleteMapping("/{coffeechatId:\\d+}")
     public ResponseEntity<Void> deleteCoffeeChat(
         @PathVariable Long coffeechatId,
         @AuthenticationPrincipal CustomUserDetails userDetails
@@ -116,4 +117,18 @@ public class CoffeeChatController {
 
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.COFFEECHAT_MESSAGES_LOAD_SUCCESS, response));
     }
+
+    @GetMapping("/{coffeechatId}/members")
+    public ResponseEntity<ApiResponse<CoffeeChatMembersResponse>> getCoffeeChatMembers(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long coffeechatId
+    ) {
+        Long userId = userDetails.getUserId();
+        log.info("[GET /api/v1/coffee-chats/{}/members] userId: {} 커피챗 참여자 목록 조회 요청 수신", coffeechatId, userId);
+
+        CoffeeChatMembersResponse response = coffeeChatService.getCoffeeChatMembers(coffeechatId);
+
+        return ResponseEntity.ok(ApiResponse.of(SuccessStatus.COFFEECHAT_MEMBER_LOAD_SUCCESS, response));
+    }
+
 }

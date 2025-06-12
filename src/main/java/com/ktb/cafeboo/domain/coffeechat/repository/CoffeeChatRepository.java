@@ -1,10 +1,13 @@
 package com.ktb.cafeboo.domain.coffeechat.repository;
 
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChat;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface CoffeeChatRepository extends JpaRepository<CoffeeChat, Long> {
 
@@ -31,6 +34,17 @@ public interface CoffeeChatRepository extends JpaRepository<CoffeeChat, Long> {
     """)
     List<CoffeeChat> findCompletedChats(Long userId);
 
+    @Query("""
+        SELECT c FROM CoffeeChat c
+        JOIN CoffeeChatMember m ON c.id = m.coffeeChat.id
+        WHERE m.user.id = :userId
+        AND c.meetingTime < CURRENT_TIMESTAMP
+        AND c.deletedAt IS NULL
+        ORDER BY c.meetingTime DESC
+    """)
+    List<CoffeeChat> findReviewableChats(Long userId);
+
+
     // 모든 활성화된 채팅방 목록 (ALL)
     @Query("""
         SELECT c FROM CoffeeChat c
@@ -39,4 +53,33 @@ public interface CoffeeChatRepository extends JpaRepository<CoffeeChat, Long> {
         ORDER BY c.createdAt DESC
     """)
     List<CoffeeChat> findAllActiveChats();
+
+    // N+1 문제 방지
+    @Query("SELECT c FROM CoffeeChat c JOIN FETCH c.members m WHERE c.id = :coffeeChatId")
+    Optional<CoffeeChat> findByIdWithMembers(@Param("coffeeChatId") Long coffeeChatId);
+
+    // 사용자가 참여했고, 후기가 있는 커피챗 목록
+    @Query("""
+        SELECT DISTINCT c FROM CoffeeChat c
+        JOIN c.members m
+        JOIN FETCH c.reviews r
+        WHERE m.user.id = :userId
+        AND r.deletedAt IS NULL
+    """)
+    List<CoffeeChat> findChatsWithReviewsByUserId(@Param("userId") Long userId);
+
+    // 후기가 하나 이상 존재하는 모든 커피챗 목록
+    @Query("""
+        SELECT DISTINCT c FROM CoffeeChat c
+        JOIN FETCH c.reviews r
+        WHERE r.deletedAt IS NULL
+    """)
+    List<CoffeeChat> findAllWithReviews();
+
+    @Query("SELECT DISTINCT c FROM CoffeeChat c WHERE c.id = :id")
+    @EntityGraph(attributePaths = {
+            "reviews.writer",
+            "coffeeChatTags.tag"
+    })
+    Optional<CoffeeChat> findWithDetailsById(Long id);
 }

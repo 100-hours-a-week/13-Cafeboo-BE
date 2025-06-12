@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 public record MessageDto(
         String messageId,
-        SenderDto sender,
+        MemberDto sender,
         String content,
         LocalDateTime sentAt
 ) {}

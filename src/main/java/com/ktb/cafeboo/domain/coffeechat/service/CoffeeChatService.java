@@ -36,6 +36,7 @@ public class CoffeeChatService {
     private final CoffeeChatMemberRepository coffeeChatMemberRepository;
     private final UserRepository userRepository;
     private final TagService tagService;
+    private final ChatService chatService;
     private final S3Properties s3Properties;
 
     @Transactional
@@ -133,6 +134,9 @@ public class CoffeeChatService {
         if (!chat.getStatus().equals(CoffeeChatStatus.ACTIVE)) {
             throw new CustomApiException(ErrorStatus.COFFEECHAT_NOT_ACTIVE);
         }
+
+        //커피챗 구독, 커피챗에서 오가는 메시지를 수신받기 위한 consumer group 등록
+        chatService.startListeningToCoffeeChat(String.valueOf(coffeechatId));
 
         if (chat.isJoinedBy(userId)) {
             throw new CustomApiException(ErrorStatus.COFFEECHAT_ALREADY_JOINED);

@@ -104,4 +104,9 @@ public class CoffeeChatMessageService {
             return messageRepository.findByCoffeeChatIdAndIdLessThanOrderByIdDesc(chatId, cursorId, pageRequest);
         }
     }
+
+    public CoffeeChatMessage save(CoffeeChatMessage coffeeChatMessage){
+        CoffeeChatMessage savedMessage = messageRepository.save(coffeeChatMessage);
+        return savedMessage;
+    }
 }

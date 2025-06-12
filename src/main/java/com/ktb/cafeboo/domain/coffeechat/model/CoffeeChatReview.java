@@ -5,6 +5,9 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Where;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(
     name = "coffee_chat_reviews",
@@ -28,17 +31,24 @@ public class CoffeeChatReview extends BaseEntity {
     private CoffeeChatMember writer;
 
     @Column(name = "content_text", nullable = false, columnDefinition = "TEXT")
-    private String contentText;
+    private String text;
 
-    @Column(name = "content_img_url", length = 255)
-    private String contentImgUrl;
+    @Builder.Default
+    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("sortOrder ASC")
+    private List<CoffeeChatReviewImage> images = new ArrayList<>();
 
-    public static CoffeeChatReview of(CoffeeChat chat, CoffeeChatMember writer, String text, String imgUrl) {
-        return CoffeeChatReview.builder()
+    public static CoffeeChatReview of(CoffeeChat chat, CoffeeChatMember writer, String text, List<CoffeeChatReviewImage> imgUrls) {
+        CoffeeChatReview review = CoffeeChatReview.builder()
                 .coffeeChat(chat)
                 .writer(writer)
-                .contentText(text)
-                .contentImgUrl(imgUrl)
+                .text(text)
                 .build();
+
+        for (CoffeeChatReviewImage img : imgUrls) {
+            img.setReview(review);
+        }
+        review.getImages().addAll(imgUrls);
+        return review;
     }
 }

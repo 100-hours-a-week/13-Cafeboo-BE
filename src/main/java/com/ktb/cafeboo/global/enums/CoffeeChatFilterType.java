@@ -8,7 +8,8 @@ import java.util.Arrays;
 public enum CoffeeChatFilterType {
     ALL,
     JOINED,
-    COMPLETED;
+    ENDED,
+    REVIEWABLE;
 
     public static CoffeeChatFilterType from(String status) {
         return Arrays.stream(values())

@@ -2,7 +2,7 @@ package com.ktb.cafeboo.domain.coffeechat.service;
 
 import com.ktb.cafeboo.domain.coffeechat.dto.CoffeeChatMessagesResponse;
 import com.ktb.cafeboo.domain.coffeechat.dto.common.MessageDto;
-import com.ktb.cafeboo.domain.coffeechat.dto.common.SenderDto;
+import com.ktb.cafeboo.domain.coffeechat.dto.common.MemberDto;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChat;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChatMember;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChatMessage;
@@ -12,8 +12,6 @@ import com.ktb.cafeboo.domain.coffeechat.repository.CoffeeChatRepository;
 import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import com.ktb.cafeboo.global.enums.CoffeeChatStatus;
-import com.ktb.cafeboo.global.enums.ProfileImageType;
-import com.ktb.cafeboo.global.infra.s3.S3Properties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -30,7 +28,6 @@ public class CoffeeChatMessageService {
     private final CoffeeChatRepository coffeeChatRepository;
     private final CoffeeChatMessageRepository messageRepository;
     private final CoffeeChatMemberRepository memberRepository;
-    private final S3Properties s3Properties;
 
     public CoffeeChatMessagesResponse getMessages(Long userId, Long coffeechatId, String cursor, int limit, String order) {
         log.info("[CoffeeChatMessageService.getMessages] 커피챗 메시지 조회 요청: userId={}, chatId={}, cursor={}, limit={}, order={}",
@@ -55,16 +52,15 @@ public class CoffeeChatMessageService {
         List<MessageDto> messageDtos = messages.stream()
                 .map(m -> {
                     CoffeeChatMember sender = m.getSender();
-                    String profileImageUrl = sender.getProfileImageType() == ProfileImageType.DEFAULT
-                            ? s3Properties.getDefaultProfileImageUrl()
-                            : sender.getUser().getProfileImageUrl();
+                    String profileImageUrl = sender.getProfileImageUrl();
 
                     return new MessageDto(
                             m.getMessageUuid(),
-                            new SenderDto(
-                                    sender.getId(),
+                            new MemberDto(
+                                    sender.getId().toString(),
                                     sender.getChatNickname(),
-                                    profileImageUrl
+                                    profileImageUrl,
+                                    sender.isHost()
                             ),
                             m.getContent(),
                             m.getCreatedAt()
@@ -75,7 +71,7 @@ public class CoffeeChatMessageService {
         String nextCursor = hasNext ? messageDtos.get(messageDtos.size() - 1).messageId() : null;
 
         return new CoffeeChatMessagesResponse(
-                coffeechatId,
+                coffeechatId.toString(),
                 messageDtos,
                 nextCursor,
                 hasNext

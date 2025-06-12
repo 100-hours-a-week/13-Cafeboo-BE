@@ -2,6 +2,7 @@ package com.ktb.cafeboo.domain.coffeechat.service;
 
 import com.ktb.cafeboo.domain.coffeechat.dto.*;
 import com.ktb.cafeboo.domain.coffeechat.dto.common.LocationDto;
+import com.ktb.cafeboo.domain.coffeechat.dto.common.MemberDto;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChat;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChatMember;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChatMessage;
@@ -14,6 +15,8 @@ import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import com.ktb.cafeboo.global.enums.CoffeeChatFilterType;
 import com.ktb.cafeboo.global.enums.CoffeeChatStatus;
+import com.ktb.cafeboo.global.enums.ProfileImageType;
+import com.ktb.cafeboo.global.infra.s3.S3Properties;
 import com.ktb.cafeboo.global.util.AuthChecker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -32,6 +36,7 @@ public class CoffeeChatService {
     private final CoffeeChatMemberRepository coffeeChatMemberRepository;
     private final UserRepository userRepository;
     private final TagService tagService;
+    private final S3Properties s3Properties;
 
     @Transactional
     public CoffeeChatCreateResponse create(Long userId, CoffeeChatCreateRequest request) {
@@ -57,11 +62,16 @@ public class CoffeeChatService {
                 .kakaoPlaceUrl(loc.kakaoPlaceUrl())
                 .build();
 
+        String profileImageUrl = (request.profileImageType() == ProfileImageType.DEFAULT)
+                ? s3Properties.getDefaultProfileImageUrl()
+                : user.getProfileImageUrl();
+
         CoffeeChatMember hostMember = CoffeeChatMember.of(
                 chat,
                 user,
                 request.chatNickname(),
-                request.profileImageType()
+                profileImageUrl,
+                true
         );
         chat.addMember(hostMember);
 
@@ -69,7 +79,7 @@ public class CoffeeChatService {
 
         tagService.saveTagsToCoffeeChat(saved, request.tags());
 
-        return new CoffeeChatCreateResponse(saved.getId());
+        return new CoffeeChatCreateResponse(saved.getId().toString());
     }
 
     @Transactional(readOnly = true)
@@ -134,11 +144,16 @@ public class CoffeeChatService {
 
         validateDuplicateNickname(coffeechatId, request.chatNickname());
 
+        String profileImageUrl = (request.profileImageType() == ProfileImageType.DEFAULT)
+                ? s3Properties.getDefaultProfileImageUrl()
+                : user.getProfileImageUrl();
+
         CoffeeChatMember member = CoffeeChatMember.of(
                 chat,
                 user,
                 request.chatNickname(),
-                request.profileImageType()
+                profileImageUrl,
+                false
         );
         chat.addMember(member);
 
@@ -195,11 +210,34 @@ public class CoffeeChatService {
         coffeeChatRepository.save(chat);
     }
 
+    @Transactional(readOnly = true)
+    public CoffeeChatMembersResponse getCoffeeChatMembers(Long coffeechatId) {
+        CoffeeChat coffeeChat = coffeeChatRepository.findByIdWithMembers(coffeechatId)
+                .orElseThrow(() -> new CustomApiException(ErrorStatus.COFFEECHAT_NOT_FOUND));
+
+        List<MemberDto> memberDtos = coffeeChat.getMembers().stream()
+                .map(cm -> new MemberDto(
+                        String.valueOf(cm.getId()),
+                        cm.getChatNickname(),
+                        cm.getProfileImageUrl(),
+                        cm.isHost()
+                ))
+                .sorted((m1, m2) -> Boolean.compare(m2.isHost(), m1.isHost()))
+                .collect(Collectors.toList());
+
+        return new CoffeeChatMembersResponse(
+                String.valueOf(coffeeChat.getId()),
+                memberDtos.size(),
+                memberDtos
+        );
+    }
+
     private List<CoffeeChat> getChatsByFilter(CoffeeChatFilterType filter, Long userId) {
         return switch (filter) {
             case JOINED -> coffeeChatRepository.findJoinedChats(userId);
-            case COMPLETED -> coffeeChatRepository.findCompletedChats(userId);
+            case ENDED -> coffeeChatRepository.findCompletedChats(userId);
             case ALL -> coffeeChatRepository.findAllActiveChats();
+            case REVIEWABLE -> coffeeChatRepository.findReviewableChats(userId);
         };
     }
 

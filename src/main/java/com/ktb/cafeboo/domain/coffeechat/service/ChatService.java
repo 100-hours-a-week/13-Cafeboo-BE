@@ -31,6 +31,8 @@ import org.springframework.data.redis.connection.stream.Consumer;
 import org.springframework.data.redis.connection.stream.MapRecord;
 import org.springframework.data.redis.connection.stream.ReadOffset;
 import org.springframework.data.redis.connection.stream.RecordId;
+import org.springframework.data.redis.connection.stream.StreamInfo;
+import org.springframework.data.redis.connection.stream.StreamInfo.XInfoGroups;
 import org.springframework.data.redis.connection.stream.StreamOffset;
 import org.springframework.data.redis.core.StreamOperations;
 import org.springframework.data.redis.stream.StreamMessageListenerContainer.StreamReadRequest;
@@ -186,23 +188,51 @@ public class ChatService {
         String consumerName = redisConfig.getConsumerName();
         log.info("[ChatService.startListeningToRoom] - streamKey: {}, consumerGroupName: {}, consumerName: {}", streamKey, consumerGroupName, consumerName);
 
-        // 이미 구독 중인 방인지 확인 (방별로 하나의 구독만 유지), 예외 처리 진행하지 않을 시 동일 메시지를 여러 번 처리하게 되므로 비효율적
+        // 이미 구독 중이고 서버의 인메모리 맵에 존재하는지 확인
         if (activeRoomSubscriptions.containsKey(roomId)) {
             log.info("[ChatService.startListeningToRoom] - 커피챗 {} 에 대응하는 Stream Listener가 이미 존재합니다.", roomId);
             return;
         }
 
-        try{
-            redisTemplate.opsForStream().createGroup(streamKey, ReadOffset.from("0-0"), consumerGroupName);
-            log.info("[ChatService.startListeningToRoom] - Stream {}에 Consumer group {}가 생성되었습니다.", streamKey, consumerGroupName);
+        // Redis Stream 존재 및 consumer group 존재 여부 확인
+        boolean streamExists = false;
+        boolean groupExistsInRedis = false;
+
+        try {
+            if (redisTemplate.hasKey(streamKey)) {
+                streamExists = true;
+                XInfoGroups groups = redisTemplate.opsForStream().groups(streamKey);
+                for (StreamInfo.XInfoGroup groupInfo : groups) {
+                    if (consumerGroupName.equals(groupInfo.groupName())) {
+                        groupExistsInRedis = true;
+                        break;
+                    }
+                }
+            }
         }
         catch (Exception e) {
-            if (e.getMessage() != null && e.getMessage().contains("BUSYGROUP Consumer Group name already exists")) {
-                log.info("Consumer group {} already exists for stream {}", consumerGroupName, streamKey);
-            } else {
-                log.error("Error creating consumer group {}: {}", consumerGroupName, e.getMessage());
-                return; // 그룹 생성 실패 시 리스너 시작 안함
+            log.warn("[ChatService.startListeningToRoom] - Redis Stream 또는 Consumer Group 정보 조회 중 오류 발생 (무시): {}", e.getMessage());
+            // 예외 발생 시 groupExistsInRedis를 false로 유지하여 그룹 생성을 시도하게 함 (안전하게)
+        }
+
+        if (!groupExistsInRedis) {
+            try {
+                // RedisTemplate의 createGroup(streamKey, ReadOffset.from("0-0"), consumerGroupName) 오버로드는
+                // 스트림이 존재하지 않을 경우 자동으로 생성(MKSTREAM)하는 역할을 겸합니다.
+                redisTemplate.opsForStream().createGroup(streamKey, ReadOffset.from("0-0"), consumerGroupName);
+                log.info("[ChatService.startListeningToRoom] - Stream {}에 Consumer group {}가 생성되었습니다.", streamKey, consumerGroupName);
+                groupExistsInRedis = true; // 새로 생성 성공
+            } catch (Exception e) {
+                if (e.getMessage() != null && e.getMessage().contains("BUSYGROUP Consumer Group name already exists")) {
+                    log.info("Consumer group {} already exists for stream {}", consumerGroupName, streamKey);
+                    groupExistsInRedis = true; // BUSYGROUP이라면 이미 존재하므로 True로 설정
+                } else {
+                    log.error("Error creating consumer group {}: {}", consumerGroupName, e.getMessage(), e);
+                    return; // 다른 심각한 그룹 생성 오류 발생 시 리스너 등록 중단
+                }
             }
+        } else {
+            log.info("[ChatService.startListeningToRoom] - Consumer group {} 이 Redis에 이미 존재합니다. 재사용합니다.", consumerGroupName);
         }
 
         // 2. ✨ StreamReadRequest를 사용하여 리스너 등록 방식 변경

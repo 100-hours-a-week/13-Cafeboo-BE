@@ -19,7 +19,7 @@ COPY --from=build /app/build/libs/*.jar app.jar
 RUN curl -fSL -o /tmp/scouter-all.tar.gz \
      https://github.com/scouter-project/scouter/releases/download/v2.20.0/scouter-all-2.20.0.tar.gz && \
     mkdir -p /tmp/scouter && \
-    tar -xzf /tmp/scouter-all.tar.gz -C /tmp/scouter && \
+    tar -xzf /tmp/scouter-all.tar.gz -C /tmp/scouter --strip-components=1 && \
     mkdir -p /opt/scouter-agent && \
     mv /tmp/scouter/agent.java/* /opt/scouter-agent/ && \
     rm -rf /tmp/scouter /tmp/scouter-all.tar.gz

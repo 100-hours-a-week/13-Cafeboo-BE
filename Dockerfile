@@ -15,8 +15,10 @@ WORKDIR /app
 
 COPY --from=build /app/build/libs/*.jar app.jar
 
-# Scouter Agent 설치
-RUN curl -fSL -o /tmp/scouter-all.tar.gz \
+# Scouter Agent 설치 및 envsubst 포함 유틸 설치
+RUN apt-get update && \
+    apt-get install -y curl tar ca-certificates gettext-base && \
+    curl -fSL -o /tmp/scouter-all.tar.gz \
      https://github.com/scouter-project/scouter/releases/download/v2.20.0/scouter-all-2.20.0.tar.gz && \
     mkdir -p /tmp/scouter && \
     tar -xzf /tmp/scouter-all.tar.gz -C /tmp/scouter --strip-components=1 && \

@@ -10,7 +10,7 @@ import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import java.util.List;
 
 public record CoffeeChatDetailResponse(
-        String coffeChatId,
+        String coffeeChatId,
         String title,
         String content,
         String time,

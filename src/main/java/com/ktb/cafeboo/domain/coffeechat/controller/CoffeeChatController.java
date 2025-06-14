@@ -1,8 +1,8 @@
 package com.ktb.cafeboo.domain.coffeechat.controller;
 
 import com.ktb.cafeboo.domain.coffeechat.dto.*;
+import com.ktb.cafeboo.domain.coffeechat.service.CoffeeChatMemberService;
 import com.ktb.cafeboo.domain.coffeechat.service.CoffeeChatMessageService;
-import com.ktb.cafeboo.domain.coffeechat.service.CoffeeChatReviewService;
 import com.ktb.cafeboo.domain.coffeechat.service.CoffeeChatService;
 import com.ktb.cafeboo.global.apiPayload.ApiResponse;
 import com.ktb.cafeboo.global.apiPayload.code.status.SuccessStatus;
@@ -22,6 +22,7 @@ public class CoffeeChatController {
 
     private final CoffeeChatService coffeeChatService;
     private final CoffeeChatMessageService coffeeChatMessageService;
+    private final CoffeeChatMemberService coffeeChatMemberService;
 
     @PostMapping
     public ResponseEntity<ApiResponse<CoffeeChatCreateResponse>> createCoffeeChat(
@@ -131,4 +132,18 @@ public class CoffeeChatController {
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.COFFEECHAT_MEMBER_LOAD_SUCCESS, response));
     }
 
+    @GetMapping("/{coffeechatId}/membership")
+    public ResponseEntity<ApiResponse<CoffeeChatMembershipCheckResponse>> checkMembership(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long coffeechatId
+    ) {
+        Long userId = userDetails.getUserId();
+        log.info("[GET /api/v1/coffee-chats/{}/membership] userId: {} 커피챗 참여 여부 조회 요청 수신", coffeechatId, userId);
+
+        CoffeeChatMembershipCheckResponse response = coffeeChatMemberService.checkMembership(coffeechatId, userId);
+
+        return ResponseEntity
+                .ok()
+                .body(ApiResponse.of(SuccessStatus.COFFEECHAT_MEMBERSHIP_CHECK_SUCCESS, response));
+    }
 }

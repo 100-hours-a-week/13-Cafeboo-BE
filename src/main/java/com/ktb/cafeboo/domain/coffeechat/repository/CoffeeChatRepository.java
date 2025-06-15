@@ -1,11 +1,14 @@
 package com.ktb.cafeboo.domain.coffeechat.repository;
 
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChat;
+import com.ktb.cafeboo.global.enums.CoffeeChatStatus;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -82,4 +85,13 @@ public interface CoffeeChatRepository extends JpaRepository<CoffeeChat, Long> {
             "coffeeChatTags.tag"
     })
     Optional<CoffeeChat> findWithDetailsById(Long id);
+
+    @Modifying
+    @Query("UPDATE CoffeeChat c " +
+            "SET c.status = :toStatus " +
+            "WHERE c.meetingTime < :today AND c.status = :fromStatus")
+    int expireOutdatedChats(@Param("today") LocalDateTime today,
+                            @Param("fromStatus") CoffeeChatStatus fromStatus,
+                            @Param("toStatus") CoffeeChatStatus toStatus);
+
 }

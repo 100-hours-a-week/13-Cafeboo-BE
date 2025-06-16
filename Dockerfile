@@ -13,15 +13,15 @@ WORKDIR /app
 COPY --from=builder /app/build/libs/*.jar ./app.jar
 
 RUN apt-get update \
- && apt-get install -y --no-install-recommends \
-      curl tar gettext-base \
+ && apt-get install -y --no-install-recommends curl tar gettext-base \
  && curl -fsSL \
       https://github.com/scouter-project/scouter/releases/download/v${SCOUTER_VERSION}/scouter-all-${SCOUTER_VERSION}.tar.gz \
       -o scouter.tar.gz \
  && mkdir scouter-temp \
  && tar -xzf scouter.tar.gz -C scouter-temp --strip-components=1 \
- && mkdir -p /opt/scouter-agent \
+ && mkdir -p /opt/scouter-agent/lib \
  && mv scouter-temp/agent.java/* /opt/scouter-agent/ \
+ && mv /opt/scouter-agent/scouter.agent.jar /opt/scouter-agent/lib/ \
  && rm -rf scouter.tar.gz scouter-temp \
  && apt-get purge -y --auto-remove curl tar \
  && rm -rf /var/lib/apt/lists/*
@@ -33,7 +33,7 @@ RUN useradd --system --home /home/scouter scouter \
 EXPOSE 8080
 USER scouter
 
-ENTRYPOINT ["sh","-c", "\
+ENTRYPOINT ["sh", "-c", "\
   export HOSTNAME=$(hostname) && \
   envsubst < /opt/scouter-agent/conf/scouter.conf.src > /opt/scouter-agent/conf/scouter.conf && \
   java -javaagent:/opt/scouter-agent/lib/scouter.agent.jar \

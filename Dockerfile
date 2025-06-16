@@ -7,7 +7,6 @@ COPY src/ src/
 RUN chmod +x gradlew && ./gradlew build -x test --no-daemon
 
 # 2. Runtime stage
-ARG SCOUTER_VERSION=2.20.0
 FROM eclipse-temurin:21-jre
 WORKDIR /app
 COPY --from=builder /app/build/libs/*.jar ./app.jar
@@ -15,7 +14,7 @@ COPY --from=builder /app/build/libs/*.jar ./app.jar
 RUN apt-get update \
  && apt-get install -y --no-install-recommends curl tar gettext-base \
  && curl -fsSL \
-      https://github.com/scouter-project/scouter/releases/download/v${SCOUTER_VERSION}/scouter-all-${SCOUTER_VERSION}.tar.gz \
+      https://github.com/scouter-project/scouter/releases/download/v2.20.0/scouter-all-2.20.0.tar.gz \
       -o scouter.tar.gz \
  && mkdir scouter-temp \
  && tar -xzf scouter.tar.gz -C scouter-temp --strip-components=1 \

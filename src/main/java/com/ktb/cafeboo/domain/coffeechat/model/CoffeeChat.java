@@ -18,7 +18,7 @@ import java.util.*;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "coffee_chats")
-@Where(clause = "status = 'ACTIVE'")
+@Where(clause = "deleted_at IS NULL")
 public class CoffeeChat extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)

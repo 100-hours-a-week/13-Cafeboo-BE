@@ -52,8 +52,6 @@ jobs:
             --zone=asia-northeast3-a \
             --tunnel-through-iap \
             --command="
-            # gcloud 인증 설정 추가
-              gcloud auth configure-docker asia-northeast3-docker.pkg.dev --quiet && \
             
             # Redis 컨테이너 중지 및 제거 (기존 있으면)
               sudo docker stop redis || true && \

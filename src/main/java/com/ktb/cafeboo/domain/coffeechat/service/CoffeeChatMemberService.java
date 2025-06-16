@@ -29,7 +29,8 @@ public class CoffeeChatMemberService {
         if (memberOpt.isPresent()) {
             return CoffeeChatMembershipCheckResponse.builder()
                     .isMember(true)
-                    .memberId(String.valueOf(memberOpt.get().getId()))
+//                    .memberId(String.valueOf(memberOpt.get().getId()))
+                    .memberId(String.valueOf(userId))
                     .build();
         } else {
             return CoffeeChatMembershipCheckResponse.builder()

@@ -14,6 +14,7 @@ public record CoffeeChatListResponse(
     public record CoffeeChatSummary(
             String coffeeChatId,
             String title,
+            String date,
             String time,
             int maxMemberCount,
             int currentMemberCount,
@@ -56,6 +57,7 @@ public record CoffeeChatListResponse(
             return new CoffeeChatSummary(
                     chat.getId().toString(),
                     chat.getName(),
+                    chat.getMeetingTime().toLocalDate().toString(),
                     chat.getMeetingTime().toLocalTime().toString(),
                     chat.getMaxMemberCount(),
                     chat.getCurrentMemberCount(),

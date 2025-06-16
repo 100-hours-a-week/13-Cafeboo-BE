@@ -113,7 +113,7 @@ public class CoffeeChatService {
     }
 
     @Transactional
-    public CoffeeChatJoinResponse join(Long userId, Long coffeechatId, CoffeeChatJoinRequest request) {
+    public CoffeeChatJoinResponse join(Long userId, Long coffeechatId, CoffeeChatJoinRequest request, Boolean isHost) {
         log.info("[CoffeeChatService.join] 커피챗 참여 요청: userId={}, chatId={}", userId, coffeechatId);
 
         User user = userRepository.findById(userId)
@@ -148,7 +148,7 @@ public class CoffeeChatService {
                 user,
                 request.chatNickname(),
                 profileImageUrl,
-                false
+                isHost
         );
         chat.addMember(member);
 

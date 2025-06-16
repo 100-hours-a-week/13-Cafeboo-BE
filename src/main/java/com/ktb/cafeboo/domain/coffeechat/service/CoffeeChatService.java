@@ -67,15 +67,6 @@ public class CoffeeChatService {
                 ? s3Properties.getDefaultProfileImageUrl()
                 : user.getProfileImageUrl();
 
-        CoffeeChatMember hostMember = CoffeeChatMember.of(
-                chat,
-                user,
-                request.chatNickname(),
-                profileImageUrl,
-                true
-        );
-        chat.addMember(hostMember);
-
         CoffeeChat saved = coffeeChatRepository.save(chat);
 
         tagService.saveTagsToCoffeeChat(saved, request.tags());

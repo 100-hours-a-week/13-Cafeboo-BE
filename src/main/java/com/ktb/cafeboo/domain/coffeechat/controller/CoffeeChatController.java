@@ -5,6 +5,7 @@ import com.ktb.cafeboo.domain.coffeechat.service.CoffeeChatMemberService;
 import com.ktb.cafeboo.domain.coffeechat.service.CoffeeChatMessageService;
 import com.ktb.cafeboo.domain.coffeechat.service.CoffeeChatService;
 import com.ktb.cafeboo.global.apiPayload.ApiResponse;
+import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.code.status.SuccessStatus;
 import com.ktb.cafeboo.global.security.userdetails.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
@@ -32,11 +33,32 @@ public class CoffeeChatController {
         Long userId = userDetails.getUserId();
         log.info("[POST /api/v1/coffee-chats] userId: {} 커피챗 생성 요청 수신", userId);
 
-        CoffeeChatCreateResponse response = coffeeChatService.create(userId, request);
+        try{
+            CoffeeChatCreateResponse createResponse = coffeeChatService.create(userId, request);
 
-        return ResponseEntity
-            .status(HttpStatus.CREATED)
-            .body(ApiResponse.of(SuccessStatus.COFFEECHAT_CREATE_SUCCESS, response));
+            Long coffeechatId = Long.valueOf(createResponse.coffeeChatId());
+            CoffeeChatJoinRequest joinRequest = new CoffeeChatJoinRequest(
+                request.chatNickname(),
+                request.profileImageType()
+            );
+
+            CoffeeChatJoinResponse joinResponse = coffeeChatService.join(
+                userDetails.getUserId(),
+                coffeechatId,
+                joinRequest
+            );
+
+            return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(ApiResponse.of(SuccessStatus.COFFEECHAT_CREATE_SUCCESS, createResponse));
+        } catch (Exception e) {
+
+            log.error("[POST /api/v1/coffee-chats] 커피챗 생성 및 참여 중 오류 발생: {}", e.getMessage(), e);
+
+            return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.of(ErrorStatus.INTERNAL_SERVER_ERROR, null));
+        }
     }
 
     @GetMapping

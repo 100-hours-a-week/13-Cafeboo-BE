@@ -12,10 +12,12 @@ import com.ktb.cafeboo.global.enums.MessageType;
 import com.ktb.cafeboo.global.infra.redis.stream.listener.RedisStreamListener;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -29,6 +31,9 @@ import org.springframework.data.redis.connection.Limit;
 import org.springframework.data.domain.Range;
 import org.springframework.data.redis.connection.stream.Consumer;
 import org.springframework.data.redis.connection.stream.MapRecord;
+import org.springframework.data.redis.connection.stream.PendingMessage;
+import org.springframework.data.redis.connection.stream.PendingMessages;
+import org.springframework.data.redis.connection.stream.PendingMessagesSummary;
 import org.springframework.data.redis.connection.stream.ReadOffset;
 import org.springframework.data.redis.connection.stream.RecordId;
 import org.springframework.data.redis.connection.stream.StreamInfo;
@@ -41,6 +46,8 @@ import org.springframework.data.redis.connection.stream.ObjectRecord;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.stream.StreamMessageListenerContainer;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -62,9 +69,10 @@ public class ChatService {
 
     private static final String CHAT_STREAM_PREFIX = "coffeechat:room:";
     private static final String CHAT_CONSUMER_GROUP_PREFIX = "coffeechat:group:";
-    private static final String ROOM_MEMBERS_KEY_PREFIX = "coffeechat:members:";
 
-    // 각 채팅방에 대한 활성 구독을 관리 (Subscription 객체)
+    private static final String PENDING_PROCESSOR_CONSUMER_NAME = "scheduler-pending-processor-" + UUID.randomUUID().toString().substring(0, 8);
+
+    // 각 채팅방에 대한 활성 구독을 관리 (Subscription 객체) 및 중복 구독 방지용 Map
     private final Map<String, Subscription> activeRoomSubscriptions = new ConcurrentHashMap<>();
 
     // @Scheduled 메서드를 위한 별도의 스케줄러 스레드 풀 (이전과 동일)
@@ -72,7 +80,7 @@ public class ChatService {
 
     @PostConstruct
     public void setupPendingMessageProcessor(){
-        //pendingMessageProcessor.submit(this::processPendingMessageScheduler);
+        pendingMessageProcessor.submit(this::processPendingMessageScheduler);
     }
 
     @PostConstruct // 서비스 계층에서 스트림 관련 로직을 초기화하는 것은 자연스럽습니다.
@@ -111,13 +119,6 @@ public class ChatService {
         Map<String, String> messageMap = new HashMap<>();
 
         try{
-            System.out.println("[ChatService.handleNewMessage] - " + message.getSenderId());
-            System.out.println("[ChatService.handleNewMessage] - " + message.getCoffeechatId());
-            System.out.println("[ChatService.handleNewMessage] - " + message.getMessage());
-//            System.out.println("[ChatService.handleNewMessage] - " + message.getSenderId());
-//            System.out.println("[ChatService.handleNewMessage] - " + message.getCoffeechatId());
-//            System.out.println("[ChatService.handleNewMessage] - " + message.getMessage());
-            System.out.println("[ChatService.handleNewMessage] - " + message.getType().name());
 
             String senderId = message.getSenderId();
             String coffeechatId = message.getCoffeechatId();
@@ -145,23 +146,6 @@ public class ChatService {
 
             StompMessagePublish messagePublish = StompMessagePublish.from(savedMessage, sender);
 
-            //DTO -> JSON 문자열
-            //String chatJson = objectMapper.writeValueAsString(messagePublish);
-
-            //Redis Stream에 메시지 publish
-//            messageMap.put("messageId", savedMessage.getMessageUuid());
-//            messageMap.put("messageType", savedMessage.getType().name());
-//            messageMap.put("content", savedMessage.getContent());
-////            messageMap.put("userId", message.getSenderId());
-////            messageMap.put("roomId", message.getCoffeechatId());
-////            messageMap.put("content", message.getMessage());
-//            messageMap.put("type", message.getType().name());
-
-//            Map<String, Object> streamEntry = new HashMap<>();
-//            streamEntry.put("message", messagePublish); // 전체 JSON 객체를 "message" 키의 값으로 저장
-//
-//            RecordId recordId = redisTemplate.opsForStream().add(streamKey, streamEntry);
-
             log.info("[ChatService.handleNewMessage] - 직렬화 전 messagePublish 객체 데이터: {}", messagePublish);
 
             ObjectRecord<String, StompMessagePublish> record =
@@ -169,10 +153,7 @@ public class ChatService {
 
             RecordId recordId = redisTemplate.opsForStream().add(record);
             log.info("[ChatService.handleNewMessage] - Stream {}에 추가된 메시지: {}", streamKey, recordId.getValue());
-            //messagingTemplate.convertAndSend("/topic/chatrooms/" + roomId, messagePublish);
-            //messagingTemplate.convertAndSend("/topic/chatrooms/" + roomId, message);
         }
-        //메시지 직렬화 오류. 순환 참조가 있거나, ObjectMapper가 처리할 수 없는 커스텀 객체가 필드로 포함된 경우
         catch (Exception e){
             log.error("[ChatService.handleNewMessage] - 메시지 전송 오류. roomId: {}, message: {}", message.getCoffeechatId(), e.getMessage(), e);
             throw e;
@@ -253,31 +234,6 @@ public class ChatService {
         log.info("Stream listener registered for chat room {} with group {} and consumer {}", roomId, consumerGroupName, consumerName);
     }
 
-    /**
-     * 특정 방에 사용자가 가입되어 있는지 확인합니다.
-     * @param roomId 채팅방 ID
-     * @param userId 사용자 ID
-     * @return 가입되어 있으면 true, 아니면 false
-     */
-    public boolean isUserJoinedRoom(String roomId, String userId) {
-        String roomMembersKey = ROOM_MEMBERS_KEY_PREFIX + roomId;
-
-        // 1. Redis Set에 사용자 추가 (이미 있으면 추가되지 않음 - 멱등성)
-        // 이 부분은 사용자가 "영구적으로" 이 방의 멤버임을 나타냅니다.
-        Long addedCount = redisTemplate.opsForSet().add(roomMembersKey, userId);
-
-        if (addedCount != null && addedCount > 0) {
-            log.info("User {} newly added to active members of room {}.", userId, roomId);
-            return false;
-        } else {
-            log.info("User {} is already an active member of room {}.", userId, roomId);
-            // 이미 멤버인 경우, Redis Stream Consumer Group 관련 로직을 다시 수행하지 않고 바로 반환
-            // (컨슈머 그룹 생성/초기화는 한번만 하면 되므로)
-            // 하지만, 필요하다면 여기에 STOMP 세션 재연결 등 추가 로직을 넣을 수 있습니다.
-            return true;
-        }
-    }
-
     // ✨ 기존 CoffeeChatController에 있던 getChatRoomMessages 로직을 여기로 이동
     public List<CoffeeChatMessage> getCoffeechatMessages(String roomId, String startId, long count) {
         String chatRoomStreamKey = "coffeechat:room:" + roomId;
@@ -289,7 +245,6 @@ public class ChatService {
 
         log.info("Fetching messages for room {} from ID {} with count {} (reverse order).", roomId, startId, count);
 
-        // streamOperations는 이제 이 서비스 클래스 내부에서 초기화되어 사용 가능합니다.
         List<MapRecord<String, Object, Object>> records = streamOperations.reverseRange(
             chatRoomStreamKey,
             Range.of(
@@ -308,20 +263,11 @@ public class ChatService {
                 Map<Object, Object> rawData = record.getValue();
 
                 return CoffeeChatMessage.builder()// Enum이라면 String에서 Enum으로 변환 필요
-                    // 예: CoffeeChatMessageType.valueOf(rawData.get("messageType"))
                     .sender((CoffeeChatMember) rawData.get("sender"))
                     .coffeeChat((CoffeeChat) rawData.get("chat"))
                     .content((String) rawData.get("content"))
                     .type(MessageType.valueOf((String) rawData.get("type")))
                     .build();
-
-//  before
-//                return new CoffeechatMessage(
-//                    (String) rawData.get("senderId"),
-//                    (String) rawData.get("coffeechatId"),
-//                    (String) rawData.get("message"),
-//                    MessageType.valueOf((String) rawData.get("type"))
-//                );
             })
             .collect(Collectors.toList());
 
@@ -331,10 +277,104 @@ public class ChatService {
     /**
      * 메시지 전송 과정에서 문제가 생겨 ACK 되지 않은 상태인 pending 메시지 처리 메서드
      */
-//    @Scheduled(fixedDelay = 300000) // 5분 마다 실행
-//    @Async
-//    public void processPendingMessageScheduler(){
-//        log.info("[ChatService.processPendingMessageScheduler] - PENDING 상태의 메서지 처리 진행...");
-//
-//    }
+    @Scheduled(fixedDelay = 300000) // 5분 마다 실행
+    @Async
+    public void processPendingMessageScheduler(){
+        log.info("[ChatService.processPendingMessageScheduler] - PENDING 상태의 메서지 처리 진행...");
+
+        Set<String> activeCoffeeChatIds = activeRoomSubscriptions.keySet();
+        if (activeCoffeeChatIds.isEmpty()) {
+            log.info("[ChatService.processPendingMessageScheduler] - 활성 채팅방 스트림이 없어 PENDING 메시지 처리를 건너뜝니다.");
+            return;
+        }
+
+        for(String coffeechatId : activeCoffeeChatIds){
+            String streamKey = CHAT_STREAM_PREFIX + coffeechatId;
+            String consumerGroupName = CHAT_CONSUMER_GROUP_PREFIX + coffeechatId;
+
+            try{
+                PendingMessagesSummary summary = streamOperations.pending(streamKey, consumerGroupName);
+
+                if (summary == null || summary.getTotalPendingMessages() == 0) {
+                    log.info("[ChatService.processPendingMessageScheduler] - 스트림 '{}'에 처리할 PENDING 메시지가 없습니다.", streamKey);
+                    continue; // 다음 스트림으로 넘어감
+                }
+
+                log.info("[ChatService.processPendingMessageScheduler] - 스트림 '{}' (그룹 '{}')의 PENDING 메시지 처리 시작.", streamKey, consumerGroupName);
+
+                PendingMessages allPendingForGroup = streamOperations.pending(streamKey, consumerGroupName, Range.of(Range.Bound.unbounded(), Range.Bound.unbounded()), 10000L);
+
+                if (allPendingForGroup != null) {
+                    allPendingForGroup.forEach(pMessage -> {
+                        log.info("  - Detail Pending Message ID: {}, Consumer: {}, Elapsed Time: {}ms, Deliveries: {}",
+                            pMessage.getId(), pMessage.getConsumerName(), pMessage.getElapsedTimeSinceLastDelivery().toMillis(), pMessage.getTotalDeliveryCount());
+                    });
+                }
+
+                List<RecordId> messageIdsToClaim = allPendingForGroup.stream()
+                    .filter(pMessage -> pMessage.getElapsedTimeSinceLastDelivery().toMillis() > Duration.ofMinutes(1).toMillis()) // 1분 이상 유휴
+                    .map(PendingMessage::getId)
+                    .collect(Collectors.toList());
+
+                if (messageIdsToClaim.isEmpty())
+                    continue;
+
+                List<MapRecord<String, Object, Object>> claimedRecords = streamOperations.claim(
+                    streamKey,
+                    consumerGroupName,
+                    PENDING_PROCESSOR_CONSUMER_NAME,
+                    Duration.ofMinutes(1),
+                    messageIdsToClaim.toArray(new RecordId[0])
+                );
+
+                if (claimedRecords != null && !claimedRecords.isEmpty()) {
+                    log.info("[ChatService.processPendingMessageScheduler] - 스트림 '{}'에서 {}개의 메시지를 성공적으로 클레임했습니다. 재처리 진행.", streamKey, claimedRecords.size());
+                    for (MapRecord<String, Object, Object> record : claimedRecords) {
+                        processAndAcknowledgeMessage(streamKey, consumerGroupName, record);
+                    }
+                } else {
+                    log.info("[ChatService.processPendingMessageScheduler] - 스트림 '{}'에서 클레임할 메시지가 없거나, 이미 다른 컨슈머가 처리 중입니다.", streamKey);
+                }
+            }
+            catch(Exception e){
+                log.error("[ChatService.processPendingMessageScheduler] - {}", e.getMessage());
+            }
+        }
+    }
+
+    private void processAndAcknowledgeMessage(String streamKey, String consumerGroupName, MapRecord<String, Object, Object> record) {
+        try {
+            // MapRecord의 payload는 Map<Object, Object> 형태로 반환될 수 있음
+            Map<Object, Object> rawData = record.getValue();
+            String messageJson = (String) rawData.get("message");
+
+            if (messageJson == null) {
+                log.warn("[ChatService.processAndAcknowledgeMessage] - 처리할 레코드 ID: {} 에 'message' 키가 없습니다. 스킵하고 ACK합니다.", record.getId());
+                streamOperations.acknowledge(streamKey, consumerGroupName, record.getId());
+                return;
+            }
+
+            if (messageJson.startsWith("\"") && messageJson.endsWith("\"")) {
+                messageJson = messageJson.substring(1, messageJson.length() - 1);
+                messageJson = messageJson.replace("\\\"", "\"");
+            }
+
+            StompMessagePublish message = objectMapper.readValue(messageJson, StompMessagePublish.class);
+
+            log.info("[ChatService.processAndAcknowledgeMessage] - 재처리 중인 메시지 ID: {} for room: {} (Content Preview: {})",
+                record.getId(), message.getCoffeechatId(), message.getContent().length() > 50 ? message.getContent().substring(0, 50) + "..." : message.getContent());
+
+            messagingTemplate.convertAndSend("/topic/chatrooms/" + message.getCoffeechatId(), message);
+
+            // ✨ 재처리 성공 후 ACK (승인) ✨
+            streamOperations.acknowledge(streamKey, consumerGroupName, record.getId());
+            log.info("[ChatService.processAndAcknowledgeMessage] - 메시지 ID: {} 를 성공적으로 재처리하고 ACK했습니다.", record.getId());
+
+        } catch (Exception e) {
+            log.error("[ChatService.processAndAcknowledgeMessage] - 메시지 ID: {} (스트림: {}) 재처리 및 ACK 중 오류 발생: {}",
+                record.getId(), streamKey, e.getMessage(), e);
+
+            streamOperations.acknowledge(streamKey, consumerGroupName, record.getId()); // 임시 ACK
+        }
+    }
 }

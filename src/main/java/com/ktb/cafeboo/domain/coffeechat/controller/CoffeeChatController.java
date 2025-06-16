@@ -45,7 +45,8 @@ public class CoffeeChatController {
             CoffeeChatJoinResponse joinResponse = coffeeChatService.join(
                 userDetails.getUserId(),
                 coffeechatId,
-                joinRequest
+                joinRequest,
+                true
             );
 
             return ResponseEntity
@@ -91,7 +92,8 @@ public class CoffeeChatController {
         CoffeeChatJoinResponse response = coffeeChatService.join(
             userDetails.getUserId(),
             coffeechatId,
-            request
+            request,
+            false
         );
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(ApiResponse.of(SuccessStatus.COFFEECHAT_JOIN_SUCCESS, response));

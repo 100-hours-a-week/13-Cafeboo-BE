@@ -18,9 +18,8 @@ RUN apt-get update \
       -o scouter.tar.gz \
  && mkdir scouter-temp \
  && tar -xzf scouter.tar.gz -C scouter-temp --strip-components=1 \
- && mkdir -p /opt/scouter-agent/lib \
- && mv scouter-temp/agent.java/* /opt/scouter-agent/ \
- && mv /opt/scouter-agent/scouter.agent.jar /opt/scouter-agent/lib/ \
+ && mkdir -p /opt/scouter-agent \
+ && cp -r scouter-temp/agent.java/* /opt/scouter-agent/ \
  && rm -rf scouter.tar.gz scouter-temp \
  && apt-get purge -y --auto-remove curl tar \
  && rm -rf /var/lib/apt/lists/*
@@ -35,6 +34,6 @@ USER scouter
 ENTRYPOINT ["sh", "-c", "\
   export HOSTNAME=$(hostname) && \
   envsubst < /opt/scouter-agent/conf/scouter.conf.src > /opt/scouter-agent/conf/scouter.conf && \
-  java -javaagent:/opt/scouter-agent/lib/scouter.agent.jar \
+  java -javaagent:/opt/scouter-agent/scouter.agent.jar \
        -Dscouter.config=/opt/scouter-agent/conf/scouter.conf \
        -jar /app/app.jar"]

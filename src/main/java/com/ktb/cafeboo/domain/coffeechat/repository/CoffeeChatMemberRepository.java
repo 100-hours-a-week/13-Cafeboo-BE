@@ -7,7 +7,7 @@ import java.util.Optional;
 
 public interface CoffeeChatMemberRepository extends JpaRepository<CoffeeChatMember, Long> {
 
-    Optional<CoffeeChatMember> findByCoffeeChatIdAndUserId(Long chatId, Long userId);
-
+    Optional<CoffeeChatMember> findByCoffeeChatIdAndUserId(Long chatId, Long Id);
+    Optional<CoffeeChatMember> findByCoffeeChatIdAndId(Long chatId, Long Id);
     boolean existsByCoffeeChatIdAndChatNickname(Long chatId, String chatNickname);
 }

@@ -46,7 +46,7 @@ public class StompMessagePublish {
             .content(message.getContent())
             .sentAt(message.getCreatedAt()) // BaseEntity의 createdAt 필드 사용
             .sender(SenderInfo.builder()
-                .userId(String.valueOf(senderMember.getUser().getId())) // User ID를 String으로 변환
+                .userId(String.valueOf(senderMember.getId())) // User ID를 String으로 변환
                 .name(senderMember.getChatNickname()) // CoffeeChatMember의 닉네임 사용
                 .profileImageUrl("") // CoffeeChatMember의 프로필 이미지 사용
                 .build())

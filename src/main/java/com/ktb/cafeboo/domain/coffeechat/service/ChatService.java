@@ -129,8 +129,9 @@ public class ChatService {
 
             // CoffeeChatMember (메시지 보낸 사람) 엔티티 조회
             // userId와 coffeechatId를 이용해 해당 채팅방의 멤버를 찾습니다.
-            CoffeeChatMember sender = coffeeChatMemberRepository.findByCoffeeChatIdAndUserId(Long.valueOf(coffeechatId), Long.valueOf(senderId))
+            CoffeeChatMember sender = coffeeChatMemberRepository.findByCoffeeChatIdAndId(Long.valueOf(coffeechatId), Long.valueOf(senderId))
                 .orElseThrow(() -> new IllegalArgumentException("Sender (CoffeeChatMember) not found for user ID: " + senderId + " in chat ID: " + coffeechatId));
+
             sender.getId();
 
             //RDB에 메시지 저장

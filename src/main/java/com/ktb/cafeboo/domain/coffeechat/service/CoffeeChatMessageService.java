@@ -44,6 +44,8 @@ public class CoffeeChatMessageService {
                 .orElseThrow(() -> new CustomApiException(ErrorStatus.COFFEECHAT_MEMBER_NOT_FOUND));
 
         List<CoffeeChatMessage> messages = fetchMessagesByCursor(coffeechatId, cursor, limit, order);
+        log.info("[CoffeeChatMessageService.getMessages] 커피챗 메시지 조회 크기 : {}", messages.size());
+
         boolean hasNext = messages.size() > limit;
         if (hasNext) {
             messages = messages.subList(0, limit);
@@ -67,6 +69,8 @@ public class CoffeeChatMessageService {
                     );
                 })
                 .collect(Collectors.toList());
+        log.info("[CoffeeChatMessageService.getMessages] 커피챗 메시지 DTO 크기 : {}", messageDtos.size());
+
 
         String nextCursor = hasNext ? messageDtos.get(messageDtos.size() - 1).messageId() : null;
 

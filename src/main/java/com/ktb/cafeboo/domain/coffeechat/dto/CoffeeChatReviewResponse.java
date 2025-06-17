@@ -11,5 +11,6 @@ public record CoffeeChatReviewResponse(
         List<String> tags,
         String address,
         int likeCount,
+        boolean liked,
         List<ReviewDto> reviews
 ) {}

@@ -50,7 +50,7 @@ public class CoffeeChatReviewController {
         Long chatId = Long.parseLong(coffeechatId);
         log.info("[GET /coffee-chats/reviews/{}] 후기 상세 조회 요청 - userId: {}", chatId, userId);
 
-        CoffeeChatReviewResponse response = coffeeChatReviewService.getReviewByCoffeeChatId(chatId);
+        CoffeeChatReviewResponse response = coffeeChatReviewService.getReviewByCoffeeChatId(userId, chatId);
 
         return ResponseEntity.ok(
                 ApiResponse.of(SuccessStatus.COFFEECHAT_REVIEW_LOAD_SUCCESS, response)

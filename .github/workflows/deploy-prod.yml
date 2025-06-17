@@ -129,7 +129,7 @@ jobs:
             --boot-disk-type=pd-balanced \
             --image-family=ubuntu-2204-lts \
             --image-project=ubuntu-os-cloud \
-            --service-account=328167857357-compute@developer.gserviceaccount.com \
+            --service-account=terraform@master-isotope-462503-m9.iam.gserviceaccount.com \
             --scopes=https://www.googleapis.com/auth/cloud-platform \
             --labels=managed-by-mig=true
 

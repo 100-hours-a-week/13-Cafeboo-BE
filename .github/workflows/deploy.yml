@@ -39,7 +39,7 @@ jobs:
           DEV_DB_USERNAME: ${{ secrets.DEV_DB_USERNAME }}
           DEV_DB_PASSWORD: ${{ secrets.DEV_DB_PASSWORD }}
           KAKAO_CLIENT_ID: ${{ secrets.KAKAO_CLIENT_ID }}
-          DORA_KAKAO_REDIRECT_URI: ${{ secrets.DORA_KAKAO_REDIRECT_URI }}
+          DEV_KAKAO_REDIRECT_URI: ${{ secrets.DEV_KAKAO_REDIRECT_URI }}
           DEV_AI_BASE_URL: ${{ secrets.DEV_AI_BASE_URL }}
           DEV_REDIS_HOST: ${{ secrets.DEV_REDIS_HOST }}
           DEV_REDIS_PORT: ${{ secrets.DEV_REDIS_PORT }} 
@@ -73,7 +73,7 @@ jobs:
               -e SPRING_PROFILES_ACTIVE=dev \
               -e JWT_SECRET='${JWT_SECRET}' \
               -e KAKAO_CLIENT_ID='${KAKAO_CLIENT_ID}' \
-              -e DORA_KAKAO_REDIRECT_URI='${DORA_KAKAO_REDIRECT_URI}' \
+              -e DEV_KAKAO_REDIRECT_URI='${DEV_KAKAO_REDIRECT_URI}' \
               -e DEV_AI_BASE_URL='${DEV_AI_BASE_URL}' \
               -e DEV_REDIS_HOST='${DEV_REDIS_HOST}' \
               -e DEV_REDIS_PORT='${DEV_REDIS_PORT}' \

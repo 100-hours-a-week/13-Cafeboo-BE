@@ -29,13 +29,20 @@ jobs:
       - name: Build Docker Image
         run: |
           docker build -t asia-northeast3-docker.pkg.dev/master-isotope-462503-m9/backend/cafeboo-back:latest .
-
       - name: Push Docker Image
         run: |
           docker push asia-northeast3-docker.pkg.dev/master-isotope-462503-m9/backend/cafeboo-back:latest 
-
-
       - name: SSH into GCP VM via IAP and Deploy
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          DEV_DB_URL: ${{ secrets.DEV_DB_URL }}
+          DEV_DB_USERNAME: ${{ secrets.DEV_DB_USERNAME }}
+          DEV_DB_PASSWORD: ${{ secrets.DEV_DB_PASSWORD }}
+          KAKAO_CLIENT_ID: ${{ secrets.KAKAO_CLIENT_ID }}
+          DORA_KAKAO_REDIRECT_URI: ${{ secrets.DORA_KAKAO_REDIRECT_URI }}
+          DEV_AI_BASE_URL: ${{ secrets.DEV_AI_BASE_URL }}
+          DEV_REDIS_HOST: ${{ secrets.DEV_REDIS_HOST }}
+          DEV_REDIS_PORT: ${{ secrets.DEV_REDIS_PORT }} 
         run: |
             gcloud compute ssh dev-vm \
             --project=master-isotope-462503-m9 \
@@ -46,13 +53,11 @@ jobs:
             # Redis 컨테이너 중지 및 제거 (기존 있으면)
               sudo docker stop redis || true && \
               sudo docker rm redis || true && \
-
             # Redis 컨테이너 실행
               sudo docker run -d --name redis \
                 --restart=always \
                 --network host \
                 redis:7 && \
-
             # 기존 백엔드 컨테이너 정리
               sudo docker stop cafeboo-back || true && \
               sudo docker rm cafeboo-back || true && \
@@ -60,16 +65,16 @@ jobs:
               sudo docker pull asia-northeast3-docker.pkg.dev/master-isotope-462503-m9/backend/cafeboo-back:latest && \
             
             # 백엔드 컨테이너 실행
-              sudo docker run -d --name cafeboo-back --network host \
-                --restart=always \
-                -e DEV_DB_URL='${{ secrets.DEV_DB_URL }}' \
-                -e DEV_DB_USERNAME='${{ secrets.DEV_DB_USERNAME }}' \
-                -e DEV_DB_PASSWORD='${{ secrets.DEV_DB_PASSWORD }}' \
-                -e SPRING_PROFILES_ACTIVE=dev \
-                -e JWT_SECRET='${{ secrets.JWT_SECRET }}' \
-                -e KAKAO_CLIENT_ID='${{ secrets.KAKAO_CLIENT_ID }}' \
-                -e DEV_KAKAO_REDIRECT_URI='${{ secrets.DORA_KAKAO_REDIRECT_URI }}' \
-                -e DEV_AI_BASE_URL='${{ secrets.DEV_AI_BASE_URL }}' \
-                -e DEV_REDIS_HOST='${{ secrets.DEV_REDIS_HOST }}' \
-                -e DEV_REDIS_PORT='${{ secrets.DEV_REDIS_PORT }}' \
-                asia-northeast3-docker.pkg.dev/master-isotope-462503-m9/backend/cafeboo-back:latest"
+            sudo docker run -d --name cafeboo-back --network host \
+              --restart=always \
+              -e DEV_DB_URL='${DEV_DB_URL}' \
+              -e DEV_DB_USERNAME='${DEV_DB_USERNAME}' \
+              -e DEV_DB_PASSWORD='${DEV_DB_PASSWORD}' \
+              -e SPRING_PROFILES_ACTIVE=dev \
+              -e JWT_SECRET='${JWT_SECRET}' \
+              -e KAKAO_CLIENT_ID='${KAKAO_CLIENT_ID}' \
+              -e DORA_KAKAO_REDIRECT_URI='${DORA_KAKAO_REDIRECT_URI}' \
+              -e DEV_AI_BASE_URL='${DEV_AI_BASE_URL}' \
+              -e DEV_REDIS_HOST='${DEV_REDIS_HOST}' \
+              -e DEV_REDIS_PORT='${DEV_REDIS_PORT}' \
+              asia-northeast3-docker.pkg.dev/master-isotope-462503-m9/backend/cafeboo-back:latest"

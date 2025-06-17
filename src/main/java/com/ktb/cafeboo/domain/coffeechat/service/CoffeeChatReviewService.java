@@ -42,6 +42,7 @@ public class CoffeeChatReviewService {
     private final CoffeeChatRepository coffeeChatRepository;
     private final CoffeeChatReviewRepository coffeeChatReviewRepository;
     private final CoffeeChatMemberRepository coffeeChatMemberRepository;
+    private final CoffeeChatLikeService coffeeChatLikeService;
     private final S3Uploader s3Uploader;
 
     @Transactional
@@ -131,7 +132,9 @@ public class CoffeeChatReviewService {
                             .map(r -> r.getImages().get(0).getImageUrl())
                             .orElse(null);
 
-                    return CoffeeChatReviewPreviewDto.from(chat, totalImageCount, previewImageUrl);
+                    boolean liked = coffeeChatLikeService.hasLiked(userId, chat.getId());
+
+                    return CoffeeChatReviewPreviewDto.from(chat, totalImageCount, previewImageUrl, liked);
                 })
                 .toList();
 
@@ -142,7 +145,7 @@ public class CoffeeChatReviewService {
         );
     }
 
-    public CoffeeChatReviewResponse getReviewByCoffeeChatId(Long coffeeChatId) {
+    public CoffeeChatReviewResponse getReviewByCoffeeChatId(Long userId, Long coffeeChatId) {
         CoffeeChat coffeeChat = coffeeChatRepository.findWithDetailsById(coffeeChatId)
                 .orElseThrow(() -> new CustomApiException(ErrorStatus.COFFEECHAT_NOT_FOUND));
 
@@ -162,6 +165,8 @@ public class CoffeeChatReviewService {
                 ))
                 .toList();
 
+        boolean liked = coffeeChatLikeService.hasLiked(userId, coffeeChat.getId());
+
         return new CoffeeChatReviewResponse(
                 String.valueOf(coffeeChat.getId()),
                 coffeeChat.getName(),
@@ -169,6 +174,7 @@ public class CoffeeChatReviewService {
                 coffeeChat.getTagNames(),
                 coffeeChat.getAddress(),
                 coffeeChat.getLikesCount(),
+                liked,
                 reviewDtos
         );
     }

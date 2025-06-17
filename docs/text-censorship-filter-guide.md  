@@ -1,0 +1,107 @@
+# TextCensorshipFilter 사용 매뉴얼
+
+## 1. 목적
+
+`TextCensorshipFilter`는 **서비스 내 사용자가 작성하는 모든 텍스트에 대해 비속어 및 유해 표현을 필터링**하기 위한 공통 유틸 클래스입니다.
+
+검열 방식은 정책에 따라 다르게 설정할 수 있으며, 확장성과 일관된 적용을 위해 글로벌 영역에서 관리됩니다.
+
+---
+
+## 2. 필터 구성
+
+```java
+// 경로: com.ktb.cafeboo.global.censorship
+
+TextCensorshipFilter          // 통합 필터 관리 클래스
+├── TrieCensorshipFilter     // 금칙어 리스트 기반 사전 필터 (빠름)
+├── AiCensorshipFilter       // 문맥 기반 인공지능 검열 (정확도↑, 비용↑)
+
+```
+
+---
+
+## 3. 전략 설정 방식
+
+```java
+public enum CensorshipStrategy {
+    TRIE_ONLY,       // Trie 기반 필터만 사용 (기본)
+    AI_ONLY,         // AI 기반 필터만 사용
+    BOTH             // Trie + AI 모두 사용 (권장)
+}
+```
+
+- 전략은 **위치별로 다르게 설정 가능**합니다.
+
+    예를 들어, 채팅 메시지는 BOTH, 닉네임은 TRIE_ONLY 등.
+
+
+---
+
+## 4. 필터 사용 예시
+
+```java
+@Autowired
+private TextCensorshipFilter textCensorshipFilter;
+
+public void validateNickname(String nickname) {
+    boolean containsBadWord = textCensorshipFilter.containsBadWord(nickname, CensorshipStrategy.TRIE_ONLY);
+    if (containsBadWord) {
+        throw new CustomApiException(ErrorStatus.COFFEECHAT_NICKNAME_PROFANITY_NOT_ALLOWED);
+    }
+}
+
+```
+
+```java
+public void validateChatMessage(String message) {
+    boolean containsBadWord = textCensorshipFilter.containsBadWord(message, CensorshipStrategy.BOTH);
+    if (containsBadWord) {
+        throw new CustomApiException(ErrorStatus.COFFEECHAT_NICKNAME_PROFANITY_NOT_ALLOWED);
+    }
+}
+
+```
+
+---
+
+## 5. 적용 위치별 권장 전략
+
+| 적용 위치 | 검열 전략 (`CensorshipStrategy`) | 설명 |
+| --- | --- | --- |
+| 실시간 채팅 메시지 | `BOTH` | 빠른 반응 + 문맥 인식 필요 |
+| 커피챗 제목 | `TRIE_ONLY` | 문맥 인식 필요 |
+| 커피챗 본문 | `BOTH` | 노출 빈도 높고 서비스 신뢰도에 영향 |
+| 후기 작성 | `AI_ONLY` | 문장 단위 검열 중심 |
+| 닉네임/별명 | `TRIE_ONLY` | 간단한 문자열 필터로 충분 |
+
+---
+
+## 6. 금칙어 관리 방법
+
+- **저장 위치**: AWS S3 버킷 내 금칙어 텍스트 파일 (key: `cafeboo/text-file/text-censorship-keywords.txt`)
+- **파일 형식**: 각 줄마다 한 단어씩 작성된 `.txt` 파일
+- **로딩 방식**:
+  - 애플리케이션 실행 시 `TrieCensorshipFilter`에서 자동으로 S3에서 파일을 불러와 Trie에 로딩
+- **관리 방법**:
+  - 금칙어 파일을 업데이트할 경우, S3의 해당 경로에 파일을 다시 업로드하면 다음 애플리케이션 실행 시 반영됨
+  - (필요시 실시간 로딩/캐시 무효화 로직 구현 가능)
+
+---
+
+## 7. 커스텀 필터 추가 시
+
+- `TextCensorshipFilter`에 `CensorshipStrategy` 확장 가능
+- 새로운 필터 로직 추가 시, 아래 메서드를 수정하세요:
+
+```java
+public boolean containsBadWord(String text, CensorshipStrategy strategy) {
+    return switch (strategy) {
+        case TRIE_ONLY -> trieFilter.contains(text);
+        case AI_ONLY -> aiFilter.contains(text);
+        case BOTH -> trieFilter.contains(text) || aiFilter.contains(text);
+    };
+}
+```
+
+---

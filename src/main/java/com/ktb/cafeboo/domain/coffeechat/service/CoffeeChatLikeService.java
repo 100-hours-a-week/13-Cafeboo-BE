@@ -55,4 +55,13 @@ public class CoffeeChatLikeService {
 
         return new CoffeeChatReviewLikeResponse(liked, coffeeChat.getLikesCount());
     }
+
+    @Transactional(readOnly = true)
+    public boolean hasLiked(Long userId, Long coffeeChatId) {
+        return coffeeChatLikeRepository.existsByCoffeeChatIdAndUserIdAndStatus(
+                coffeeChatId,
+                userId,
+                CoffeeChatLikeStatus.ACTIVE
+        );
+    }
 }

@@ -170,4 +170,31 @@ public class CoffeeChatController {
                 .ok()
                 .body(ApiResponse.of(SuccessStatus.COFFEECHAT_MEMBERSHIP_CHECK_SUCCESS, response));
     }
+
+    @PostMapping("/{coffeechatId}/listeners")
+    public ResponseEntity<?> createCoffeeChatListener(
+        @AuthenticationPrincipal CustomUserDetails userDetails,
+        @PathVariable Long coffeechatId
+    ) {
+        Long userId = userDetails.getUserId();
+        log.info("[POST /api/v1/coffee-chats/{}/listeners] userId: {} 커피챗 리스너 생성 요청 수신", coffeechatId, userId);
+
+        try {
+            // chatService에서 Redis Stream Listener 활성화 로직 호출
+            // startListeningToCoffeeChat 메서드가 idempotently 작동(이미 리스너가 있으면 생성하지 않음)하므로,
+            // 매번 호출해도 안전합니다.
+            coffeeChatService.startListeningToCoffeeChat(String.valueOf(coffeechatId));
+
+            // 201 Created 응답 (리스너 리소스가 성공적으로 생성되었음을 의미)
+            return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(ApiResponse.of(SuccessStatus.COFFEECHAT_LISTENER_CREATED_SUCCESS, null));
+        } catch (Exception e) {
+            log.error("[POST /api/v1/coffee-chats/{}/listeners] 커피챗 리스너 생성 중 오류 발생: {}", coffeechatId, e.getMessage(), e);
+            // 적절한 에러 상태 코드와 메시지로 응답
+            return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.of(ErrorStatus.INTERNAL_SERVER_ERROR, null));
+        }
+    }
 }

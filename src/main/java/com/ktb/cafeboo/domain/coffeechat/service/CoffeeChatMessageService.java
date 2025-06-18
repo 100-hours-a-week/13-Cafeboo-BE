@@ -58,7 +58,7 @@ public class CoffeeChatMessageService {
                     String profileImageUrl = sender.getProfileImageUrl();
 
                     return new MessageDto(
-                            m.getId(),
+                            String.valueOf(m.getId()),
                             new MemberDto(
                                     sender.getId().toString(),
                                     sender.getChatNickname(),

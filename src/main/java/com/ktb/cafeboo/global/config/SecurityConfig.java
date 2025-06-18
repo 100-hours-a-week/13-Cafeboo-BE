@@ -63,7 +63,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:5173", "https://jeff-cloud.com", "https://cafeboo.com")); // 프론트 도메인, 서비스 도메인
+        config.setAllowedOrigins(List.of("http://localhost:5173", "https://jeff-cloud.com", "https://doraa.net", "https://cafeboo.com")); // 프론트 도메인, 서비스 도메인
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true); // Authorization 헤더 포함 허용

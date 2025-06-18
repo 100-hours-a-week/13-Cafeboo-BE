@@ -42,7 +42,10 @@ jobs:
           DEV_KAKAO_REDIRECT_URI: ${{ secrets.DEV_KAKAO_REDIRECT_URI }}
           DEV_AI_BASE_URL: ${{ secrets.DEV_AI_BASE_URL }}
           DEV_REDIS_HOST: ${{ secrets.DEV_REDIS_HOST }}
-          DEV_REDIS_PORT: ${{ secrets.DEV_REDIS_PORT }} 
+          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+          AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
+          DEFAULT_PROFILE_IMAGE_URL: ${{ secrets.DEFAULT_PROFILE_IMAGE_URL }} 
         run: |
             gcloud compute ssh dev-vm \
             --project=master-isotope-462503-m9 \
@@ -77,4 +80,8 @@ jobs:
               -e DEV_AI_BASE_URL='${DEV_AI_BASE_URL}' \
               -e DEV_REDIS_HOST='${DEV_REDIS_HOST}' \
               -e DEV_REDIS_PORT='${DEV_REDIS_PORT}' \
+              -e AWS_S3_BUCKET='${AWS_S3_BUCKET}' \
+              -e AWS_ACCESS_KEY='${AWS_ACCESS_KEY}' \
+              -e AWS_SECRET_KEY='${AWS_SECRET_KEY}' \
+              -e DEFAULT_PROFILE_IMAGE_URL='${DEFAULT_PROFILE_IMAGE_URL}' \
               asia-northeast3-docker.pkg.dev/master-isotope-462503-m9/backend/cafeboo-back:latest"

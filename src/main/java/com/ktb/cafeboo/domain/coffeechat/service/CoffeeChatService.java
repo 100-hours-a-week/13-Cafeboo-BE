@@ -232,7 +232,7 @@ public class CoffeeChatService {
             case JOINED -> coffeeChatRepository.findJoinedChats(userId);
             case ENDED -> coffeeChatRepository.findCompletedChats(userId);
             case ALL -> coffeeChatRepository.findAllActiveChats();
-            case REVIEWABLE -> coffeeChatRepository.findReviewableChats(userId);
+            case REVIEWABLE -> coffeeChatRepository.findReviewableChats(userId, LocalDateTime.now());
         };
     }
 

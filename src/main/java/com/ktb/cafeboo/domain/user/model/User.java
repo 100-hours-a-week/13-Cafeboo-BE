@@ -118,4 +118,8 @@ public class User extends BaseEntity {
             this.profileImageUrl = profileImageUrl;
         }
     }
+
+    public void addCoffeeBeans(int amount) {
+        this.coffeeBean += amount;
+    }
 }

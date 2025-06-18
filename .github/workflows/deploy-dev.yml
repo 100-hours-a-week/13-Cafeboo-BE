@@ -15,12 +15,12 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v1
         with:
-          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+          credentials_json: '${{ secrets.GCP_SA_KEY_2 }}'
 
       - name: Set up Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
         with:
-          project_id: elevated-valve-459107-h8
+          project_id: master-isotope-462503-m9
           version: latest
 
       - name: Configure Docker to use Artifact Registry
@@ -28,12 +28,10 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          docker build -t asia-northeast3-docker.pkg.dev/elevated-valve-459107-h8/backend/cafeboo-back:latest .
-
+          docker build -t asia-northeast3-docker.pkg.dev/master-isotope-462503-m9/backend/cafeboo-back:latest .
       - name: Push Docker Image
         run: |
-          docker push asia-northeast3-docker.pkg.dev/elevated-valve-459107-h8/backend/cafeboo-back:latest 
-
+          docker push asia-northeast3-docker.pkg.dev/master-isotope-462503-m9/backend/cafeboo-back:latest 
       - name: SSH into GCP VM via IAP and Deploy
         env:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
@@ -44,10 +42,14 @@ jobs:
           DEV_KAKAO_REDIRECT_URI: ${{ secrets.DEV_KAKAO_REDIRECT_URI }}
           DEV_AI_BASE_URL: ${{ secrets.DEV_AI_BASE_URL }}
           DEV_REDIS_HOST: ${{ secrets.DEV_REDIS_HOST }}
-          DEV_REDIS_PORT: ${{ secrets.DEV_REDIS_PORT }} 
+          DEV_REDIS_PORT: ${{ secrets.DEV_REDIS_PORT }}
+          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+          AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
+          DEFAULT_PROFILE_IMAGE_URL: ${{ secrets.DEFAULT_PROFILE_IMAGE_URL }} 
         run: |
-            gcloud compute ssh dev-private-vm \
-            --project=elevated-valve-459107-h8 \
+            gcloud compute ssh dev-vm \
+            --project=master-isotope-462503-m9 \
             --zone=asia-northeast3-a \
             --tunnel-through-iap \
             --command="
@@ -55,18 +57,16 @@ jobs:
             # Redis 컨테이너 중지 및 제거 (기존 있으면)
               sudo docker stop redis || true && \
               sudo docker rm redis || true && \
-
             # Redis 컨테이너 실행
               sudo docker run -d --name redis \
                 --restart=always \
                 --network host \
                 redis:7 && \
-
             # 기존 백엔드 컨테이너 정리
               sudo docker stop cafeboo-back || true && \
               sudo docker rm cafeboo-back || true && \
            
-              sudo docker pull asia-northeast3-docker.pkg.dev/elevated-valve-459107-h8/backend/cafeboo-back:latest && \
+              sudo docker pull asia-northeast3-docker.pkg.dev/master-isotope-462503-m9/backend/cafeboo-back:latest && \
             
             # 백엔드 컨테이너 실행
             sudo docker run -d --name cafeboo-back --network host \
@@ -81,4 +81,8 @@ jobs:
               -e DEV_AI_BASE_URL='${DEV_AI_BASE_URL}' \
               -e DEV_REDIS_HOST='${DEV_REDIS_HOST}' \
               -e DEV_REDIS_PORT='${DEV_REDIS_PORT}' \
-              asia-northeast3-docker.pkg.dev/elevated-valve-459107-h8/backend/cafeboo-back:latest"
+              -e AWS_S3_BUCKET='${AWS_S3_BUCKET}' \
+              -e AWS_ACCESS_KEY='${AWS_ACCESS_KEY}' \
+              -e AWS_SECRET_KEY='${AWS_SECRET_KEY}' \
+              -e DEFAULT_PROFILE_IMAGE_URL='${DEFAULT_PROFILE_IMAGE_URL}' \
+              asia-northeast3-docker.pkg.dev/master-isotope-462503-m9/backend/cafeboo-back:latest"

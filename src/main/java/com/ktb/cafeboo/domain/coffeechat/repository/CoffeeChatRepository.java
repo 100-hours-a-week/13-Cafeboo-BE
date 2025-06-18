@@ -41,11 +41,11 @@ public interface CoffeeChatRepository extends JpaRepository<CoffeeChat, Long> {
         SELECT c FROM CoffeeChat c
         JOIN CoffeeChatMember m ON c.id = m.coffeeChat.id
         WHERE m.user.id = :userId
-        AND c.meetingTime < CURRENT_TIMESTAMP
+        AND c.meetingTime < :now
         AND c.deletedAt IS NULL
         ORDER BY c.meetingTime DESC
     """)
-    List<CoffeeChat> findReviewableChats(Long userId);
+    List<CoffeeChat> findReviewableChats(Long userId, @Param("now") LocalDateTime now);
 
 
     // 모든 활성화된 채팅방 목록 (ALL)

@@ -15,6 +15,7 @@ import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChatReviewImage;
 import com.ktb.cafeboo.domain.coffeechat.repository.CoffeeChatMemberRepository;
 import com.ktb.cafeboo.domain.coffeechat.repository.CoffeeChatRepository;
 import com.ktb.cafeboo.domain.coffeechat.repository.CoffeeChatReviewRepository;
+import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import com.ktb.cafeboo.global.enums.ReviewFilterType;
@@ -38,6 +39,8 @@ import java.util.List;
 @Slf4j
 public class CoffeeChatReviewService {
     private static final int MAX_IMAGE_COUNT = 3;
+    private static final int REWARD_BEANS_WITH_IMAGE = 3;
+    private static final int REWARD_BEANS_TEXT_ONLY = 1;
 
     private final CoffeeChatRepository coffeeChatRepository;
     private final CoffeeChatReviewRepository coffeeChatReviewRepository;
@@ -103,6 +106,13 @@ public class CoffeeChatReviewService {
                 images
         );
         CoffeeChatReview savedReview = coffeeChatReviewRepository.save(review);
+
+        // 커피콩 지급
+        boolean hasImage = !images.isEmpty();
+        int rewardCount = hasImage ? REWARD_BEANS_WITH_IMAGE : REWARD_BEANS_TEXT_ONLY;
+
+        User user = writer.getUser();
+        user.addCoffeeBeans(rewardCount);
 
         return new CoffeeChatReviewCreateResponse(savedReview.getId().toString());
     }

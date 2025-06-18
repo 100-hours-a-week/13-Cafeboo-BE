@@ -112,6 +112,9 @@ public class CoffeeChatService {
         return CoffeeChatDetailResponse.from(chat, userId);
     }
 
+    // 이거를 무조건 신규가입으로 생각하는게아니라, 연결접속리소스를 생성한다는 관점으로 보면 이 api에 사전에
+    // member 인지 아닌지 판단해서 해도 괜찮을 거 같긴해요
+
     @Transactional
     public CoffeeChatJoinResponse join(Long userId, Long coffeechatId, CoffeeChatJoinRequest request, Boolean isHost) {
         log.info("[CoffeeChatService.join] 커피챗 참여 요청: userId={}, chatId={}", userId, coffeechatId);
@@ -225,6 +228,10 @@ public class CoffeeChatService {
                 memberDtos.size(),
                 memberDtos
         );
+    }
+
+    public void startListeningToCoffeeChat(String coffeechatId){
+        chatService.startListeningToCoffeeChat(coffeechatId);
     }
 
     private List<CoffeeChat> getChatsByFilter(CoffeeChatFilterType filter, Long userId) {

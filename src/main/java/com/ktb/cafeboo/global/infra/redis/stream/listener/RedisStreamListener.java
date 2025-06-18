@@ -79,7 +79,7 @@ public class RedisStreamListener implements StreamListener<String, MapRecord<Str
                             // LocalDateTime 필드는 String으로 유지하고 ObjectMapper가 처리하도록 합니다.
                             decodedData.put(key, decodedString);
                         }
-                        else if ("sender.name".equals(key) || "sender.profileImageUrl".equals(key) || "content".equals(key) || "messageId".equals(key)) {
+                        else if ("sender.chatNickname".equals(key) || "sender.profileImageUrl".equals(key) || "content".equals(key) || "messageId".equals(key)) {
                             // 나머지 String 필드
                             decodedData.put(key, decodedString);
                         } else {

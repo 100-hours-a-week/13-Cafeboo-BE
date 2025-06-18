@@ -105,8 +105,8 @@ public class RedisStreamListener implements StreamListener<String, MapRecord<Str
             if (decodedData.containsKey("sender.userId")) {
                 senderMap.put("userId", decodedData.remove("sender.userId"));
             }
-            if (decodedData.containsKey("sender.name")) {
-                senderMap.put("name", decodedData.remove("sender.name"));
+            if (decodedData.containsKey("sender.chatNickname")) {
+                senderMap.put("chatNickname", decodedData.remove("sender.chatNickname"));
             }
             if (decodedData.containsKey("sender.profileImageUrl")) {
                 senderMap.put("profileImageUrl", decodedData.remove("sender.profileImageUrl"));

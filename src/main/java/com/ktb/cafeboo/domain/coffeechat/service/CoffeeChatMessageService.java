@@ -12,6 +12,7 @@ import com.ktb.cafeboo.domain.coffeechat.repository.CoffeeChatRepository;
 import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import com.ktb.cafeboo.global.enums.CoffeeChatStatus;
+import java.util.Collections;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -44,6 +45,8 @@ public class CoffeeChatMessageService {
                 .orElseThrow(() -> new CustomApiException(ErrorStatus.COFFEECHAT_MEMBER_NOT_FOUND));
 
         List<CoffeeChatMessage> messages = fetchMessagesByCursor(coffeechatId, cursor, limit, order);
+        log.info("[CoffeeChatMessageService.getMessages] 커피챗 메시지 조회 크기 : {}", messages.size());
+
         boolean hasNext = messages.size() > limit;
         if (hasNext) {
             messages = messages.subList(0, limit);
@@ -55,7 +58,7 @@ public class CoffeeChatMessageService {
                     String profileImageUrl = sender.getProfileImageUrl();
 
                     return new MessageDto(
-                            m.getMessageUuid(),
+                            String.valueOf(m.getId()),
                             new MemberDto(
                                     sender.getId().toString(),
                                     sender.getChatNickname(),
@@ -68,7 +71,11 @@ public class CoffeeChatMessageService {
                 })
                 .collect(Collectors.toList());
 
-        String nextCursor = hasNext ? messageDtos.get(messageDtos.size() - 1).messageId() : null;
+        Collections.reverse(messageDtos);
+        log.info("[CoffeeChatMessageService.getMessages] 커피챗 메시지 DTO 크기 : {}", messageDtos.size());
+
+        String nextCursor =
+            !messageDtos.isEmpty() ? String.valueOf(messageDtos.getFirst().messageId()) : "0";
 
         return new CoffeeChatMessagesResponse(
                 coffeechatId.toString(),
@@ -81,7 +88,8 @@ public class CoffeeChatMessageService {
     private List<CoffeeChatMessage> fetchMessagesByCursor(Long chatId, String cursor, int limit, String order) {
         PageRequest pageRequest = PageRequest.of(0, limit + 1);
 
-        if (cursor == null) {
+        if (cursor == null || cursor.equals("0")) {
+            log.info("[CoffeeChatMessageService.fetchMessageByCursor] - cursor null 분기 실행");
             return messageRepository.findByCoffeeChatId(chatId)
                     .stream()
                     .sorted(order.equalsIgnoreCase("asc")
@@ -91,13 +99,14 @@ public class CoffeeChatMessageService {
                     .collect(Collectors.toList());
         }
 
+        log.info("[CoffeeChatMessageService.fetchMessageByCursor] - cursor is not null 분기 실행");
         Long cursorId;
         try {
             cursorId = Long.parseLong(cursor);
         } catch (NumberFormatException e) {
             throw new CustomApiException(ErrorStatus.INVALID_CURSOR);
         }
-
+        log.info("[CoffeeChatMessageService.fetchMessageByCursor] - cursorId: {}", cursorId);
         if (order.equalsIgnoreCase("asc")) {
             return messageRepository.findByCoffeeChatIdAndIdGreaterThanOrderByIdAsc(chatId, cursorId, pageRequest);
         } else {

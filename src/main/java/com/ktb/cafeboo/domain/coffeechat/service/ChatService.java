@@ -7,6 +7,8 @@ import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChatMember;
 import com.ktb.cafeboo.domain.coffeechat.dto.StompMessage;
 import com.ktb.cafeboo.domain.coffeechat.repository.CoffeeChatMemberRepository;
 import com.ktb.cafeboo.domain.coffeechat.repository.CoffeeChatRepository;
+import com.ktb.cafeboo.global.censorship.CensorshipStrategy;
+import com.ktb.cafeboo.global.censorship.TextCensorshipFilter;
 import com.ktb.cafeboo.global.config.RedisConfig;
 import com.ktb.cafeboo.global.enums.MessageType;
 import com.ktb.cafeboo.global.infra.redis.stream.listener.RedisStreamListener;
@@ -66,6 +68,7 @@ public class ChatService {
     private final CoffeeChatRepository coffeeChatRepository;
     private final CoffeeChatMemberRepository coffeeChatMemberRepository;
     private final CoffeeChatMessageService coffeeChatMessageService;
+    private final TextCensorshipFilter textCensorshipFilter;
 
     private static final String CHAT_STREAM_PREFIX = "coffeechat:room:";
     private static final String CHAT_CONSUMER_GROUP_PREFIX = "coffeechat:group:";
@@ -119,6 +122,13 @@ public class ChatService {
         Map<String, String> messageMap = new HashMap<>();
 
         try{
+//            String content = message.getMessage();
+//            Boolean filterResult = textCensorshipFilter.containsBadWord(content, CensorshipStrategy.BOTH);
+//
+//            if(filterResult){
+//                log.info("[ChatService.handleMessage()] - 사용자 {} 가 보낸 메시지가 비속적 표현을 포함하고 있습니다", message.getSenderId());
+//                return;
+//            }
 
             String senderId = message.getSenderId();
             String coffeechatId = message.getCoffeechatId();

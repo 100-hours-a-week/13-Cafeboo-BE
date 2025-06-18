@@ -59,7 +59,7 @@ public class RedisStreamListener implements StreamListener<String, MapRecord<Str
                         String decodedString = new String(decodedBytes, StandardCharsets.UTF_8);
 
                         // ⭐⭐⭐ 각 필드에 맞는 타입으로 변환 및 디코딩 ⭐⭐⭐
-                        if ("coffeechatId".equals(key) || "sender.userId".equals(key)) { // userId는 sender 안에 있으므로 "sender.userId"
+                        if ("coffeechatId".equals(key) || "sender.memberId".equals(key)) { // userId는 sender 안에 있으므로 "sender.userId"
                             try {
                                 decodedData.put(key, Long.parseLong(decodedString));
                             } catch (NumberFormatException e) {
@@ -102,8 +102,8 @@ public class RedisStreamListener implements StreamListener<String, MapRecord<Str
             // ObjectMapper의 convertValue는 점(.)으로 구분된 필드를 자동으로 중첩 객체로 인식하지 못할 수 있습니다.
             // 따라서 수동으로 SenderInfo 맵을 생성하여 'sender' 키에 넣어줘야 합니다.
             Map<String, Object> senderMap = new HashMap<>();
-            if (decodedData.containsKey("sender.userId")) {
-                senderMap.put("userId", decodedData.remove("sender.userId"));
+            if (decodedData.containsKey("sender.memberId")) {
+                senderMap.put("memberId", decodedData.remove("sender.memberId"));
             }
             if (decodedData.containsKey("sender.chatNickname")) {
                 senderMap.put("chatNickname", decodedData.remove("sender.chatNickname"));
@@ -121,8 +121,8 @@ public class RedisStreamListener implements StreamListener<String, MapRecord<Str
             if (stompMessage != null) {
                 log.info("  messageId: {}", stompMessage.getMessageId());
                 log.info("  coffeechatId: {}", stompMessage.getCoffeechatId());
-                log.info("  sender.userId: {}",
-                    stompMessage.getSender() != null ? stompMessage.getSender().getUserId()
+                log.info("  sender.memberId: {}",
+                    stompMessage.getSender() != null ? stompMessage.getSender().getMemberId()
                         : "null");
                 log.info("  content: {}", stompMessage.getContent());
             } else {

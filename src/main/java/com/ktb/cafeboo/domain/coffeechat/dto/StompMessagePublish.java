@@ -32,7 +32,7 @@ public class StompMessagePublish {
     @AllArgsConstructor
     @ToString
     public static class SenderInfo { // 내부 클래스로 Sender 정보 정의
-        private String userId; // 사용자의 고유 ID (String 형태)
+        private String memberId; // 사용자의 고유 ID (String 형태)
         private String chatNickname; // 사용자 이름 또는 닉네임
         private String profileImageUrl; // 사용자 프로필 이미지 URL
     }
@@ -46,7 +46,7 @@ public class StompMessagePublish {
             .content(message.getContent())
             .sentAt(message.getCreatedAt()) // BaseEntity의 createdAt 필드 사용
             .sender(SenderInfo.builder()
-                .userId(String.valueOf(senderMember.getId())) // User ID를 String으로 변환
+                .memberId(String.valueOf(senderMember.getId())) // User ID를 String으로 변환
                 .chatNickname(senderMember.getChatNickname()) // CoffeeChatMember의 닉네임 사용
                 .profileImageUrl("") // CoffeeChatMember의 프로필 이미지 사용
                 .build())

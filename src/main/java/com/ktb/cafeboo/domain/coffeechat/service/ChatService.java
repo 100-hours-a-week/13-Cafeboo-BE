@@ -122,13 +122,13 @@ public class ChatService {
         Map<String, String> messageMap = new HashMap<>();
 
         try{
-            String content = message.getMessage();
-            Boolean filterResult = textCensorshipFilter.containsBadWord(content, CensorshipStrategy.BOTH);
-
-            if(filterResult){
-                log.info("[ChatService.handleMessage()] - 사용자 {} 가 보낸 메시지가 비속적 표현을 포함하고 있습니다", message.getSenderId());
-                return;
-            }
+//            String content = message.getMessage();
+//            Boolean filterResult = textCensorshipFilter.containsBadWord(content, CensorshipStrategy.BOTH);
+//
+//            if(filterResult){
+//                log.info("[ChatService.handleMessage()] - 사용자 {} 가 보낸 메시지가 비속적 표현을 포함하고 있습니다", message.getSenderId());
+//                return;
+//            }
 
             String senderId = message.getSenderId();
             String coffeechatId = message.getCoffeechatId();

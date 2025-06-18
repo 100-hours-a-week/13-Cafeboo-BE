@@ -7,6 +7,7 @@ import java.util.List;
 public record CoffeeChatReviewResponse(
         String coffeeChatId,
         String title,
+        String date,
         String time,
         List<String> tags,
         String address,

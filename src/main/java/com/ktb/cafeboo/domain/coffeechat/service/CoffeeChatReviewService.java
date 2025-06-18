@@ -180,6 +180,7 @@ public class CoffeeChatReviewService {
         return new CoffeeChatReviewResponse(
                 String.valueOf(coffeeChat.getId()),
                 coffeeChat.getName(),
+                coffeeChat.getMeetingTime().toLocalDate().toString(),
                 coffeeChat.getMeetingTime().format(DateTimeFormatter.ofPattern("HH:mm")),
                 coffeeChat.getTagNames(),
                 coffeeChat.getAddress(),

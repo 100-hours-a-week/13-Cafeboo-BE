@@ -6,5 +6,6 @@ import lombok.Builder;
 public record CoffeeChatMembershipCheckResponse(
         boolean isMember,
         String userId,
-        String memberId
+        String memberId,
+        String chatNickname
 ) {}

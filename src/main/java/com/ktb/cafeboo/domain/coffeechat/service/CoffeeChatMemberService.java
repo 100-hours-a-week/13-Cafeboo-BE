@@ -31,6 +31,7 @@ public class CoffeeChatMemberService {
                     .isMember(true)
                     .userId(String.valueOf(userId))
                     .memberId(String.valueOf(memberOpt.get().getId()))
+                    .chatNickname(memberOpt.get().getChatNickname())
                     .build();
         } else {
             return CoffeeChatMembershipCheckResponse.builder()

@@ -13,7 +13,7 @@ FROM ubuntu:22.04 AS scouter-agent
 RUN set -eux; \
     # 1) curl, tar 설치  
     apt-get update && \
-    aapt-get install -y --no-install-recommends \
+    apt-get install -y --no-install-recommends \
     curl \
     tar \
     ca-certificates && \

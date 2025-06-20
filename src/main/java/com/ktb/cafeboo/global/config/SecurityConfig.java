@@ -45,7 +45,8 @@ public class SecurityConfig {
             new AntPathRequestMatcher("/webjars/**"), // SockJS, STOMP.js가 webjars를 통해 제공된다면 필요// 웹소켓 엔드포인트
             new AntPathRequestMatcher("/api/chat/**"),
             new AntPathRequestMatcher("/api/chatrooms/**"),
-            new AntPathRequestMatcher("/chatrooms/{roomId}/member") // 테스트용
+            new AntPathRequestMatcher("/chatrooms/{roomId}/member"), // 테스트용
+            new AntPathRequestMatcher("/internal/censorship/check")
         );
 
         http

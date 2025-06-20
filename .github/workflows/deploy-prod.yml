@@ -36,28 +36,29 @@ jobs:
 
       - name: Generate Startup Script
         env:
-          GITHUB_SHA:       ${{ github.sha }}
-          JWT_SECRET:       ${{ secrets.JWT_SECRET }}
-          PROD_DB_URL:      ${{ secrets.PROD_DB_URL }}
+          GITHUB_SHA: ${{ github.sha }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          PROD_DB_URL: ${{ secrets.PROD_DB_URL }}
           PROD_DB_USERNAME: ${{ secrets.PROD_DB_USERNAME }}
           PROD_DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
           PROD_KAKAO_REDIRECT_URI: ${{ secrets.PROD_KAKAO_REDIRECT_URI }}
           PROD_AI_BASE_URL: ${{ secrets.PROD_AI_BASE_URL }}
-          PROD_REDIS_HOST:  ${{ secrets.PROD_REDIS_HOST }}
-          PROD_REDIS_PORT:  ${{ secrets.PROD_REDIS_PORT }}
+          PROD_REDIS_HOST: ${{ secrets.PROD_REDIS_HOST }}
+          PROD_REDIS_PORT: ${{ secrets.PROD_REDIS_PORT }}
           PROD_REDIS_PASSWORD: ${{ secrets.PROD_REDIS_PASSWORD }}
-          KAKAO_CLIENT_ID:  ${{ secrets.KAKAO_CLIENT_ID }}
+          KAKAO_CLIENT_ID: ${{ secrets.KAKAO_CLIENT_ID }}
+          LOKI_VM_IP: ${{ secrets.LOKI_VM_IP }}
         run: |
           cat <<EOF > startup.sh
           #!/bin/bash
           set -e
 
           apt-get update
-          apt-get install -y docker.io curl
+          apt-get install -y docker.io
 
           gcloud auth configure-docker asia-northeast3-docker.pkg.dev
 
-          docker pull asia-northeast3-docker.pkg.dev/master-isotope-462503-m9/backend/cafeboo-back:\${GITHUB_SHA}
+          docker pull asia-northeast3-docker.pkg.dev/master-isotope-462503-m9/backend/cafeboo-back:${GITHUB_SHA}
 
           docker stop cafeboo-back || true
           docker rm cafeboo-back || true
@@ -65,24 +66,23 @@ jobs:
           docker run -d --name cafeboo-back --network host \
             --label app=cafeboo-back \
             -e SPRING_PROFILES_ACTIVE=prod \
-            -e JWT_SECRET="\${JWT_SECRET}" \
-            -e PROD_DB_URL="\${PROD_DB_URL}" \
-            -e PROD_DB_USERNAME="\${PROD_DB_USERNAME}" \
-            -e PROD_DB_PASSWORD="\${PROD_DB_PASSWORD}" \
-            -e PROD_KAKAO_REDIRECT_URI="\${PROD_KAKAO_REDIRECT_URI}" \
-            -e PROD_AI_BASE_URL="\${PROD_AI_BASE_URL}" \
-            -e PROD_REDIS_HOST="\${PROD_REDIS_HOST}" \
-            -e PROD_REDIS_PORT="\${PROD_REDIS_PORT}" \
-            -e PROD_REDIS_PASSWORD="\${PROD_REDIS_PASSWORD}" \
-            -e KAKAO_CLIENT_ID="\${KAKAO_CLIENT_ID}" \
-            asia-northeast3-docker.pkg.dev/master-isotope-462503-m9/backend/cafeboo-back:\${GITHUB_SHA}
+            -e JWT_SECRET="${JWT_SECRET}" \
+            -e PROD_DB_URL="${PROD_DB_URL}" \
+            -e PROD_DB_USERNAME="${PROD_DB_USERNAME}" \
+            -e PROD_DB_PASSWORD="${PROD_DB_PASSWORD}" \
+            -e PROD_KAKAO_REDIRECT_URI="${PROD_KAKAO_REDIRECT_URI}" \
+            -e PROD_AI_BASE_URL="${PROD_AI_BASE_URL}" \
+            -e PROD_REDIS_HOST="${PROD_REDIS_HOST}" \
+            -e PROD_REDIS_PORT="${PROD_REDIS_PORT}" \
+            -e PROD_REDIS_PASSWORD="${PROD_REDIS_PASSWORD}" \
+            -e KAKAO_CLIENT_ID="${KAKAO_CLIENT_ID}" \
+            asia-northeast3-docker.pkg.dev/master-isotope-462503-m9/backend/cafeboo-back:${GITHUB_SHA}
 
           mkdir -p /opt/promtail
           touch /opt/promtail/positions.yaml
           chown 65534:65534 /opt/promtail/positions.yaml
           
-          INSTANCE_NAME=\$(curl -s -H "Metadata-Flavor: Google" \
-            http://metadata.google.internal/computeMetadata/v1/instance/name)
+          INSTANCE_NAME=$(curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/name)
 
           cat <<EOC > /opt/promtail/promtail-config.yaml
           server:
@@ -100,7 +100,7 @@ jobs:
                   labels:
                     job: back
                     app: cafeboo
-                    instance: "\${INSTANCE_NAME}"
+                    instance: "${HOSTNAME}"
                     __path__: /var/lib/docker/containers/*/*.log
           EOC
 

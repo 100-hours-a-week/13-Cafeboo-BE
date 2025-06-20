@@ -41,6 +41,10 @@ RUN set -eux; \
 FROM eclipse-temurin:21-jre
 WORKDIR /app
 
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends gettext-base && \
+    rm -rf /var/lib/apt/lists/*
+
 # 1) 애플리케이션 JAR 복사
 COPY --from=builder /app/build/libs/*.jar ./app.jar
 

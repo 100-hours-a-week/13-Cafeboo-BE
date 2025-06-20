@@ -8,7 +8,6 @@ RUN chmod +x gradlew \
  && ./gradlew build -x test --no-daemon
 
 # ──────────────── 2. Scouter Agent stage ────────────────
-ENV SCOUTER_VER=2.20.0
 FROM ubuntu:22.04 AS scouter-agent
 
 RUN set -eux; \
@@ -17,9 +16,9 @@ RUN set -eux; \
     apt-get install -y --no-install-recommends curl tar && \
     rm -rf /var/lib/apt/lists/*; \
     \
-    # 2) 전체 tarball 다운로드  
+    # 2) 전체 tarball 다운로드 (버전 하드코딩)  
     curl -fsSL \
-      https://github.com/scouter-project/scouter/releases/download/v${SCOUTER_VER}/scouter-all-${SCOUTER_VER}.tar.gz \
+      https://github.com/scouter-project/scouter/releases/download/v2.20.0/scouter-all-2.20.0.tar.gz \
       -o /tmp/scouter.tar.gz; \
     \
     # 3) 임시 디렉토리에 모두 풀기  
@@ -39,10 +38,14 @@ RUN set -eux; \
 FROM eclipse-temurin:21-jre
 WORKDIR /app
 
-COPY --from=builder   /app/build/libs/*.jar     ./app.jar
-COPY --from=scouter-agent /opt/scouter-agent   /opt/scouter-agent
+# 1) 앱 바이너리 복사
+COPY --from=builder /app/build/libs/*.jar ./app.jar
 
-COPY scouter.conf   /opt/scouter-agent/conf/scouter.conf.src
+# 2) Scouter Agent 복사
+COPY --from=scouter-agent /opt/scouter-agent /opt/scouter-agent
+
+# 3) Scouter 설정 복사
+COPY scouter.conf /opt/scouter-agent/conf/scouter.conf.src
 
 RUN useradd --system --home /home/scouter scouter \
  && chown -R scouter:scouter /opt/scouter-agent

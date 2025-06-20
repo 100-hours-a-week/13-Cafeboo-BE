@@ -7,6 +7,6 @@ public record MessageDto(
         String messageId,
         MemberDto sender,
         String content,
-        MessageType type,
+        MessageType messageType,
         LocalDateTime sentAt
 ) {}

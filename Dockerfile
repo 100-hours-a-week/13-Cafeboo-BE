@@ -13,7 +13,10 @@ FROM ubuntu:22.04 AS scouter-agent
 RUN set -eux; \
     # 1) curl, tar 설치  
     apt-get update && \
-    apt-get install -y --no-install-recommends curl tar && \
+    aapt-get install -y --no-install-recommends \
+    curl \
+    tar \
+    ca-certificates && \
     rm -rf /var/lib/apt/lists/*; \
     \
     # 2) 전체 tarball 다운로드 (버전 하드코딩)  

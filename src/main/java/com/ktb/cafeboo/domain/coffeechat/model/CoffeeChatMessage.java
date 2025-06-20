@@ -20,7 +20,7 @@ public class CoffeeChatMessage extends BaseEntity {
     private CoffeeChat coffeeChat;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id", nullable = false)
+    @JoinColumn(name = "member_id", nullable = true)
     private CoffeeChatMember sender;
 
     @Column(name = "content", nullable = false, length = 300)

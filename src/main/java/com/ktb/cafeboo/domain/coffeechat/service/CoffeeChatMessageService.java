@@ -66,6 +66,7 @@ public class CoffeeChatMessageService {
                                     sender.isHost()
                             ),
                             m.getContent(),
+                            m.getType(),
                             m.getCreatedAt()
                     );
                 })

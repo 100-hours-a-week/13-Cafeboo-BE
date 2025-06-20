@@ -15,20 +15,20 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v1
         with:
-          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+          credentials_json: '${{ secrets.GCP_SA_KEY_2 }}'
 
       - name: Set up Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
         with:
-          project_id: elevated-valve-459107-h8
+          project_id: master-isotope-462503-m9
 
       - name: Configure Docker to use Artifact Registry
         run: gcloud auth configure-docker asia-northeast3-docker.pkg.dev
 
       - name: Build and Push Docker Image
         run: |
-          docker build -t asia-northeast3-docker.pkg.dev/elevated-valve-459107-h8/backend/cafeboo-back:${{ github.sha }} .
-          docker push asia-northeast3-docker.pkg.dev/elevated-valve-459107-h8/backend/cafeboo-back:${{ github.sha }}
+          docker build -t asia-northeast3-docker.pkg.dev/master-isotope-462503-m9/backend/cafeboo-back:${{ github.sha }} .
+          docker push asia-northeast3-docker.pkg.dev/master-isotope-462503-m9/backend/cafeboo-back:${{ github.sha }}
 
       - name: Compute Unique Template Name
         run: |
@@ -36,19 +36,19 @@ jobs:
 
       - name: Generate Startup Script
         env:
-          GITHUB_SHA: ${{ github.sha }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          PROD_DB_URL: ${{ secrets.PROD_DB_URL }}
+          GITHUB_SHA:       ${{ github.sha }}
+          JWT_SECRET:       ${{ secrets.JWT_SECRET }}
+          PROD_DB_URL:      ${{ secrets.PROD_DB_URL }}
           PROD_DB_USERNAME: ${{ secrets.PROD_DB_USERNAME }}
           PROD_DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
           PROD_KAKAO_REDIRECT_URI: ${{ secrets.PROD_KAKAO_REDIRECT_URI }}
           PROD_AI_BASE_URL: ${{ secrets.PROD_AI_BASE_URL }}
-          PROD_REDIS_HOST: ${{ secrets.PROD_REDIS_HOST }}
-          PROD_REDIS_PORT: ${{ secrets.PROD_REDIS_PORT }}
+          PROD_REDIS_HOST:  ${{ secrets.PROD_REDIS_HOST }}
+          PROD_REDIS_PORT:  ${{ secrets.PROD_REDIS_PORT }}
           PROD_REDIS_PASSWORD: ${{ secrets.PROD_REDIS_PASSWORD }}
-          KAKAO_CLIENT_ID: ${{ secrets.KAKAO_CLIENT_ID }}
-          LOKI_VM_IP: ${{ secrets.LOKI_VM_IP }}
-          SCOUTER_VER: 2.20.0
+          KAKAO_CLIENT_ID:  ${{ secrets.KAKAO_CLIENT_ID }}
+          LOKI_VM_IP:       ${{ secrets.LOKI_VM_IP }}
+          SCOUTER_VER:      2.20.0
         run: |
           cat <<EOF > startup.sh
           #!/bin/bash
@@ -60,7 +60,8 @@ jobs:
           # --- Scouter Host Agent 설치 및 기동 ---
           SCOUTER_DIR=/opt/scouter
           mkdir -p \$SCOUTER_DIR
-          curl -fsSL https://github.com/scouter-project/scouter/releases/download/v\${SCOUTER_VER}/scouter-all-\${SCOUTER_VER}.tar.gz -o /tmp/scouter.tar.gz
+          curl -fsSL https://github.com/scouter-project/scouter/releases/download/v\${SCOUTER_VER}/scouter-all-\${SCOUTER_VER}.tar.gz \
+            -o /tmp/scouter.tar.gz
           tar -xzf /tmp/scouter.tar.gz -C \$SCOUTER_DIR --strip-components=1
           rm /tmp/scouter.tar.gz
           cp \$SCOUTER_DIR/agent.host/sample.host.conf \$SCOUTER_DIR/agent.host/scouter.conf
@@ -69,7 +70,7 @@ jobs:
 
           gcloud auth configure-docker asia-northeast3-docker.pkg.dev
 
-          docker pull asia-northeast3-docker.pkg.dev/elevated-valve-459107-h8/backend/cafeboo-back:\${GITHUB_SHA}
+          docker pull asia-northeast3-docker.pkg.dev/master-isotope-462503-m9/backend/cafeboo-back:\${GITHUB_SHA}
 
           docker stop cafeboo-back || true
           docker rm cafeboo-back || true
@@ -87,13 +88,14 @@ jobs:
             -e PROD_REDIS_PORT="\${PROD_REDIS_PORT}" \
             -e PROD_REDIS_PASSWORD="\${PROD_REDIS_PASSWORD}" \
             -e KAKAO_CLIENT_ID="\${KAKAO_CLIENT_ID}" \
-            asia-northeast3-docker.pkg.dev/elevated-valve-459107-h8/backend/cafeboo-back:\${GITHUB_SHA}
+            asia-northeast3-docker.pkg.dev/master-isotope-462503-m9/backend/cafeboo-back:\${GITHUB_SHA}
 
           mkdir -p /opt/promtail
           touch /opt/promtail/positions.yaml
           chown 65534:65534 /opt/promtail/positions.yaml
           
-          INSTANCE_NAME=\$(curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/name)
+          INSTANCE_NAME=\$(curl -s -H "Metadata-Flavor: Google" \
+            http://metadata.google.internal/computeMetadata/v1/instance/name)
 
           cat <<EOC > /opt/promtail/promtail-config.yaml
           server:
@@ -129,10 +131,10 @@ jobs:
       - name: Create New Instance Template
         run: |
           gcloud compute instance-templates create "${{ env.TEMPLATE_NAME }}" \
-            --project=elevated-valve-459107-h8 \
+            --project=master-isotope-462503-m9 \
             --machine-type=e2-small \
             --region=asia-northeast3 \
-            --subnet=projects/elevated-valve-459107-h8/regions/asia-northeast3/subnetworks/v2-prod-vpc-private-be-a \
+            --subnet=projects/master-isotope-462503-m9/regions/asia-northeast3/subnetworks/v2-prod-vpc-private-be-a \
             --tags=backend \
             --metadata-from-file startup-script=startup.sh \
             --no-address \
@@ -140,7 +142,7 @@ jobs:
             --boot-disk-type=pd-balanced \
             --image-family=ubuntu-2204-lts \
             --image-project=ubuntu-os-cloud \
-            --service-account=328167857357-compute@developer.gserviceaccount.com \
+            --service-account=erraform@master-isotope-462503-m9.iam.gserviceaccount.com \
             --scopes=https://www.googleapis.com/auth/cloud-platform \
             --labels=managed-by-mig=true
 

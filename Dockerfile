@@ -9,7 +9,7 @@ COPY src/ src/
 RUN chmod +x gradlew \
  && ./gradlew build -x test --no-daemon
 
- 
+
 # ──────────────── 2. Scouter Agent stage ────────────────
 FROM ubuntu:22.04 AS scouter-agent
 
@@ -33,7 +33,14 @@ RUN set -eux; \
     mkdir -p /opt/scouter-agent; \
     cp -r /tmp/extract/scouter/agent.java/* /opt/scouter-agent; \
     \
-    # 4) 정리 (tar는 dpkg가 필요로 하므로 purge 대상에서 제외)  
+
+    # 4) Spring 플러그인 추가
+    mkdir -p /opt/scouter-agent/plugin; \
+    curl -fsSL \
+      https://github.com/scouter-project/scouter/releases/download/v2.20.0/scouter-spring-plugin-2.20.0.jar \
+      -o /opt/scouter-agent/plugin/scouter-spring-plugin-2.20.0.jar; \
+    \
+    # 5) 정리 (tar는 dpkg가 필요로 하므로 purge 대상에서 제외)  
     rm -rf /tmp/extract; \
     apt-get purge -y --auto-remove curl ca-certificates && \
     rm -rf /var/lib/apt/lists/*

@@ -9,6 +9,7 @@ COPY src/ src/
 RUN chmod +x gradlew \
  && ./gradlew build -x test --no-daemon
 
+ 
 # ──────────────── 2. Scouter Agent stage ────────────────
 FROM ubuntu:22.04 AS scouter-agent
 

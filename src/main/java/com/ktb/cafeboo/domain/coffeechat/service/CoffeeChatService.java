@@ -63,13 +63,16 @@ public class CoffeeChatService {
                 .kakaoPlaceUrl(loc.kakaoPlaceUrl())
                 .build();
 
-        String profileImageUrl = (request.profileImageType() == ProfileImageType.DEFAULT)
-                ? s3Properties.getDefaultProfileImageUrl()
-                : user.getProfileImageUrl();
-
         CoffeeChat saved = coffeeChatRepository.save(chat);
 
         tagService.saveTagsToCoffeeChat(saved, request.tags());
+
+        // 생성자 본인 참여
+        CoffeeChatJoinRequest joinRequest = new CoffeeChatJoinRequest(
+                request.chatNickname(),
+                request.profileImageType()
+        );
+        this.join(userId, saved.getId(), joinRequest, true);
 
         return new CoffeeChatCreateResponse(saved.getId().toString());
     }
@@ -111,9 +114,6 @@ public class CoffeeChatService {
 
         return CoffeeChatDetailResponse.from(chat, userId);
     }
-
-    // 이거를 무조건 신규가입으로 생각하는게아니라, 연결접속리소스를 생성한다는 관점으로 보면 이 api에 사전에
-    // member 인지 아닌지 판단해서 해도 괜찮을 거 같긴해요
 
     @Transactional
     public CoffeeChatJoinResponse join(Long userId, Long coffeechatId, CoffeeChatJoinRequest request, Boolean isHost) {

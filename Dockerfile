@@ -33,6 +33,7 @@ RUN set -eux; \
     mkdir -p /opt/scouter-agent/plugin; \
     cp -r /tmp/extract/scouter/agent.java/* /opt/scouter-agent; \
     cp -r /tmp/extract/scouter/agent.java/plugin/* /opt/scouter-agent/plugin/; \
+    cp /tmp/extract/scouter/plugins/scouter-spring-plugin-2.20.0.jar /opt/scouter-agent/plugin/
     \
 
     # 4) 정리 (tar는 dpkg가 필요로 하므로 purge 대상에서 제외)  

@@ -13,8 +13,10 @@ import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import com.ktb.cafeboo.global.enums.CoffeeChatStatus;
 import java.util.Collections;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -29,6 +31,9 @@ public class CoffeeChatMessageService {
     private final CoffeeChatRepository coffeeChatRepository;
     private final CoffeeChatMessageRepository messageRepository;
     private final CoffeeChatMemberRepository memberRepository;
+
+    @Value("${DEFAULT_PROFILE_IMAGE_URL}")
+    private String defaultProfileImageUrl;
 
     public CoffeeChatMessagesResponse getMessages(Long userId, Long coffeechatId, String cursor, int limit, String order) {
         log.info("[CoffeeChatMessageService.getMessages] 커피챗 메시지 조회 요청: userId={}, chatId={}, cursor={}, limit={}, order={}",
@@ -53,18 +58,34 @@ public class CoffeeChatMessageService {
         }
 
         List<MessageDto> messageDtos = messages.stream()
-                .filter(m -> m.getSender() != null)
                 .map(m -> {
                     CoffeeChatMember sender = m.getSender();
-                    String profileImageUrl = sender.getProfileImageUrl();
+
+                    // Optional.ofNullable을 사용하여 sender가 null인 경우를 안전하게 처리
+                    String senderId = Optional.ofNullable(sender)
+                        .map(s -> s.getId().toString())
+                        .orElse(null); // sender가 null이면 ID도 null
+
+                    String senderChatNickname = Optional.ofNullable(sender)
+                        .map(CoffeeChatMember::getChatNickname)
+                        .orElse("<알 수 없음>"); // sender가 null이면 "<알수없음>"
+
+                    String senderProfileImageUrl = Optional.ofNullable(sender)
+                        .map(CoffeeChatMember::getProfileImageUrl)
+                        .orElse(defaultProfileImageUrl); // sender가 null이면 기본 이미지 URL
+                    // 예: "/images/default_profile.png"
+
+                    boolean senderIsHost = Optional.ofNullable(sender)
+                        .map(CoffeeChatMember::isHost)
+                        .orElse(false); // sender가 null이면 호스트 아님
 
                     return new MessageDto(
                             String.valueOf(m.getId()),
                             new MemberDto(
-                                    sender.getId().toString(),
-                                    sender.getChatNickname(),
-                                    profileImageUrl,
-                                    sender.isHost()
+                                senderId,
+                                senderChatNickname,
+                                senderProfileImageUrl,
+                                senderIsHost
                             ),
                             m.getContent(),
                             m.getType(),

@@ -46,6 +46,7 @@ WORKDIR /app
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends gettext-base && \
+    nano && \
     rm -rf /var/lib/apt/lists/*
 
 # 1) 애플리케이션 JAR 복사

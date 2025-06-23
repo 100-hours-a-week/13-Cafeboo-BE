@@ -73,6 +73,6 @@ ENTRYPOINT ["sh","-c","\
   exec java \
     --add-opens java.base/java.lang=ALL-UNNAMED \
     -javaagent:/opt/scouter-agent/scouter.agent.jar \
-    -Dscouter.config=/opt/scouter-agent/conf \
+    -Dscouter.config=/opt/scouter-agent/conf/scouter.conf \
     -jar /app/app.jar \
 "]

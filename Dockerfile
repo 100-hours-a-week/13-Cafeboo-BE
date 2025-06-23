@@ -66,13 +66,13 @@ RUN useradd --system --home /home/scouter scouter \
 EXPOSE 8080
 USER scouter
 
-# 5) ENTRYPOINT: hostname 치환 + Java 에이전트 실행
+# 5) ENTRYPOINT: Java 에이전트 실행
 ENTRYPOINT ["sh","-c","\
   export HOSTNAME=$(hostname) && \
   envsubst < /opt/scouter-agent/conf/scouter.conf.src > /opt/scouter-agent/conf/scouter.conf && \
-  java \
+  exec java \
     --add-opens java.base/java.lang=ALL-UNNAMED \
     -javaagent:/opt/scouter-agent/scouter.agent.jar \
-    -Dscouter.config=/opt/scouter-agent/conf/scouter.conf \
+    -Dscouter.config=/opt/scouter-agent/conf \
     -jar /app/app.jar \
 "]

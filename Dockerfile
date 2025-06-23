@@ -71,6 +71,6 @@ ENTRYPOINT ["sh","-c","\
   java \
     --add-opens java.base/java.lang=ALL-UNNAMED \
     -javaagent:/opt/scouter-agent/scouter.agent.jar \
-    -Dscouter.config=/opt/scouter-agent/conf/scouter.conf \
+    -Dscouter.config=/opt/scouter-agent/conf \
     -jar /app/app.jar \
 "]

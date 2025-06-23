@@ -48,6 +48,10 @@ jobs:
           PROD_REDIS_PASSWORD: ${{ secrets.PROD_REDIS_PASSWORD }}
           KAKAO_CLIENT_ID: ${{ secrets.KAKAO_CLIENT_ID }}
           LOKI_VM_IP: ${{ secrets.LOKI_VM_IP }}
+          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+          AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
+          DEFAULT_PROFILE_IMAGE_URL: ${{ secrets.DEFAULT_PROFILE_IMAGE_URL }}
         run: |
           cat <<EOF > startup.sh
           #!/bin/bash
@@ -77,6 +81,10 @@ jobs:
             -e PROD_REDIS_PASSWORD="${PROD_REDIS_PASSWORD}" \
             -e KAKAO_CLIENT_ID="${KAKAO_CLIENT_ID}" \
             -e LOKI_VM_IP="${LOKI_VM_IP}" \
+            -e AWS_S3_BUCKET='${AWS_S3_BUCKET}' \
+            -e AWS_ACCESS_KEY='${AWS_ACCESS_KEY}' \
+            -e AWS_SECRET_KEY='${AWS_SECRET_KEY}' \
+            -e DEFAULT_PROFILE_IMAGE_URL='${DEFAULT_PROFILE_IMAGE_URL}' \
             asia-northeast3-docker.pkg.dev/master-isotope-462503-m9/backend/cafeboo-back:${GITHUB_SHA}
 
           mkdir -p /opt/promtail

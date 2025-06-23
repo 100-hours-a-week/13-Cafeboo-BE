@@ -53,6 +53,7 @@ public class CoffeeChatMessageService {
         }
 
         List<MessageDto> messageDtos = messages.stream()
+                .filter(m -> m.getSender() != null)
                 .map(m -> {
                     CoffeeChatMember sender = m.getSender();
                     String profileImageUrl = sender.getProfileImageUrl();

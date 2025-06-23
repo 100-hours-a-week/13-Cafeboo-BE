@@ -63,8 +63,7 @@ jobs:
           docker stop cafeboo-back || true
           docker rm cafeboo-back || true
 
-          docker run -d --name cafeboo-back \
-            -p 8080:8080 \
+          docker run -d --name cafeboo-back --network host \
             --label app=cafeboo-back \
             -e SPRING_PROFILES_ACTIVE=prod \
             -e JWT_SECRET="${JWT_SECRET}" \

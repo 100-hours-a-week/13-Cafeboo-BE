@@ -57,7 +57,7 @@ COPY --from=builder /app/build/libs/*.jar ./app.jar
 COPY --from=scouter-agent /opt/scouter-agent /opt/scouter-agent
 
 # 3) Scouter 설정 템플릿 복사
-COPY scouter.conf /opt/scouter-agent/conf/scouter.conf.src
+COPY scouter.conf.src /opt/scouter-agent/conf/scouter.conf.src
 
 # 4) 비루팅 사용자 생성 및 권한 설정
 RUN useradd --system --home /home/scouter scouter \

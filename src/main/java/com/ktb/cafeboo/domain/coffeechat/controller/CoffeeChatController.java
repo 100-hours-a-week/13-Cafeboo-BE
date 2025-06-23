@@ -33,25 +33,12 @@ public class CoffeeChatController {
         Long userId = userDetails.getUserId();
         log.info("[POST /api/v1/coffee-chats] userId: {} 커피챗 생성 요청 수신", userId);
 
-        try{
-            CoffeeChatCreateResponse createResponse = coffeeChatService.create(userId, request);
-
-            Long coffeechatId = Long.valueOf(createResponse.coffeeChatId());
-            CoffeeChatJoinRequest joinRequest = new CoffeeChatJoinRequest(
-                request.chatNickname(),
-                request.profileImageType()
-            );
-
-            CoffeeChatJoinResponse joinResponse = coffeeChatService.join(
-                userDetails.getUserId(),
-                coffeechatId,
-                joinRequest,
-                true
-            );
+        try {
+            CoffeeChatCreateResponse response = coffeeChatService.create(userId, request);
 
             return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(ApiResponse.of(SuccessStatus.COFFEECHAT_CREATE_SUCCESS, createResponse));
+                .body(ApiResponse.of(SuccessStatus.COFFEECHAT_CREATE_SUCCESS, response));
         } catch (Exception e) {
 
             log.error("[POST /api/v1/coffee-chats] 커피챗 생성 및 참여 중 오류 발생: {}", e.getMessage(), e);

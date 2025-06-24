@@ -9,26 +9,6 @@ log_dir=/opt/scouter-agent/log
 dump_dir=/opt/scouter-agent/dump
 plugin_dir=/opt/scouter-agent/plugin
 
-# --- XLog Profile Settings (메서드 프로파일링을 위해 추가 또는 수정) ---
-# XLog에 풀스택 프로필을 저장할지 여부를 결정합니다. 이 값을 true로 설정해야 메서드 호출 스택이 수집됩니다.
-xlog_profile_fullstack_enable=true
-
-# 프로파일링할 메서드의 패턴을 정의합니다. (기존 설정 유지)
-# com.ktb.cafeboo 패키지 하위의 모든 클래스/메서드를 대상으로 합니다.
+# com.ktb.cafeboo 패키지 하위의 모든 클래스/메서드를 대상
+profile_fullstack_hooked_exception_enabled=true
 hook_method_patterns=com.ktb.cafeboo.*.*
-
-# 서비스 진입점 패턴 정의 (기존 설정 유지)
-hook_service_patterns=com.ktb.cafeboo..service.*Service,com.ktb.cafeboo..controller.*Controller
-
-hook_method_access_public_enabled=true
-hook_method_access_private_enabled=true
-hook_method_access_protected_enabled=true
-hook_method_access_none_enabled=true
-
-# --- Profile Depth & Step Settings (기존 설정 유지) ---
-profile_main_depth=20
-profile_max_depth=20
-profile_async_depth=10
-profile_step_max=5000
-profile_ignore_method_time=0
-profile_ignore_sql=false

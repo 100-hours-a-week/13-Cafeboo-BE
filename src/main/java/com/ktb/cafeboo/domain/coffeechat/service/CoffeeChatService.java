@@ -72,9 +72,18 @@ public class CoffeeChatService {
                 request.chatNickname(),
                 request.profileImageType()
         );
-        this.join(userId, saved.getId(), joinRequest, true);
+        joinMember(user, saved.getId(), joinRequest, true);
 
         return new CoffeeChatCreateResponse(saved.getId().toString());
+    }
+
+    @Transactional
+    public CoffeeChatJoinResponse join(Long userId, Long coffeechatId, CoffeeChatJoinRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomApiException(ErrorStatus.USER_NOT_FOUND));
+
+        boolean isHost = false;
+        return joinMember(user, coffeechatId, request, isHost);
     }
 
     @Transactional(readOnly = true)
@@ -113,51 +122,6 @@ public class CoffeeChatService {
                 .orElseThrow(() -> new CustomApiException(ErrorStatus.COFFEECHAT_NOT_FOUND));
 
         return CoffeeChatDetailResponse.from(chat, userId);
-    }
-
-    @Transactional
-    public CoffeeChatJoinResponse join(Long userId, Long coffeechatId, CoffeeChatJoinRequest request, Boolean isHost) {
-        log.info("[CoffeeChatService.join] 커피챗 참여 요청: userId={}, chatId={}", userId, coffeechatId);
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomApiException(ErrorStatus.USER_NOT_FOUND));
-
-        CoffeeChat chat = coffeeChatRepository.findById(coffeechatId)
-                .orElseThrow(() -> new CustomApiException(ErrorStatus.COFFEECHAT_NOT_FOUND));
-
-        if (!chat.getStatus().equals(CoffeeChatStatus.ACTIVE)) {
-            throw new CustomApiException(ErrorStatus.COFFEECHAT_NOT_ACTIVE);
-        }
-
-        //커피챗 구독, 커피챗에서 오가는 메시지를 수신받기 위한 consumer group 등록
-        chatService.startListeningToCoffeeChat(String.valueOf(coffeechatId));
-
-        if (chat.isJoinedBy(userId)) {
-            throw new CustomApiException(ErrorStatus.COFFEECHAT_ALREADY_JOINED);
-        }
-
-        if (chat.getCurrentMemberCount() >= chat.getMaxMemberCount()) {
-            throw new CustomApiException(ErrorStatus.COFFEECHAT_CAPACITY_EXCEEDED);
-        }
-
-        validateDuplicateNickname(coffeechatId, request.chatNickname());
-
-        String profileImageUrl = (request.profileImageType() == ProfileImageType.DEFAULT)
-                ? s3Properties.getDefaultProfileImageUrl()
-                : user.getProfileImageUrl();
-
-        CoffeeChatMember member = CoffeeChatMember.of(
-                chat,
-                user,
-                request.chatNickname(),
-                profileImageUrl,
-                isHost
-        );
-        chat.addMember(member);
-
-        CoffeeChatMember saved = coffeeChatMemberRepository.save(member);
-        log.info("[CoffeeChatService.join] 참여자 닉네임: {}", request.chatNickname());
-        return CoffeeChatJoinResponse.from(saved.getId());
     }
 
     @Transactional
@@ -248,5 +212,46 @@ public class CoffeeChatService {
         if (exists) {
             throw new CustomApiException(ErrorStatus.CHAT_NICKNAME_ALREADY_EXISTS);
         }
+    }
+
+    private CoffeeChatJoinResponse joinMember(User user, Long coffeechatId, CoffeeChatJoinRequest request, Boolean isHost) {
+        log.info("[CoffeeChatService.join] 커피챗 참여 요청: userId={}, chatId={}", user.getId(), coffeechatId);
+
+        CoffeeChat chat = coffeeChatRepository.findById(coffeechatId)
+                .orElseThrow(() -> new CustomApiException(ErrorStatus.COFFEECHAT_NOT_FOUND));
+
+        if (!chat.getStatus().equals(CoffeeChatStatus.ACTIVE)) {
+            throw new CustomApiException(ErrorStatus.COFFEECHAT_NOT_ACTIVE);
+        }
+
+        //커피챗 구독, 커피챗에서 오가는 메시지를 수신받기 위한 consumer group 등록
+        chatService.startListeningToCoffeeChat(String.valueOf(coffeechatId));
+
+        if (chat.isJoinedBy(user.getId())) {
+            throw new CustomApiException(ErrorStatus.COFFEECHAT_ALREADY_JOINED);
+        }
+
+        if (chat.getCurrentMemberCount() >= chat.getMaxMemberCount()) {
+            throw new CustomApiException(ErrorStatus.COFFEECHAT_CAPACITY_EXCEEDED);
+        }
+
+        validateDuplicateNickname(coffeechatId, request.chatNickname());
+
+        String profileImageUrl = (request.profileImageType() == ProfileImageType.DEFAULT)
+                ? s3Properties.getDefaultProfileImageUrl()
+                : user.getProfileImageUrl();
+
+        CoffeeChatMember member = CoffeeChatMember.of(
+                chat,
+                user,
+                request.chatNickname(),
+                profileImageUrl,
+                isHost
+        );
+        chat.addMember(member);
+
+        CoffeeChatMember saved = coffeeChatMemberRepository.save(member);
+        log.info("[CoffeeChatService.join] 참여자 닉네임: {}", request.chatNickname());
+        return CoffeeChatJoinResponse.from(saved.getId());
     }
 }

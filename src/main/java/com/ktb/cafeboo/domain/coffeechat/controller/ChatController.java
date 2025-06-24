@@ -40,7 +40,8 @@ public class ChatController {
 
     // 클라이언트에서 /chatrooms/{roomId}로 메시지를 보내면 이 메서드가 처리
     @MessageMapping("/chatrooms/{roomId}")
-    public void handleCoffeeChatMessage(@DestinationVariable String roomId, @Payload StompMessage chatMessage, SimpMessageHeaderAccessor headerAccessor, Principal principal) {
+    public void handleCoffeeChatMessage(@DestinationVariable String roomId, @Payload StompMessage chatMessage, SimpMessageHeaderAccessor headerAccessor, Principal principal)
+        throws Exception {
 
         log.info("[ChatController.handleCoffeeChatMessage] - handleCoffeeChatMessage 호출");
         // 클라이언트에서 보낸 메시지 로그
@@ -57,21 +58,21 @@ public class ChatController {
 
 //        String userIdentifier = principal.getName();
 //
-//        try{
-//            chatService.handleNewMessage(roomId, chatMessage);
-//        }
-//        catch (CustomApiException e){
-//            log.error("[ChatController.handleCoffeeChatMessage] - 메시지 전송 실패 - 검열");
-//            messagingTemplate.convertAndSendToUser(userIdentifier, "/queue/errors", "메시지 전송 실패: 부적절한 표현을 담은 메시지");
-//        }
-//        catch (JsonProcessingException e){
-//            log.error("[ChatController.handleCoffeeChatMessage] - 메시지 직렬화 실패 오류. roomId: {}, {}", roomId, e.getMessage());
-//            messagingTemplate.convertAndSendToUser(userIdentifier, "/queue/errors", "메시지 전송 실패: 유효하지 않은 메시지 형태.");
-//        }
-//        catch (Exception e) {
-//            log.error("[ChatController.handleCoffeeChatMessage] - 메시지 전송 실패");
-//            messagingTemplate.convertAndSendToUser(userIdentifier, "/queue/errors", "메시지 전송 실패: 서버 오류.");
-//        }
+        try{
+            chatService.handleNewMessage(roomId, chatMessage);
+        }
+        catch (CustomApiException e){
+            log.error("[ChatController.handleCoffeeChatMessage] - 메시지 전송 실패 - 검열");
+            throw e;
+        }
+        catch (JsonProcessingException e){
+            log.error("[ChatController.handleCoffeeChatMessage] - 메시지 직렬화 실패 오류. roomId: {}, {}", roomId, e.getMessage());
+            throw e;
+        }
+        catch (Exception e) {
+            log.error("[ChatController.handleCoffeeChatMessage] - 메시지 전송 실패");
+            throw e;
+        }
     }
 
     @MessageExceptionHandler(CustomApiException.class) // CustomApiException을 잡습니다.

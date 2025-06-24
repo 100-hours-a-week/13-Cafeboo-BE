@@ -122,7 +122,6 @@ jobs:
             -v /opt/promtail:/etc/promtail \
             grafana/promtail:2.9.4 \
             -config.file=/etc/promtail/promtail.yaml
-          EOF
 
           docker stop node_exporter || true
           docker rm node_exporter || true

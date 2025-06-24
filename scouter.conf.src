@@ -11,7 +11,7 @@ plugin_dir=/opt/scouter-agent/plugin
 
 # --- XLog Profile Settings (메서드 프로파일링을 위해 추가 또는 수정) ---
 # XLog에 풀스택 프로필을 저장할지 여부를 결정합니다. 이 값을 true로 설정해야 메서드 호출 스택이 수집됩니다.
-xlog_profile_fullstack_enable=true 
+xlog_profile_fullstack_enable=true
 
 # 프로파일링할 메서드의 패턴을 정의합니다. (기존 설정 유지)
 # com.ktb.cafeboo 패키지 하위의 모든 클래스/메서드를 대상으로 합니다.

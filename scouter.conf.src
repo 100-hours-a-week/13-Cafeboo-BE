@@ -1,6 +1,6 @@
 # Scouter Agent Configuration
 # --- General Settings ---
-scouter.log_level=3
+scouter.log_level=7
 net_collector_ip=${LOKI_VM_IP}
 obj_name=${HOSTNAME}
 net_collector_udp_port=6100
@@ -15,10 +15,15 @@ xlog_profile_fullstack_enable=true
 
 # 프로파일링할 메서드의 패턴을 정의합니다. (기존 설정 유지)
 # com.ktb.cafeboo 패키지 하위의 모든 클래스/메서드를 대상으로 합니다.
-hook_method_patterns=com.ktb.cafeboo..*.*
+hook_method_patterns=com.ktb.cafeboo.*.*
 
 # 서비스 진입점 패턴 정의 (기존 설정 유지)
 hook_service_patterns=com.ktb.cafeboo..service.*Service,com.ktb.cafeboo..controller.*Controller
+
+hook_method_access_public_enabled=true
+hook_method_access_private_enabled=true
+hook_method_access_protected_enabled=true
+hook_method_access_none_enabled=true
 
 # --- Profile Depth & Step Settings (기존 설정 유지) ---
 profile_main_depth=20

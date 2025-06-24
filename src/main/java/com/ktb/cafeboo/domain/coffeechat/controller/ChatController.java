@@ -6,6 +6,7 @@ import com.ktb.cafeboo.domain.coffeechat.service.ChatService;
 import com.ktb.cafeboo.domain.user.service.UserService;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import jakarta.annotation.PostConstruct;
+import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +38,7 @@ public class ChatController {
 
     // 클라이언트에서 /chatrooms/{roomId}로 메시지를 보내면 이 메서드가 처리
     @MessageMapping("/chatrooms/{roomId}")
-    public void handleCoffeeChatMessage(@DestinationVariable String roomId, @Payload StompMessage chatMessage, SimpMessageHeaderAccessor headerAccessor) {
+    public void handleCoffeeChatMessage(@DestinationVariable String roomId, @Payload StompMessage chatMessage, SimpMessageHeaderAccessor headerAccessor, Principal principal) {
 
         log.info("[ChatController.handleCoffeeChatMessage] - handleCoffeeChatMessage 호출");
         // 클라이언트에서 보낸 메시지 로그
@@ -52,20 +53,22 @@ public class ChatController {
             return; // 유효한 세션 ID가 없으면 STOMP 연결이 활성화되지 않을 것이기에 메시지 처리 중단
         }
 
+        String userIdentifier = principal.getName();
+
         try{
             chatService.handleNewMessage(roomId, chatMessage);
         }
         catch (CustomApiException e){
             log.error("[ChatController.handleCoffeeChatMessage] - 메시지 전송 실패 - 검열");
-            messagingTemplate.convertAndSendToUser(headerAccessor.getSessionId(), "/queue/errors", "메시지 전송 실패: 부적절한 표현을 담은 메시지");
+            messagingTemplate.convertAndSendToUser(userIdentifier, "/queue/errors", "메시지 전송 실패: 부적절한 표현을 담은 메시지");
         }
         catch (JsonProcessingException e){
             log.error("[ChatController.handleCoffeeChatMessage] - 메시지 직렬화 실패 오류. roomId: {}, {}", roomId, e.getMessage());
-            messagingTemplate.convertAndSendToUser(headerAccessor.getSessionId(), "/queue/errors", "메시지 전송 실패: 유효하지 않은 메시지 형태.");
+            messagingTemplate.convertAndSendToUser(userIdentifier, "/queue/errors", "메시지 전송 실패: 유효하지 않은 메시지 형태.");
         }
         catch (Exception e) {
             log.error("[ChatController.handleCoffeeChatMessage] - 메시지 전송 실패");
-            messagingTemplate.convertAndSendToUser(headerAccessor.getSessionId(), "/queue/errors", "메시지 전송 실패: 서버 오류.");
+            messagingTemplate.convertAndSendToUser(userIdentifier, "/queue/errors", "메시지 전송 실패: 서버 오류.");
         }
     }
 }

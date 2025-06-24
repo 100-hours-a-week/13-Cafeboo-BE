@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.ktb.cafeboo.domain.coffeechat.dto.StompMessage;
 import com.ktb.cafeboo.domain.coffeechat.service.ChatService;
 import com.ktb.cafeboo.domain.user.service.UserService;
+import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import jakarta.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.Map;
@@ -53,6 +54,10 @@ public class ChatController {
 
         try{
             chatService.handleNewMessage(roomId, chatMessage);
+        }
+        catch (CustomApiException e){
+            log.error("[ChatController.handleCoffeeChatMessage] - 메시지 전송 실패 - 검열");
+            messagingTemplate.convertAndSendToUser(headerAccessor.getSessionId(), "/queue/errors", "메시지 전송 실패: 부적절한 표현을 담은 메시지");
         }
         catch (JsonProcessingException e){
             log.error("[ChatController.handleCoffeeChatMessage] - 메시지 직렬화 실패 오류. roomId: {}, {}", roomId, e.getMessage());

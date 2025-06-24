@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cafeboo-config
+data:
+  SPRING_PROFILES_ACTIVE: "prod"
+  PROD_KAKAO_REDIRECT_URI: "https://cafeboo.com/oauth/kakao/callback"
+  PROD_AI_BASE_URL: "http://ai-service.default.svc.cluster.local"
+  PROD_REDIS_HOST: "redis.default.svc.cluster.local"
+  PROD_REDIS_PORT: "6379"
+  KAKAO_CLIENT_ID: "9333a34b6c9de8d1db66955c4b396b21"

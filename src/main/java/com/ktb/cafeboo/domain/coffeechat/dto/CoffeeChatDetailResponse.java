@@ -22,11 +22,7 @@ public record CoffeeChatDetailResponse(
         MemberDto writer,
         Boolean isJoined
 ) {
-    public static CoffeeChatDetailResponse from(CoffeeChat chat, Long userId) {
-        CoffeeChatMember writerMember = chat.getMembers().stream()
-                .filter(m -> m.getUser().getId().equals(chat.getWriter().getId()))
-                .findFirst()
-                .orElseThrow(() -> new CustomApiException(ErrorStatus.COFFEECHAT_MEMBER_NOT_FOUND));
+    public static CoffeeChatDetailResponse from(CoffeeChat chat, CoffeeChatMember writerMember, Long userId) {
 
         return new CoffeeChatDetailResponse(
                 chat.getId().toString(),

@@ -122,6 +122,20 @@ jobs:
             -v /opt/promtail:/etc/promtail \
             grafana/promtail:2.9.4 \
             -config.file=/etc/promtail/promtail.yaml
+
+          docker stop node_exporter || true
+          docker rm node_exporter || true
+          docker run -d --name node_exporter \
+            --restart unless-stopped \
+            --network host \
+            -v /proc:/host/proc:ro \
+            -v /sys:/host/sys:ro \
+            -v /:/rootfs:ro \
+            quay.io/prometheus/node-exporter:latest \
+            --path.procfs=/host/proc \
+            --path.sysfs=/host/sys \
+            --path.rootfs=/rootfs \
+            --web.listen-address=":9100"
           EOF
 
       - name: Create New Instance Template

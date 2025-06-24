@@ -7,6 +7,8 @@ import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChatMember;
 import com.ktb.cafeboo.domain.coffeechat.dto.StompMessage;
 import com.ktb.cafeboo.domain.coffeechat.repository.CoffeeChatMemberRepository;
 import com.ktb.cafeboo.domain.coffeechat.repository.CoffeeChatRepository;
+import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
+import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import com.ktb.cafeboo.global.censorship.CensorshipStrategy;
 import com.ktb.cafeboo.global.censorship.TextCensorshipFilter;
 import com.ktb.cafeboo.global.config.RedisConfig;
@@ -127,7 +129,7 @@ public class ChatService {
 
             if(filterResult){
                 log.info("[ChatService.handleMessage()] - 사용자 {} 가 보낸 메시지가 비속적 표현을 포함하고 있습니다", message.getSenderId());
-                return;
+                throw new CustomApiException(ErrorStatus.CENSORED_MESSAGE);
             }
 
             String senderId = message.getSenderId();

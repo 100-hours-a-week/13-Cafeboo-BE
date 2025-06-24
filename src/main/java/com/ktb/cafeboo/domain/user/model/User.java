@@ -8,8 +8,7 @@ import com.ktb.cafeboo.global.BaseEntity;
 import com.ktb.cafeboo.global.enums.LoginType;
 import com.ktb.cafeboo.global.enums.UserRole;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Where;
 
@@ -19,6 +18,9 @@ import java.util.List;
 @Getter
 @Setter
 @Entity
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "users")
 @Where(clause = "deleted_at IS NULL")
 public class User extends BaseEntity {

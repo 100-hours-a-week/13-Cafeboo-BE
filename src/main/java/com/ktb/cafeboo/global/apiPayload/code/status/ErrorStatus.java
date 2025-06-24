@@ -39,7 +39,11 @@ public enum ErrorStatus implements BaseCode {
     ALARM_SETTING_NOT_FOUND(404, "ALARM_SETTING_NOT_FOUND", "알림 설정 정보를 찾을 수 없습니다."),
 
     // 섭취 내역 관련 오류
+    INVALID_INTAKE_INFO(400, "INVALID_INTAKE_INFO", "필수 데이터 필드가 누락되었습니다"),
     INTAKE_INFO_NOT_FOUND(404, "INTAKE_INFO_NOT_FOUND", "섭취 내역을 찾을 수 없습니다."),
+    RESIDUAL_SAVE_ERROR(500, "RESIDUAL_SAVE_ERROR", "카페인 잔존량 데이터 저장에 실패했습니다. 다시 시도해주세요."),
+    INTAKE_DELETE_FAILED(500, "INTAKE_DELETE_FAILED", "섭취 내역 삭제에 실패했습니다. 다시 시도해주세요."),
+    INTAKE_UPDATE_FAILED(500, "INTAKE_UPDATE_FAILED", "섭취 내역 수정에 실패했습니다. 다시 시도해주세요."),
 
     // 음료 관련 오류
     DRINK_NOT_FOUND(404, "DRINK_NOT_FOUND", "음료 정보를 찾을 수 없습니다."),
@@ -68,6 +72,7 @@ public enum ErrorStatus implements BaseCode {
     CHAT_NICKNAME_ALREADY_EXISTS(409, "CHAT_NICKNAME_ALREADY_EXISTS", "이미 사용 중인 채팅방 닉네임입니다."),
     CANNOT_LEAVE_CHAT_OWNER(400, "CANNOT_LEAVE_CHAT_OWNER", "작성자는 채팅방에서 나갈 수 없습니다."),
     INVALID_CURSOR(400, "INVALID_CURSOR", "커서 값이 유효하지 않습니다."),
+    CENSORED_MESSAGE(403, "CENSORED_MESSAGE", "부적절한 표현을 담은 메시지"),
 
     // 커피챗 후기 관련
     INVALID_IMAGE_COUNT(400, "INVALID_IMAGE_COUNT", "이미지는 최대 3장까지만 첨부할 수 있습니다."),

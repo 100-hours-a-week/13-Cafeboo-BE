@@ -121,7 +121,12 @@ public class CoffeeChatService {
         CoffeeChat chat = coffeeChatRepository.findById(coffeechatId)
                 .orElseThrow(() -> new CustomApiException(ErrorStatus.COFFEECHAT_NOT_FOUND));
 
-        return CoffeeChatDetailResponse.from(chat, userId);
+        CoffeeChatMember writerMember = chat.getMembers().stream()
+                .filter(m -> m.getUser().getId().equals(chat.getWriter().getId()))
+                .findFirst()
+                .orElseThrow(() -> new CustomApiException(ErrorStatus.COFFEECHAT_MEMBER_NOT_FOUND));
+
+        return CoffeeChatDetailResponse.from(chat, writerMember, userId);
     }
 
     @Transactional

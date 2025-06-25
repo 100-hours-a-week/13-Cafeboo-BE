@@ -13,7 +13,7 @@ public enum ErrorStatus implements BaseCode {
     UNAUTHORIZED(401, "UNAUTHORIZED", "인증이 필요합니다."),
     FORBIDDEN(403, "FORBIDDEN", "접근 권한이 없습니다."),
     NOT_FOUND(404, "NOT_FOUND", "요청한 리소스를 찾을 수 없습니다."),
-    INTERNAL_SERVER_ERROR(500, "INTERNAL_ERROR", "요청을 처리하는 도중 서버에서 문제가 발생했습니다."),
+    INTERNAL_SERVER_ERROR(500, "INTERNAL_SERVER_ERROR", "요청을 처리하는 도중 서버에서 문제가 발생했습니다."),
 
     // 인증 관련 오류 (서버 자체)
     UNSUPPORTED_SOCIAL_LOGIN_TYPE(400, "UNSUPPORTED_SOCIAL_LOGIN_TYPE", "지원하지 않는 소셜 로그인 타입입니다."),

@@ -48,7 +48,7 @@ public class StompMessagePublish {
             .sender(SenderInfo.builder()
                 .memberId(String.valueOf(senderMember.getId())) // User ID를 String으로 변환
                 .chatNickname(senderMember.getChatNickname()) // CoffeeChatMember의 닉네임 사용
-                .profileImageUrl("") // CoffeeChatMember의 프로필 이미지 사용
+                .profileImageUrl(senderMember.getProfileImageUrl()) // CoffeeChatMember의 프로필 이미지 사용
                 .build())
             .build();
     }

@@ -6,7 +6,9 @@ import com.ktb.cafeboo.global.infra.ai.dto.PredictCaffeineLimitByRuleRequest;
 import com.ktb.cafeboo.global.infra.ai.dto.PredictCaffeineLimitByRuleResponse;
 import com.ktb.cafeboo.global.infra.ai.dto.PredictCanIntakeCaffeineRequest;
 import com.ktb.cafeboo.global.infra.ai.dto.PredictCanIntakeCaffeineResponse;
-import java.util.List;
+import com.ktb.cafeboo.global.infra.ai.dto.ToxicityDetectionRequest;
+import com.ktb.cafeboo.global.infra.ai.dto.ToxicityDetectionResponse;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -46,6 +48,16 @@ public class AiServerClient {
             .retrieve()
             .bodyToMono(CreateWeeklyAnalysisResponse.class)
             .block();
+    }
+
+    public ToxicityDetectionResponse detectToxicity(ToxicityDetectionRequest request) {
+        return aiServerWebClient.post()
+                .uri("/internal/ai/toxicity_detect")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .retrieve()
+                .bodyToMono(ToxicityDetectionResponse.class)
+                .block();
     }
 }
 

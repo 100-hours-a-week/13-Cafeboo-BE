@@ -52,7 +52,27 @@ public enum SuccessStatus implements BaseCode {
 
     //AI 리포트 생성 관련 응답
     REPORT_GENERATION_SUCCESS(200, "AI_GENERATION_REPORT", "AI 리포트 생성 요청 성공"),
+
+    //커피챗 관련 응답
+    COFFEECHAT_CREATE_SUCCESS(201, "COFFEECHAT_CREATE_SUCCESS", "커피챗이 성공적으로 생성되었습니다."),
+    COFFEECHAT_LIST_LOAD_SUCCESS(200, "COFFEECHAT_LIST_LOAD_SUCCESS", "커피챗 목록을 성공적으로 조회했습니다."),
+    COFFEECHAT_LOAD_SUCCESS(200, "COFFEECHAT_LOAD_SUCCESS", "커피챗 상세내용을 성공적으로 조회했습니다."),
+    COFFEECHAT_JOIN_SUCCESS(201, "COFFEECHAT_JOIN_SUCCESS", "커피챗에 성공적으로 참여하였습니다."),
+    COFFEECHAT_MESSAGES_LOAD_SUCCESS(200, "COFFEECHAT_MESSAGES_LOAD_SUCCESS", "커피챗 메시지를 성공적으로 조회했습니다."),
+    COFFEECHAT_MEMBER_LOAD_SUCCESS(200, "COFFEECHAT_MEMBER_LOAD_SUCCESS", "커피챗 참여자 목록을 성공적으로 조회했습니다."),
+    COFFEECHAT_LISTENER_CREATED_SUCCESS(201, "COFFEECHAT_LISTENER_CREATED_SUCCESS", "커피챗 리스너가 성공적으로 생성되었습니다"),
+
+    // 커피챗 후기
+
+    COFFEECHAT_REVIEW_CREATE_SUCCESS(201, "COFFECHAT_REVIEW_CREATE_SUCCESS", "커피챗 후기가 성공적으로 등록되었습니다."),
+    COFFEECHAT_REVIEW_LIST_LOAD_SUCCESS(200, "COFFEECHAT_REVIEW_LIST_LOAD_SUCCESS", "커피챗 후기 목록을 성공적으로 조회했습니다."),
+    COFFEECHAT_REVIEW_LOAD_SUCCESS(200, "COFFEECHAT_REVIEW_LOAD_SUCCESS", "커피챗 후기를 성공적으로 조회했습니다."),
+    COFFEECHAT_LIKE_SUCCESS(200, "COFFEECHAT_LIKE_SUCCESS", "커피챗 후기를 좋아요 처리했습니다."),
+    COFFEECHAT_UNLIKE_SUCCESS(200, "COFFEECHAT_UNLIKE_SUCCESS", "커피챗 후기 좋아요를 취소했습니다."),
+    COFFEECHAT_MEMBERSHIP_CHECK_SUCCESS(200, "COFFEECHAT_MEMBERSHIP_CHECK_SUCCESS", "커피챗 참여 여부를 성공적으로 조회했습니다.")
     ;
+
+
     private final int status;
     private final String code;
     private final String message;

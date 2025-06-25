@@ -1,0 +1,163 @@
+name: Deploy Backend to PROD MIG
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: '${{ secrets.GCP_SA_KEY_2 }}'
+
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: master-isotope-462503-m9
+
+      - name: Configure Docker to use Artifact Registry
+        run: gcloud auth configure-docker asia-northeast3-docker.pkg.dev
+
+      - name: Build and Push Docker Image
+        run: |
+          docker build -t asia-northeast3-docker.pkg.dev/master-isotope-462503-m9/backend/cafeboo-back:${{ github.sha }} .
+          docker push asia-northeast3-docker.pkg.dev/master-isotope-462503-m9/backend/cafeboo-back:${{ github.sha }}
+
+      - name: Compute Unique Template Name
+        run: |
+          echo "TEMPLATE_NAME=backend-template-$(date +%s)" >> $GITHUB_ENV
+
+      - name: Generate Startup Script
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          PROD_DB_URL: ${{ secrets.PROD_DB_URL }}
+          PROD_DB_USERNAME: ${{ secrets.PROD_DB_USERNAME }}
+          PROD_DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
+          PROD_KAKAO_REDIRECT_URI: ${{ secrets.PROD_KAKAO_REDIRECT_URI }}
+          PROD_AI_BASE_URL: ${{ secrets.PROD_AI_BASE_URL }}
+          PROD_REDIS_HOST: ${{ secrets.PROD_REDIS_HOST }}
+          PROD_REDIS_PORT: ${{ secrets.PROD_REDIS_PORT }}
+          PROD_REDIS_PASSWORD: ${{ secrets.PROD_REDIS_PASSWORD }}
+          KAKAO_CLIENT_ID: ${{ secrets.KAKAO_CLIENT_ID }}
+          LOKI_VM_IP: ${{ secrets.LOKI_VM_IP }}
+          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+          AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
+          DEFAULT_PROFILE_IMAGE_URL: ${{ secrets.DEFAULT_PROFILE_IMAGE_URL }}
+        run: |
+          cat <<EOF > startup.sh
+          #!/bin/bash
+          set -e
+
+          apt-get update
+          apt-get install -y docker.io
+
+          gcloud auth configure-docker asia-northeast3-docker.pkg.dev
+
+          docker pull asia-northeast3-docker.pkg.dev/master-isotope-462503-m9/backend/cafeboo-back:${GITHUB_SHA}
+
+          docker stop cafeboo-back || true
+          docker rm cafeboo-back || true
+
+          docker run -d --name cafeboo-back --network host \
+            --label app=cafeboo-back \
+            -e SPRING_PROFILES_ACTIVE=prod \
+            -e JWT_SECRET="${JWT_SECRET}" \
+            -e PROD_DB_URL="${PROD_DB_URL}" \
+            -e PROD_DB_USERNAME="${PROD_DB_USERNAME}" \
+            -e PROD_DB_PASSWORD="${PROD_DB_PASSWORD}" \
+            -e PROD_KAKAO_REDIRECT_URI="${PROD_KAKAO_REDIRECT_URI}" \
+            -e PROD_AI_BASE_URL="${PROD_AI_BASE_URL}" \
+            -e PROD_REDIS_HOST="${PROD_REDIS_HOST}" \
+            -e PROD_REDIS_PORT="${PROD_REDIS_PORT}" \
+            -e PROD_REDIS_PASSWORD="${PROD_REDIS_PASSWORD}" \
+            -e KAKAO_CLIENT_ID="${KAKAO_CLIENT_ID}" \
+            -e LOKI_VM_IP="${LOKI_VM_IP}" \
+            -e AWS_S3_BUCKET='${AWS_S3_BUCKET}' \
+            -e AWS_ACCESS_KEY='${AWS_ACCESS_KEY}' \
+            -e AWS_SECRET_KEY='${AWS_SECRET_KEY}' \
+            -e DEFAULT_PROFILE_IMAGE_URL='${DEFAULT_PROFILE_IMAGE_URL}' \
+            asia-northeast3-docker.pkg.dev/master-isotope-462503-m9/backend/cafeboo-back:${GITHUB_SHA}
+
+          mkdir -p /opt/promtail
+          touch /opt/promtail/positions.yaml
+          chown 65534:65534 /opt/promtail/positions.yaml
+          
+          INSTANCE_NAME=$(curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/name)
+
+          cat <<EOC > /opt/promtail/promtail-config.yaml
+          server:
+            http_listen_port: 9080
+            grpc_listen_port: 0
+          positions:
+            filename: /etc/promtail/positions.yaml
+          clients:
+            - url: http://${LOKI_VM_IP}:3100/loki/api/v1/push
+          scrape_configs:
+            - job_name: cafeboo-back
+              static_configs:
+                - targets:
+                  - localhost
+                  labels:
+                    job: back
+                    app: cafeboo
+                    instance: "${HOSTNAME}"
+                    __path__: /var/lib/docker/containers/*/*.log
+          EOC
+
+          docker stop promtail || true
+          docker rm promtail || true
+
+          docker run -d --name promtail --network host \
+            -v /var/lib/docker/containers:/var/lib/docker/containers:ro \
+            -v /opt/promtail/promtail-config.yaml:/etc/promtail/promtail.yaml \
+            -v /opt/promtail:/etc/promtail \
+            grafana/promtail:2.9.4 \
+            -config.file=/etc/promtail/promtail.yaml
+
+          docker stop node_exporter || true
+          docker rm node_exporter || true
+          docker run -d --name node_exporter \
+            --restart unless-stopped \
+            --network host \
+            -v /proc:/host/proc:ro \
+            -v /sys:/host/sys:ro \
+            -v /:/rootfs:ro \
+            quay.io/prometheus/node-exporter:latest \
+            --path.procfs=/host/proc \
+            --path.sysfs=/host/sys \
+            --path.rootfs=/rootfs \
+            --web.listen-address=":9100"
+          EOF
+
+      - name: Create New Instance Template
+        run: |
+          gcloud compute instance-templates create "${{ env.TEMPLATE_NAME }}" \
+            --project=master-isotope-462503-m9 \
+            --machine-type=e2-small \
+            --region=asia-northeast3 \
+            --subnet=projects/master-isotope-462503-m9/regions/asia-northeast3/subnetworks/v2-prod-vpc-private-be-a \
+            --tags=backend \
+            --metadata-from-file startup-script=startup.sh \
+            --no-address \
+            --boot-disk-size=10GB \
+            --boot-disk-type=pd-balanced \
+            --image-family=ubuntu-2204-lts \
+            --image-project=ubuntu-os-cloud \
+            --service-account=terraform@master-isotope-462503-m9.iam.gserviceaccount.com \
+            --scopes=https://www.googleapis.com/auth/cloud-platform \
+            --labels=managed-by-mig=true
+
+      - name: Rolling Update MIG
+        run: |
+          gcloud compute instance-groups managed rolling-action start-update backend-mig \
+            --region=asia-northeast3 \
+            --version=template="${{ env.TEMPLATE_NAME }}"

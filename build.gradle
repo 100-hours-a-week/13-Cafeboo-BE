@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.4.5'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id 'jacoco'
 }
 
 group = 'com.ktb'
@@ -24,8 +25,10 @@ repositories {
 }
 
 dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	implementation 'org.springframework.data:spring-data-redis'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
@@ -36,22 +39,78 @@ dependencies {
 	//swagger
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6'
 
+	//health check
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
 	//prometheus
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'io.micrometer:micrometer-registry-prometheus'
-
-	implementation 'org.springframework.boot:spring-boot-starter'
 	implementation 'io.micrometer:micrometer-core'
+
+	// s3
+	implementation platform("software.amazon.awssdk:bom:2.25.0")
+	implementation "software.amazon.awssdk:s3"
 
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	annotationProcessor 'org.projectlombok:lombok'
+
+	// test
+	testImplementation 'com.h2database:h2'
+	testImplementation 'org.springframework.boot:spring-boot-test'
+	testImplementation 'org.mockito:mockito-inline:5.2.0'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
-tasks.named('test') {
+jacoco {
+	toolVersion = "0.8.13" // JaCoCo 도구 버전 (최신 안정 버전 사용 권장)
+}
+
+// jacocoTestReport 태스크 설정
+jacocoTestReport {
+	dependsOn test // jacocoTestReport가 test 태스크 이후에 실행되도록 의존성 설정
+
+	reports {
+		xml.required = true // XML 보고서 생성 여부 (CI/CD 도구에서 파싱할 때 유용)
+		html.required = true // HTML 보고서 생성 여부 (사람이 보기 좋음)
+		csv.required = false // CSV 보고서 생성 여부 (선택 사항)
+
+		// 보고서 저장 경로 설정 (선택 사항, 기본값: build/reports/jacoco/test/html)
+		// html.outputLocation = layout.buildDirectory.dir('jacocoHtml')
+	}
+
+	// 커버리지 보고서에 포함/제외할 파일 설정 (선택 사항, 중요!)
+	// 프로젝트 구조에 따라 수정해야 합니다.
+	afterEvaluate {
+		classDirectories.setFrom(files(classDirectories.files.collect {
+			fileTree(dir: it, exclude: [
+					'com/ktb/cafeboo/CafebooApplication.class', // 메인 애플리케이션 클래스는 보통 제외
+					'**/*Application.class', // 모든 Application 클래스 제외
+					'**/*Config.class', // 설정 클래스 제외 (선택 사항)
+					'**/*DTO.class', // DTO 클래스 제외 (선택 사항)
+					'**/*Response.class', // 응답 DTO 클래스 제외 (선택 사항)
+					'**/*Request.class', // 요청 DTO 클래스 제외 (선택 사항)
+					'**/*Exception.class', // 예외 클래스 제외 (선택 사항)
+					'**/*ErrorStatus.class', // 에러 상태 enum 제외 (선택 사항)
+					'**/*SuccessStatus.class',
+					'com/ktb/cafeboo/domain/**/dto/**',
+					'com/ktb/cafeboo/global/**/dto/**',
+					'**/*Test.class' // 테스트 클래스 자체는 커버리지에서 제외 (기본적으로 제외됨)
+			])
+		}))
+	}
+}
+
+test {
+	// ...
+	systemProperty 'spring.profiles.active', 'test' // 테스트 전용 프로파일 사용 (선택 사항)
+	systemProperty 'debug', 'true' // 디버그 모드 활성화
+	jvmArgs += [
+			"-XX:+EnableDynamicAgentLoading",
+			"-Djdk.instrument.traceUsage"
+	]
 	useJUnitPlatform()
+	finalizedBy jacocoTestReport
 }

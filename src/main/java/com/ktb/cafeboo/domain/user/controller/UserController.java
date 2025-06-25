@@ -171,16 +171,19 @@ public class UserController {
     @DeleteMapping("/{userId}")
     public ResponseEntity<Void> deleteUser(
             @PathVariable Long userId,
+            @RequestHeader("Authorization") String authHeader,
             @AuthenticationPrincipal CustomUserDetails userDetails,
             HttpServletResponse response
     ) {
         log.info("[DELETE /api/v1/users/{}] 회원 탈퇴 요청 수신", userId);
         AuthChecker.checkOwnership(userId, userDetails.getUserId());
 
+        String accessToken = authHeader.replace("Bearer ", "");
+
         kakaoOauthService.disconnectKakaoAccount(userId);
         log.info("[DELETE /api/v1/users/{}] 카카오 계정 연동 해제 완료", userId);
 
-        userService.deleteUser(userId);
+        userService.deleteUser(accessToken, userId);
         log.info("[DELETE /api/v1/users/{}] 사용자 데이터 삭제 완료", userId);
 
         // refreshToken 쿠키 삭제

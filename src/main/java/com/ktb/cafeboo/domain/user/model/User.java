@@ -1,14 +1,14 @@
 package com.ktb.cafeboo.domain.user.model;
 
 import com.ktb.cafeboo.domain.caffeinediary.model.*;
+import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChat;
 import com.ktb.cafeboo.domain.report.model.*;
 import com.ktb.cafeboo.global.infra.kakao.dto.KakaoUserResponse;
 import com.ktb.cafeboo.global.BaseEntity;
 import com.ktb.cafeboo.global.enums.LoginType;
 import com.ktb.cafeboo.global.enums.UserRole;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Where;
 
@@ -18,6 +18,9 @@ import java.util.List;
 @Getter
 @Setter
 @Entity
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "users")
 @Where(clause = "deleted_at IS NULL")
 public class User extends BaseEntity {
@@ -36,6 +39,9 @@ public class User extends BaseEntity {
 
     @Column(nullable = false, length = 10)
     private String nickname;
+
+    @Column
+    private String profileImageUrl;
 
     @Column(nullable = true, length = 512)
     private String refreshToken;
@@ -84,7 +90,10 @@ public class User extends BaseEntity {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<YearlyReport> yearlyReports = new ArrayList<>();
 
-    public static User fromKakao(KakaoUserResponse kakaoUser) {
+    @OneToMany(mappedBy = "writer", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CoffeeChat> coffeeChats = new ArrayList<>();
+  
+    public static User fromKakao(KakaoUserResponse kakaoUser, String profileImageUrl) {
         User user = new User();
         user.setOauthId(kakaoUser.getId());
         user.setLoginType(LoginType.KAKAO);
@@ -93,6 +102,7 @@ public class User extends BaseEntity {
         user.setRole(UserRole.USER);
         user.setDarkMode(false);
         user.setCoffeeBean(0);
+        user.setProfileImageUrl(profileImageUrl);
         return user;
     }
 
@@ -103,5 +113,15 @@ public class User extends BaseEntity {
     public void setFavoriteDrinks(List<UserFavoriteDrinkType> favorites) {
         this.favoriteDrinks.clear(); // 기존 관계 제거
         this.favoriteDrinks.addAll(favorites);
+    }
+
+    public void updateProfileImage(String profileImageUrl) {
+        if (this.profileImageUrl == null) {
+            this.profileImageUrl = profileImageUrl;
+        }
+    }
+
+    public void addCoffeeBeans(int amount) {
+        this.coffeeBean += amount;
     }
 }

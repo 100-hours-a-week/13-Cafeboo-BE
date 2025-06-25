@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -204,11 +205,12 @@ public class CoffeeChatService {
     }
 
     private List<CoffeeChat> getChatsByFilter(CoffeeChatFilterType filter, Long userId) {
+        LocalDateTime nowUtc = LocalDateTime.now(ZoneOffset.UTC);
         return switch (filter) {
             case JOINED -> coffeeChatRepository.findJoinedChats(userId);
             case ENDED -> coffeeChatRepository.findCompletedChats(userId);
             case ALL -> coffeeChatRepository.findAllActiveChats();
-            case REVIEWABLE -> coffeeChatRepository.findReviewableChats(userId, LocalDateTime.now());
+            case REVIEWABLE -> coffeeChatRepository.findReviewableChats(userId, nowUtc);
         };
     }
 

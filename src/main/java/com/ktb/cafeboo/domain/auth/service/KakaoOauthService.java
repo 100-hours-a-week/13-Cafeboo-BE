@@ -232,6 +232,15 @@ public class KakaoOauthService {
         }
     }
 
+    private String getProfileImageOrDefault(KakaoUserResponse kakaoUser) {
+        boolean isDefaultImage = kakaoUser.getKakaoAccount().getProfile().isDefaultImage();
+        String kakaoImageUrl = kakaoUser.getKakaoAccount().getProfile().getProfileImageUrl();
+
+        if (kakaoImageUrl != null && !kakaoImageUrl.isBlank() && !isDefaultImage) {
+            return fetchKakaoProfileImage(kakaoImageUrl);
+        }
+        return s3Uploader.getDefaultProfileImageUrl();
+    }
 
     private void updateProfileImage(User user, String profileImageUrl) {
         user.updateProfileImage(profileImageUrl);

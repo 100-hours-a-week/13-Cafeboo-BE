@@ -23,22 +23,26 @@ public class UserService {
     private final OauthTokenRepository oauthTokenRepository;
     private final TokenBlacklistService tokenBlacklistService;
 
+    @Transactional(readOnly = true)
     public User findUserById(Long id){
         return userRepository.findById(id)
                 .orElseThrow(() -> new CustomApiException(ErrorStatus.USER_NOT_FOUND));
     }
 
+    @Transactional(readOnly = true)
     public EmailDuplicationResponse isEmailDuplicated(String email) {
         boolean isDuplicated = userRepository.existsByEmail(email);
         log.info("[UserService.isEmailDuplicated] 이메일 중복 확인 - email={}, duplicated={}", email, isDuplicated);
         return new EmailDuplicationResponse(email, isDuplicated);
     }
 
+    @Transactional(readOnly = true)
     public boolean hasCompletedOnboarding(User user) {
         return user.getHealthInfo() != null
                 && user.getCaffeinInfo() != null;
     }
-  
+
+    @Transactional(readOnly = true)
     public UserProfileResponse getUserProfile(Long targetUserId, Long currentUserId) {
         log.info("[UserService.getUserProfile] 사용자 프로필 조회 - targetUserId={}, currentUserId={}", targetUserId, currentUserId);
 
@@ -56,6 +60,7 @@ public class UserService {
 
         return new UserProfileResponse(
                 targetUser.getNickname(),
+                targetUser.getProfileImageUrl(),
                 (int) dailyCaffeineLimit,
                 targetUser.getCoffeeBean(),
                 0

@@ -16,8 +16,12 @@ public class KakaoUserResponse {
         @Getter
         public static class Profile {
             private String nickname;
+
             @JsonProperty("profile_image_url")
             private String profileImageUrl;
+
+            @JsonProperty("is_default_image")
+            private boolean isDefaultImage;
         }
     }
 }

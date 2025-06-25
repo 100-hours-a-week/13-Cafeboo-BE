@@ -152,34 +152,17 @@ public class KakaoOauthService {
     }
 
     private User getOrCreateUser(KakaoUserResponse kakaoUser) {
-        String kakaoImageUrl = kakaoUser.getKakaoAccount().getProfile().getProfileImageUrl();
-
         return userRepository.findByOauthIdAndLoginType(kakaoUser.getId(), LoginType.KAKAO)
                 .map(user -> {
-                    // 기존 유저인데 프로필 이미지가 없는 경우
                     if (user.getProfileImageUrl() == null) {
-                        String profileImageUrl = (kakaoImageUrl != null && !kakaoImageUrl.isBlank())
-                                ? fetchKakaoProfileImage(kakaoImageUrl)
-                                : s3Uploader.getDefaultProfileImageUrl();
-
-                        user.updateProfileImage(profileImageUrl);
-                        userRepository.save(user);
+                        String profileImageUrl = getProfileImageOrDefault(kakaoUser);
+                        updateProfileImage(user, profileImageUrl);
                     }
                     return user;
                 })
                 .orElseGet(() -> {
-                    String profileImageUrl = (kakaoImageUrl != null && !kakaoImageUrl.isBlank())
-                            ? fetchKakaoProfileImage(kakaoImageUrl)
-                            : s3Uploader.getDefaultProfileImageUrl();
-
-                    User newUser = User.fromKakao(kakaoUser, profileImageUrl);
-                    User savedUser = userRepository.save(newUser);
-
-                    userAlarmSettingService.create(
-                            savedUser.getId(),
-                            new UserAlarmSettingCreateRequest(false, false, false)
-                    );
-                    return savedUser;
+                    String profileImageUrl = getProfileImageOrDefault(kakaoUser);
+                    return createNewUser(kakaoUser, profileImageUrl);
                 });
     }
 
@@ -249,4 +232,28 @@ public class KakaoOauthService {
         }
     }
 
+    private String getProfileImageOrDefault(KakaoUserResponse kakaoUser) {
+        boolean isDefaultImage = kakaoUser.getKakaoAccount().getProfile().isDefaultImage();
+        String kakaoImageUrl = kakaoUser.getKakaoAccount().getProfile().getProfileImageUrl();
+
+        if (kakaoImageUrl != null && !kakaoImageUrl.isBlank() && !isDefaultImage) {
+            return fetchKakaoProfileImage(kakaoImageUrl);
+        }
+        return s3Uploader.getDefaultProfileImageUrl();
+    }
+
+    private void updateProfileImage(User user, String profileImageUrl) {
+        user.updateProfileImage(profileImageUrl);
+        userRepository.save(user);
+    }
+
+    private User createNewUser(KakaoUserResponse kakaoUser, String profileImageUrl) {
+        User newUser = User.fromKakao(kakaoUser, profileImageUrl);
+        User savedUser = userRepository.save(newUser);
+        userAlarmSettingService.create(
+                savedUser.getId(),
+                new UserAlarmSettingCreateRequest(false, false, false)
+        );
+        return savedUser;
+    }
 }

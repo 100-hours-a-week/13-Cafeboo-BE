@@ -73,7 +73,7 @@ public class CoffeeChatReviewService {
 
         LocalDateTime meetingTime = coffeeChat.getMeetingTime();
         //LocalDateTime reviewDeadline = meetingTime.plusHours(24); 후기 작성 데드라인은 현재 없음
-        if (LocalDateTime.now().isBefore(meetingTime) ) {
+        if (LocalDateTime.now().plusHours(9).isBefore(meetingTime)) {
             throw new CustomApiException(ErrorStatus.INVALID_REVIEW_TIME);
         }
 

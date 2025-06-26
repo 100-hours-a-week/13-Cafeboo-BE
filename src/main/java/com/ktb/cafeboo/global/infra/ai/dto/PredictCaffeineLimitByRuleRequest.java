@@ -17,4 +17,5 @@ public class PredictCaffeineLimitByRuleRequest {
     private int isSmoker;
     private int takeHormonalContraceptive;
     private int caffeineSensitivity;
+    private int isPregnant;
 }

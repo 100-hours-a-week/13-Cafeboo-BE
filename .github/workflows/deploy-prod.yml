@@ -91,7 +91,7 @@ jobs:
           touch /opt/promtail/positions.yaml
           chown 65534:65534 /opt/promtail/positions.yaml
           
-          INSTANCE_NAME=$(curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/name)
+          INSTANCE_NAME=\$(curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/name)
 
           cat > /opt/promtail/promtail.yaml <<EOC
           server:
@@ -109,7 +109,7 @@ jobs:
                   labels:
                     job: back
                     app: cafeboo
-                    instance: "${INSTANCE_NAME}"
+                    instance: "\${INSTANCE_NAME}"
                     __path__: /var/lib/docker/containers/*/*.log
           EOC
           touch /opt/promtail/positions.yaml

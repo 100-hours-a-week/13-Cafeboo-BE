@@ -120,7 +120,7 @@ jobs:
 
           docker run -d --name promtail --network host \
             -v /var/lib/docker/containers:/var/lib/docker/containers:ro \
-            -v /opt/promtail:/etc/promtail:ro \
+            -v /opt/promtail:/etc/promtail \
             grafana/promtail:2.9.4 \
             -config.file=/etc/promtail/promtail.yaml
 

@@ -93,7 +93,7 @@ jobs:
           
           INSTANCE_NAME=$(curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/name)
 
-          cat <<EOF > /opt/promtail/promtail-config.yaml
+          cat <<EOC > /opt/promtail/promtail-config.yaml
           server:
             http_listen_port: 9080
             grpc_listen_port: 0
@@ -111,7 +111,7 @@ jobs:
                     app: cafeboo
                     instance: "${INSTANCE_NAME}"
                     __path__: /var/lib/docker/containers/*/*.log
-          EOF
+          EOC
 
           docker stop promtail || true
           docker rm promtail || true

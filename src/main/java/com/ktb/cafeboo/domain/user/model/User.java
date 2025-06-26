@@ -115,10 +115,12 @@ public class User extends BaseEntity {
         this.favoriteDrinks.addAll(favorites);
     }
 
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
     public void updateProfileImage(String profileImageUrl) {
-        if (this.profileImageUrl == null) {
-            this.profileImageUrl = profileImageUrl;
-        }
+        this.profileImageUrl = profileImageUrl;
     }
 
     public void addCoffeeBeans(int amount) {

@@ -4,15 +4,22 @@ import com.ktb.cafeboo.domain.auth.repository.OauthTokenRepository;
 import com.ktb.cafeboo.domain.auth.service.TokenBlacklistService;
 import com.ktb.cafeboo.domain.user.dto.EmailDuplicationResponse;
 import com.ktb.cafeboo.domain.user.dto.UserProfileResponse;
+import com.ktb.cafeboo.domain.user.dto.UserProfileUpdateRequest;
+import com.ktb.cafeboo.domain.user.dto.UserProfileUpdateResponse;
 import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.domain.user.repository.UserRepository;
 import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import com.ktb.cafeboo.global.enums.TokenBlacklistReason;
+import com.ktb.cafeboo.global.infra.s3.S3Uploader;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 @Slf4j
 @Service
@@ -22,6 +29,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final OauthTokenRepository oauthTokenRepository;
     private final TokenBlacklistService tokenBlacklistService;
+    private final S3Uploader s3Uploader;
 
     @Transactional(readOnly = true)
     public User findUserById(Long id){
@@ -65,6 +73,29 @@ public class UserService {
                 targetUser.getCoffeeBean(),
                 0
         );
+    }
+
+    @Transactional
+    public UserProfileUpdateResponse updateUserProfile(Long userId, UserProfileUpdateRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomApiException(ErrorStatus.USER_NOT_FOUND));
+
+        if (request.nickname() != null && !request.nickname().equals(user.getNickname())) {
+            user.updateNickname(request.nickname());
+        }
+
+        if (request.profileImage() != null) {
+            MultipartFile file = request.profileImage();
+            try (InputStream inputStream = file.getInputStream()) {
+                String url = s3Uploader.uploadProfileImage(inputStream, file.getSize(), file.getContentType());
+                user.updateProfileImage(url);
+            } catch (IOException e) {
+                throw new CustomApiException(ErrorStatus.S3_PROFILE_IMAGE_UPLOAD_FAILED);
+            }
+        }
+        userRepository.save(user);
+
+        return new UserProfileUpdateResponse(userId.toString(), user.getUpdatedAt());
     }
 
     @Transactional

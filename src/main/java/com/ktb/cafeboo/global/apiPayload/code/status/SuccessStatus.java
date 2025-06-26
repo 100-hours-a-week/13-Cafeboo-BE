@@ -37,7 +37,7 @@ public enum SuccessStatus implements BaseCode {
 
     //카페인 섭취 관련 응답
     CAFFEINE_INTAKE_RECORDED(201, "CAFFEINE_INTAKE_RECORDED", "카페인 섭취 내역이 성공적으로 등록되었습니다."),
-    CAFFEINE_INTAKE_UPDATED(200, "CAFFEINE_INTAKE_UPDATED", "카페인 섭취 내역이 성공적으로 갱신되었습니다."),
+    CAFFEINE_INTAKE_UPDATED(200, "CAFFEINE_INTAKE_UPDATED", "카페인 섭취 내역이 성공적으로 수정되었습니다."),
     CAFFEINE_INTAKE_DELETED(204, "CAFFEINE_INTAKE_DELETED", "카페인 섭취 내역이 성공적으로 삭제되었습니다."),
 
     //카페인 리포트 관련 응답

@@ -39,8 +39,8 @@ public enum ErrorStatus implements BaseCode {
     ALARM_SETTING_NOT_FOUND(404, "ALARM_SETTING_NOT_FOUND", "알림 설정 정보를 찾을 수 없습니다."),
 
     // 섭취 내역 관련 오류
-    INVALID_INTAKE_INFO(400, "INVALID_INTAKE_INFO", "필수 데이터 필드가 누락되었습니다"),
-    INTAKE_INFO_NOT_FOUND(404, "INTAKE_INFO_NOT_FOUND", "섭취 내역을 찾을 수 없습니다."),
+    INVALID_INTAKE_INFO(400, "INVALID_INTAKE_INFO", "필수 데이터 필드가 누락되었습니다."),
+    INTAKE_NOT_FOUND(404, "INTAKE_NOT_FOUND", "섭취 내역을 찾을 수 없습니다."),
     RESIDUAL_SAVE_ERROR(500, "RESIDUAL_SAVE_ERROR", "카페인 잔존량 데이터 저장에 실패했습니다. 다시 시도해주세요."),
     INTAKE_DELETE_FAILED(500, "INTAKE_DELETE_FAILED", "섭취 내역 삭제에 실패했습니다. 다시 시도해주세요."),
     INTAKE_UPDATE_FAILED(500, "INTAKE_UPDATE_FAILED", "섭취 내역 수정에 실패했습니다. 다시 시도해주세요."),

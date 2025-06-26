@@ -93,7 +93,7 @@ jobs:
           
           INSTANCE_NAME=$(curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/name)
 
-          cat > /opt/promtail/promtail.yaml <<EOF
+          cat > /opt/promtail/promtail.yaml <<EOC
           server:
             http_listen_port: 9080
             grpc_listen_port: 0

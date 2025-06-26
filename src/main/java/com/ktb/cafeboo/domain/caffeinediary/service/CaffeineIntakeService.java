@@ -16,12 +16,10 @@ import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import com.ktb.cafeboo.global.enums.DrinkSize;
 import jakarta.transaction.Transactional;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
-import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -61,7 +59,8 @@ public class CaffeineIntakeService {
         User user = userService.findUserById(userId);
 
         //request dto에 required field 값 누락 시 exception 발생
-        if(request.drinkId() == null || request.drinkSize() == null || request.intakeTime() == null || request.drinkCount() == null || request.caffeineAmount() == null){
+        if(request.drinkId() == null || request.drinkSize() == null || request.intakeTime() == null || request.drinkCount() == null || request.caffeineAmount() == null ||
+            request.drinkId().isEmpty() || request.drinkSize().isEmpty()){
             log.error("[CaffeineIntakeService.recordCaffeineIntake] 필수 필드 누락 - request={}", request);
             throw new CustomApiException(ErrorStatus.BAD_REQUEST);
         }
@@ -107,7 +106,7 @@ public class CaffeineIntakeService {
      */
     public CaffeineIntake getCaffeineIntakeById(Long intakeId) {
         return intakeRepository.findById(intakeId)
-            .orElseThrow(() -> new CustomApiException(ErrorStatus.INTAKE_INFO_NOT_FOUND));
+            .orElseThrow(() -> new CustomApiException(ErrorStatus.INTAKE_NOT_FOUND));
     }
 
     /**
@@ -117,7 +116,8 @@ public class CaffeineIntakeService {
      * @return 수정된 카페인 섭취 기록에 대한 응답
      * @throws IllegalArgumentException 해당 ID의 섭취 기록이 없거나, 유효하지 않은 음료 ID가 입력된 경우 발생
      */
-    public CaffeineIntakeResponse updateCaffeineIntake(Long intakeId, CaffeineIntakeRequest request) {
+    public CaffeineIntakeResponse updateCaffeineIntake(Long intakeId, CaffeineIntakeRequest request)
+        throws Exception {
         // 1. 수정할 섭취 기록 조회
         try {
             CaffeineIntake intake = getCaffeineIntakeById(intakeId);
@@ -185,12 +185,12 @@ public class CaffeineIntakeService {
             );
 
         }
+        catch (CustomApiException e){
+            throw new CustomApiException(ErrorStatus.INTAKE_NOT_FOUND);
+        }
         catch(Exception e){ // Error 대신 Exception으로 catch 하는 것이 더 일반적입니다.
             log.error("[CaffeineIntakeService.updateCaffeineIntake] 섭취 기록 수정 실패 - intakeId: {}, request: {}", intakeId, request);
-            // 필요하다면 여기서 예외를 다시 던지거나, 특정 예외 유형에 따라 다른 처리를 할 수 있습니다.
-            throw new RuntimeException("카페인 섭취 내역 수정 실패", e);
-            // 또는 특정 에러 코드나 메시지를 담은 응답을 클라이언트에게 반환할 수도 있습니다.
-            // return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("카페인 섭취 수정에 실패했습니다.");
+            throw new CustomApiException(ErrorStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -211,19 +211,26 @@ public class CaffeineIntakeService {
             intakeRepository.deleteById(intakeId);
         }
         catch(Exception e){
-            log.error("[CaffeineIntakeService.updateCaffeineIntake] 섭취 기록 삭ㅈ[ 실패 - intakeId: {}", intakeId);
-            throw new RuntimeException("카페인 섭취 내역 삭제 실패", e);
+            log.error("[CaffeineIntakeService.deleteCaffeineIntake] 섭취 기록 삭제 실패 - intakeId: {}", intakeId);
+            throw new CustomApiException(ErrorStatus.INTAKE_DELETE_FAILED);
         }
     }
 
     public MonthlyCaffeineDiaryResponse getCaffeineIntakeDiary(Long userId, String targetYear, String targetMonth){
         if(targetYear == null || targetMonth == null || targetYear.isEmpty() || targetMonth.isEmpty()){
             log.error("[CaffeineIntakeService.getCaffeineIntakeDiary] 파라미터 누락 - year={}, month={}", targetYear, targetMonth);
-            throw new CustomApiException(ErrorStatus.INVALID_PARAMETER);
+            throw new CustomApiException(ErrorStatus.BAD_REQUEST);
         }
 
-        int year = Integer.parseInt(targetYear);
-        int month = Integer.parseInt(targetMonth);
+        int year, month;
+
+        try{
+            year = Integer.parseInt(targetYear);
+            month = Integer.parseInt(targetMonth);
+        }
+        catch (Exception e){
+            throw new CustomApiException(ErrorStatus.BAD_REQUEST);
+        }
 
         LocalDateTime start = LocalDate.of(year, month, 1).atStartOfDay();
         LocalDateTime end = start.plusMonths(1).minusNanos(1);
@@ -271,10 +278,16 @@ public class CaffeineIntakeService {
     public DailyCaffeineDiaryResponse getDailyCaffeineIntake(Long userId, String targetDate){
         if(targetDate == null || targetDate.isEmpty()){
             log.error("[CaffeineIntakeService.getDailyCaffeineIntake] 파라미터 누락 - date={}", targetDate);
-            throw new CustomApiException(ErrorStatus.INVALID_PARAMETER);
+            throw new CustomApiException(ErrorStatus.BAD_REQUEST);
         }
 
-        LocalDate date = LocalDate.parse(targetDate);
+        LocalDate date;
+        try{
+            date = LocalDate.parse(targetDate);
+        }
+        catch (Exception e){
+            throw new CustomApiException(ErrorStatus.BAD_REQUEST);
+        }
 
         LocalDateTime start = date.atStartOfDay();
         LocalDateTime end = date.atTime(LocalTime.MAX);

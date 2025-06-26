@@ -2,7 +2,7 @@ name: Deploy Backend to PROD MIG
 
 on:
   push:
-    branches: [ main ]
+    branches: [ test ]
 
 jobs:
   deploy:
@@ -93,7 +93,7 @@ jobs:
           
           INSTANCE_NAME=$(curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/name)
 
-          cat <<EOC > /opt/promtail/promtail-config.yaml
+          cat <<EOF > /opt/promtail/promtail-config.yaml
           server:
             http_listen_port: 9080
             grpc_listen_port: 0
@@ -109,9 +109,9 @@ jobs:
                   labels:
                     job: back
                     app: cafeboo
-                    instance: "${HOSTNAME}"
+                    instance: "${INSTANCE_NAME}"
                     __path__: /var/lib/docker/containers/*/*.log
-          EOC
+          EOF
 
           docker stop promtail || true
           docker rm promtail || true

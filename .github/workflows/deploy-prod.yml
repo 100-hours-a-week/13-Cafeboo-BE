@@ -112,14 +112,15 @@ jobs:
                     instance: "${INSTANCE_NAME}"
                     __path__: /var/lib/docker/containers/*/*.log
           EOC
+          touch /opt/promtail/positions.yaml
+          chown 65534:65534 /opt/promtail/positions.yaml
 
           docker stop promtail || true
           docker rm promtail || true
 
           docker run -d --name promtail --network host \
             -v /var/lib/docker/containers:/var/lib/docker/containers:ro \
-            -v /opt/promtail/promtail-config.yaml:/etc/promtail/promtail.yaml \
-            -v /opt/promtail:/etc/promtail \
+            -v /opt/promtail:/etc/promtail:ro \
             grafana/promtail:2.9.4 \
             -config.file=/etc/promtail/promtail.yaml
 

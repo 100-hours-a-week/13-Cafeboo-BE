@@ -52,6 +52,7 @@ public enum ErrorStatus implements BaseCode {
     // 외부 시스템 관련 오류
     AI_SERVER_ERROR(502, "AI_SERVER_ERROR", "AI 서버와의 통신 중 오류가 발생했습니다."),
     S3_REVIEW_IMAGE_UPLOAD_FAILED(500, "S3_REVIEW_IMAGE_UPLOAD_FAILED", "S3에 후기 이미지를 업로드하는 데 실패했습니다."),
+    S3_PROFILE_IMAGE_UPLOAD_FAILED(500, "S3_PROFILE_IMAGE_UPLOAD_FAILED", "S3에 프로필 이미지를 업로드하는 데 실패했습니다."),
 
     //리포트 관련 오류
     REPORT_NOT_FOUND(404, "REPORT_NOT_FOUND", "리포트 정보를 찾을 수 없습니다."),

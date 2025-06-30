@@ -41,7 +41,6 @@ public class WeeklyReportService {
 
     private final WeeklyReportRepository weeklyReportRepository;
     private final UserService userService;
-    private final AiServerClient aiServerClient;
 
     public WeeklyReport getOrCreateWeeklyReport(Long userId, MonthlyReport monthlyReport, LocalDate date) {
         int year = date.get(IsoFields.WEEK_BASED_YEAR);
@@ -95,18 +94,6 @@ public class WeeklyReportService {
             endOfMonth = endOfMonth.minusWeeks(1);
         }
 
-//        // 주어진 year와 month로 해당 달의 첫 번째 날짜를 얻습니다.
-//        LocalDate startOfMonth = LocalDate.of(year, month, 1);
-//
-//        // 해당 달의 첫 번째 주 월요일을 찾습니다.
-//        LocalDate firstMondayOfMonth = firstDayOfMonth.with(TemporalAdjusters.firstInMonth(DayOfWeek.MONDAY));
-//
-//        // 만약 첫 번째 날짜가 월요일보다 앞선다면, 그 주는 이전 달의 마지막 주에 해당할 수 있습니다.
-//        // 이를 보정하기 위해 첫 번째 월요일이 없다면 해당 달의 1일로 시작하는 주를 기준으로 합니다.
-//        LocalDate firstWeekStart = firstMondayOfMonth.getMonthValue() != month ?
-//            firstDayOfMonth : firstMondayOfMonth;
-//
-//        // 첫 번째 주 시작 날짜에 (weekOfMonth - 1) 주를 더하여 해당 월의 weekOfMonth 번째 주의 시작 날짜를 얻습니다.
         LocalDate startDate = startOfMonth.plusWeeks(week - 1).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         LocalDate endDate = startDate.plusDays(6);
 
@@ -127,7 +114,6 @@ public class WeeklyReportService {
                 .build());
 
         float weeklyTotal = weeklyReport.getTotalCaffeineMg();
-        //float dailyLimit = user.getDailyLimit();
         int overLimitDays = weeklyReport.getOverIntakeDays();
         float dailyAvg = weeklyReport.getDailyCaffeineAvgMg();
 
@@ -201,8 +187,9 @@ public class WeeklyReportService {
 
         try {
             yearMonth = YearMonth.of(Integer.parseInt(givenYear), Integer.parseInt(givenMonth));
-        } catch (DateTimeException e) {
-            throw new CustomApiException(ErrorStatus.BAD_REQUEST);
+        }
+        catch (Exception e) {
+            throw new CustomApiException(ErrorStatus.INVALID_PARAMETER);
         }
 
 
@@ -286,42 +273,6 @@ public class WeeklyReportService {
         Map<Integer, WeeklyReport> reportMap = weeklyStats.stream()
             .collect(Collectors.toMap(WeeklyReport::getWeekNum, Function.identity()));
 
-//        List<MonthlyCaffeineReportResponse.weeklyIntakeTotal> weeklyIntakeTotals = weekNums.stream()
-//            .map(weekNum -> {
-//                WeeklyReport report = reportMap.get(weekNum);
-//                if (report != null) {
-//                    return MonthlyCaffeineReportResponse.weeklyIntakeTotal.builder()
-//                        .isoWeek(String.format("%d-W%02d", report.getYear(), report.getWeekNum()))
-//                        .totalCaffeineMg(Math.round(report.getTotalCaffeineMg()))
-//                        .build();
-//                } else {
-//                    // 없는 주차는 0으로 채움
-//                    return MonthlyCaffeineReportResponse.weeklyIntakeTotal.builder()
-//                        .isoWeek(String.format("%d-W%02d", resolvedYear, weekNum))
-//                        .totalCaffeineMg(0)
-//                        .build();
-//                }
-//            })
-//            .collect(Collectors.toList());
-//
-//        float sum = (float) weeklyIntakeTotals.stream()
-//            .mapToDouble(MonthlyCaffeineReportResponse.weeklyIntakeTotal::getTotalCaffeineMg)
-//            .sum();
-//
-//        float avg = weeklyIntakeTotals.isEmpty() ? 0f : sum / weeklyIntakeTotals.size();
-//
-//        MonthlyCaffeineReportResponse response = MonthlyCaffeineReportResponse.builder()
-//            .filter(MonthlyCaffeineReportResponse.Filter.builder()
-//                .year(String.valueOf(resolvedYear))
-//                .month(String.valueOf(resolvedMonth))
-//                .build()
-//            )
-//            .startDate(startDate.toString())
-//            .endDate(endDate.toString())
-//            .monthlyCaffeineTotal(sum)
-//            .weeklyCaffeineAvg(avg)
-//            .weeklyIntakeTotals(weeklyIntakeTotals)
-//            .build();
         MonthlyCaffeineReportResponse response = MonthlyCaffeineReportResponse.create(
             resolvedYear, resolvedMonth, startDate, endDate, reportMap, weekNums
         );

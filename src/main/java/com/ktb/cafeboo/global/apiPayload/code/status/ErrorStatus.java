@@ -39,8 +39,8 @@ public enum ErrorStatus implements BaseCode {
     ALARM_SETTING_NOT_FOUND(404, "ALARM_SETTING_NOT_FOUND", "알림 설정 정보를 찾을 수 없습니다."),
 
     // 섭취 내역 관련 오류
-    INVALID_INTAKE_INFO(400, "INVALID_INTAKE_INFO", "필수 데이터 필드가 누락되었습니다"),
-    INTAKE_INFO_NOT_FOUND(404, "INTAKE_INFO_NOT_FOUND", "섭취 내역을 찾을 수 없습니다."),
+    INVALID_INTAKE_INFO(400, "INVALID_INTAKE_INFO", "필수 데이터 필드가 누락되었습니다."),
+    INTAKE_NOT_FOUND(404, "INTAKE_NOT_FOUND", "섭취 내역을 찾을 수 없습니다."),
     RESIDUAL_SAVE_ERROR(500, "RESIDUAL_SAVE_ERROR", "카페인 잔존량 데이터 저장에 실패했습니다. 다시 시도해주세요."),
     INTAKE_DELETE_FAILED(500, "INTAKE_DELETE_FAILED", "섭취 내역 삭제에 실패했습니다. 다시 시도해주세요."),
     INTAKE_UPDATE_FAILED(500, "INTAKE_UPDATE_FAILED", "섭취 내역 수정에 실패했습니다. 다시 시도해주세요."),
@@ -52,6 +52,7 @@ public enum ErrorStatus implements BaseCode {
     // 외부 시스템 관련 오류
     AI_SERVER_ERROR(502, "AI_SERVER_ERROR", "AI 서버와의 통신 중 오류가 발생했습니다."),
     S3_REVIEW_IMAGE_UPLOAD_FAILED(500, "S3_REVIEW_IMAGE_UPLOAD_FAILED", "S3에 후기 이미지를 업로드하는 데 실패했습니다."),
+    S3_PROFILE_IMAGE_UPLOAD_FAILED(500, "S3_PROFILE_IMAGE_UPLOAD_FAILED", "S3에 프로필 이미지를 업로드하는 데 실패했습니다."),
 
     //리포트 관련 오류
     REPORT_NOT_FOUND(404, "REPORT_NOT_FOUND", "리포트 정보를 찾을 수 없습니다."),

@@ -19,6 +19,7 @@ public enum SuccessStatus implements BaseCode {
     // 유저 관련 응답
     EMAIL_DUPLICATION_CHECK_SUCCESS(200, "EMAIL_DUPLICATION_CHECK_SUCCESS", "이메일 중복 확인 결과를 반환했습니다."),
     BASIC_PROFILE_FETCH_SUCCESS(200, "BASIC_PROFILE_FETCH_SUCCESS", "기본 프로필이 성공적으로 조회되었습니다."),
+    BASIC_PROFILE_UPDATE_SUCCESS(200, "BASIC_PROFILE_UPDATE_SUCCESS", "기본 프로필 정보가 성공적으로 수정되었습니다."),
     
     //유저 건강 프로필 관련 응답
     HEALTH_PROFILE_CREATION_SUCCESS(201, "HEALTH_PROFILE_CREATION_SUCCESS", "건강 프로필이 성공적으로 저장되었습니다."),
@@ -37,7 +38,7 @@ public enum SuccessStatus implements BaseCode {
 
     //카페인 섭취 관련 응답
     CAFFEINE_INTAKE_RECORDED(201, "CAFFEINE_INTAKE_RECORDED", "카페인 섭취 내역이 성공적으로 등록되었습니다."),
-    CAFFEINE_INTAKE_UPDATED(200, "CAFFEINE_INTAKE_UPDATED", "카페인 섭취 내역이 성공적으로 갱신되었습니다."),
+    CAFFEINE_INTAKE_UPDATED(200, "CAFFEINE_INTAKE_UPDATED", "카페인 섭취 내역이 성공적으로 수정되었습니다."),
     CAFFEINE_INTAKE_DELETED(204, "CAFFEINE_INTAKE_DELETED", "카페인 섭취 내역이 성공적으로 삭제되었습니다."),
 
     //카페인 리포트 관련 응답

@@ -37,6 +37,7 @@ public class CaffeineRecommendationService {
                 .height(healthInfo.getHeight())
                 .isSmoker(healthInfo.getSmoking() ? 1 : 0)
                 .takeHormonalContraceptive(healthInfo.getTakingBirthPill() ? 1 : 0)
+                .isPregnant(healthInfo.getPregnant() ? 1 : 0)
                 .caffeineSensitivity(caffeineSensitivity)
                 .build();
 

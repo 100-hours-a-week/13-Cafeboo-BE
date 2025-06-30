@@ -4,6 +4,8 @@ import com.ktb.cafeboo.domain.caffeinediary.model.CaffeineResidual;
 import com.ktb.cafeboo.domain.caffeinediary.repository.CaffeineResidualRepository;
 import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.domain.user.service.UserService;
+import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
+import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -84,7 +86,7 @@ public class CaffeineResidualService {
             residualRepository.saveAll(residualsToModify);
         } catch (Exception e) {
             log.error("[CaffeineResidualService.modifyResidualAmounts] 잔존량 수정 저장 실패 - userId={}, message={}", userId, e.getMessage(), e);
-            throw new RuntimeException("카페인 잔존량 저장 중 오류가 발생했습니다.", e);
+            throw new CustomApiException(ErrorStatus.RESIDUAL_SAVE_ERROR);
         }
     }
 

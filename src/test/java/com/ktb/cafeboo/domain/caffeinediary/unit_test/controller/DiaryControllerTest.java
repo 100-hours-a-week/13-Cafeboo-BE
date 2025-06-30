@@ -105,7 +105,6 @@ class DiaryControllerTest {
 
     @Nested
     @DisplayName("카페인 섭취 기록 (POST /api/v1/caffeine-intakes)")
-    @WithMockUser
     class RecordCaffeineIntakeTests {
         @Test
         @DisplayName("카페인 기록 성공 - 200 OK")
@@ -130,8 +129,8 @@ class DiaryControllerTest {
             // then
             verify(caffeineIntakeService, times(1)).recordCaffeineIntake(eq(1L), any(CaffeineIntakeRequest.class));
 
-            result.andExpect(jsonPath("$.code").value("CAFFEINE_INTAKE_RECORDED"))
-                .andExpect(jsonPath("$.message").value("카페인 섭취 내역이 성공적으로 등록되었습니다."))
+            result.andExpect(jsonPath("$.code").value(SuccessStatus.CAFFEINE_INTAKE_RECORDED.getCode()))
+                .andExpect(jsonPath("$.message").value(SuccessStatus.CAFFEINE_INTAKE_RECORDED.getMessage()))
                 .andExpect(jsonPath("$.data.id").value(response.id()))
                 .andExpect(jsonPath("$.data.drinkId").value(response.drinkId()))
                 .andExpect(jsonPath("$.data.drinkName").value(response.drinkName()))
@@ -161,8 +160,9 @@ class DiaryControllerTest {
                 .andExpect(status().isBadRequest());
 
             // then
-            result.andExpect(jsonPath("$.code").value("INVALID_INTAKE_INFO"))
-                .andExpect(jsonPath("$.message").value("필수 데이터 필드가 누락되었습니다."));
+            result.andExpect(jsonPath("$.code").value(ErrorStatus.INVALID_INTAKE_INFO.getCode()))
+                .andExpect(jsonPath("$.message").value(ErrorStatus.INVALID_INTAKE_INFO.getMessage()))
+                .andExpect(jsonPath("$.data").doesNotExist());
 
             verify(caffeineIntakeService, times(1)).recordCaffeineIntake(1L, invalidRequest);
         }
@@ -188,8 +188,8 @@ class DiaryControllerTest {
                 .andExpect(status().isInternalServerError());
 
             // then
-            result.andExpect(jsonPath("$.code").value("INTERNAL_SERVER_ERROR"))
-                .andExpect(jsonPath("$.message").value("요청을 처리하는 도중 서버에서 문제가 발생했습니다."))
+            result.andExpect(jsonPath("$.code").value(ErrorStatus.INTERNAL_SERVER_ERROR.getCode()))
+                .andExpect(jsonPath("$.message").value(ErrorStatus.INTERNAL_SERVER_ERROR.getMessage()))
                 .andExpect(jsonPath("$.data").doesNotExist()
                 );
 
@@ -199,7 +199,6 @@ class DiaryControllerTest {
 
     @Nested
     @DisplayName("카페인 섭취 기록 삭제 (DELETE /api/v1/caffeine-intakes)")
-    @WithMockUser
     class DeleteCaffeineIntakeTests{
         @Test
         @DisplayName("카페인 섭취 기록 삭제 성공")
@@ -240,8 +239,8 @@ class DiaryControllerTest {
                 .andExpect(status().isNotFound());
 
             // then
-            result.andExpect(jsonPath("$.code").value("INTAKE_NOT_FOUND"))
-                    .andExpect(jsonPath("$.message").value("섭취 내역을 찾을 수 없습니다."))
+            result.andExpect(jsonPath("$.code").value(ErrorStatus.INTAKE_NOT_FOUND.getCode()))
+                    .andExpect(jsonPath("$.message").value(ErrorStatus.INTAKE_NOT_FOUND.getMessage()))
                     .andExpect(jsonPath("$.data").doesNotExist());
 
             // mock 서비스의 deleteCaffeineIntake 메소드가 정확히 한 번 호출되었는지 검증
@@ -269,8 +268,8 @@ class DiaryControllerTest {
                 .andExpect(status().isInternalServerError());
 
             // then
-            result.andExpect(jsonPath("$.code").value("INTERNAL_SERVER_ERROR"))
-                .andExpect(jsonPath("$.message").value("요청을 처리하는 도중 서버에서 문제가 발생했습니다."))
+            result.andExpect(jsonPath("$.code").value(ErrorStatus.INTERNAL_SERVER_ERROR.getCode()))
+                .andExpect(jsonPath("$.message").value(ErrorStatus.INTERNAL_SERVER_ERROR.getMessage()))
                 .andExpect(jsonPath("$.data").doesNotExist()
                 );
 
@@ -280,7 +279,6 @@ class DiaryControllerTest {
 
     @Nested
     @DisplayName("카페인 섭취 기록 수정 (PATCH /api/v1/caffeine-intakes)")
-    @WithMockUser
     class UpdateCaffeineIntakeTests{
         @Test
         @DisplayName("카페인 섭취 기록 수정 성공")
@@ -308,8 +306,8 @@ class DiaryControllerTest {
                 .andExpect(status().isOk());
 
             // then
-            result.andExpect(jsonPath("$.code").value("CAFFEINE_INTAKE_UPDATED"))
-                .andExpect(jsonPath("$.message").value("카페인 섭취 내역이 성공적으로 수정되었습니다."))
+            result.andExpect(jsonPath("$.code").value(SuccessStatus.CAFFEINE_INTAKE_UPDATED.getCode()))
+                .andExpect(jsonPath("$.message").value(SuccessStatus.CAFFEINE_INTAKE_UPDATED.getMessage()))
                 .andExpect(jsonPath("$.data.id").value(response.id()))
                 .andExpect(jsonPath("$.data.drinkId").value(response.drinkId()))
                 .andExpect(jsonPath("$.data.drinkName").value(response.drinkName()))
@@ -344,8 +342,8 @@ class DiaryControllerTest {
                 .andExpect(status().isNotFound());
 
             // then
-            result.andExpect(jsonPath("$.code").value("INTAKE_NOT_FOUND"))
-                .andExpect(jsonPath("$.message").value("섭취 내역을 찾을 수 없습니다."))
+            result.andExpect(jsonPath("$.code").value(ErrorStatus.INTAKE_NOT_FOUND.getCode()))
+                .andExpect(jsonPath("$.message").value(ErrorStatus.INTAKE_NOT_FOUND.getMessage()))
                 .andExpect(jsonPath("$.data").doesNotExist()
                 );
 
@@ -376,8 +374,8 @@ class DiaryControllerTest {
                 .andExpect(status().isInternalServerError());
 
             // then
-            result.andExpect(jsonPath("$.code").value("INTERNAL_SERVER_ERROR"))
-                .andExpect(jsonPath("$.message").value("요청을 처리하는 도중 서버에서 문제가 발생했습니다."))
+            result.andExpect(jsonPath("$.code").value(ErrorStatus.INTERNAL_SERVER_ERROR.getCode()))
+                .andExpect(jsonPath("$.message").value(ErrorStatus.INTERNAL_SERVER_ERROR.getMessage()))
                 .andExpect(jsonPath("$.data").doesNotExist()
                 );
 
@@ -388,7 +386,6 @@ class DiaryControllerTest {
 
     @Nested
     @DisplayName("카페인 다이어리 달력 조회 (GET /api/v1/caffeine-intakes/monthly)")
-    @WithMockUser
     class getCaffeineIntakeDiaryTests{
 
         @Test
@@ -516,7 +513,6 @@ class DiaryControllerTest {
 
     @Nested
     @DisplayName("카페인 다이어리 일별 조회 (GET /api/v1/caffeine-intakes/daily)")
-    @WithMockUser
     class getDailyCaffeineIntake{
         @Test
         @DisplayName("카페인 다이어리 일별 조회 성공 - 200")

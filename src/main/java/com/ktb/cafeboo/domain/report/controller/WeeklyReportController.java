@@ -18,6 +18,8 @@ import com.ktb.cafeboo.global.security.userdetails.CustomUserDetails;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -55,11 +57,23 @@ public class WeeklyReportController {
 
         Long userId = userDetails.getId();
 
-        List<DailyStatistics> dailyStats = dailyStatisticsService.getDailyStatisticsForWeek(userId, targetYear, targetMonth, targetWeek);
+        try{
+            List<DailyStatistics> dailyStats = dailyStatisticsService.getDailyStatisticsForWeek(userId, targetYear, targetMonth, targetWeek);
 
-        WeeklyCaffeineReportResponse response = weeklyReportService.getWeeklyReport(userId, targetYear, targetMonth, targetWeek, dailyStats);
+            WeeklyCaffeineReportResponse response = weeklyReportService.getWeeklyReport(userId, targetYear, targetMonth, targetWeek, dailyStats);
 
-        return ResponseEntity.ok(ApiResponse.of(SuccessStatus.WEEKLY_CAFFEINE_REPORT_SUCCESS, response));
+            return ResponseEntity.ok(ApiResponse.of(SuccessStatus.WEEKLY_CAFFEINE_REPORT_SUCCESS, response));
+        }
+        catch (CustomApiException e){
+            return ResponseEntity
+                .status(e.getErrorCode().getStatus()) // ErrorStatus에서 정의된 HTTP 상태 코드 사용
+                .body(ApiResponse.of(e.getErrorCode(), null));
+        }
+        catch (Exception e) {
+            return ResponseEntity
+                .status(ErrorStatus.INTERNAL_SERVER_ERROR.getStatus()) // ErrorStatus에서 정의된 HTTP 상태 코드 사용
+                .body(ApiResponse.of(ErrorStatus.INTERNAL_SERVER_ERROR, null));
+        }
     }
 
     @GetMapping("/test")
@@ -72,13 +86,19 @@ public class WeeklyReportController {
             CreateWeeklyAnalysisResponse response = weeklyReportScheduler.generateWeeklyReports();
             log.debug("[WeeklyReportController.sendWeeklyCaffeineReportToAI] 주간 리포트 생성 완료 - 응답={}", response);
             return ResponseEntity.ok(ApiResponse.of(SuccessStatus.REPORT_GENERATION_SUCCESS, response));
-        } catch (CustomApiException e) {
-            log.warn("[WeeklyReportController.sendWeeklyCaffeineReportToAI] 커스텀 예외 발생 - message={}", e.getMessage());
-            throw e;
-        } catch (Exception e) {
+        }
+        catch (CustomApiException e) {
             log.error("[WeeklyReportController.sendWeeklyCaffeineReportToAI] 시스템 예외 발생 - message={}", e.getMessage(), e);
-            throw new CustomApiException(ErrorStatus.REPORT_GENERATION_FAILED);
-        } finally {
+            return ResponseEntity
+                .status(e.getErrorCode().getStatus())
+                .body(ApiResponse.of(e.getErrorCode(), null));
+        }
+        catch (Exception e){
+            return ResponseEntity
+                .status(ErrorStatus.INTERNAL_SERVER_ERROR.getStatus())
+                .body(ApiResponse.of(ErrorStatus.INTERNAL_SERVER_ERROR, null));
+        }
+        finally {
             log.info("[WeeklyReportController.sendWeeklyCaffeineReportToAI] 주간 리포트 AI 생성 요청 종료");
         }
     }
@@ -88,12 +108,27 @@ public class WeeklyReportController {
      * @param request AI 서버가 비동기로 생성한 유저 주간 섭취내역에 대한 평가
      */
     @PostMapping("/ai_callback")
-    public void getWeeklyCaffeineReportFromAI(@RequestBody ReceiveWeeklyAnalysisRequest request){
+    public ResponseEntity<ApiResponse<Object>> getWeeklyCaffeineReportFromAI(@RequestBody ReceiveWeeklyAnalysisRequest request){
         log.info("[WeeklyReportController.getWeeklyCaffeineReportFromAI] AI 서버로부터 주간 리포트 분석 콜백 수신 - reportCount={}", request.getReports().size());
 
         List<ReceiveWeeklyAnalysisRequest.ReportDto> receivedReports = request.getReports();
 
-        weeklyReportService.updateAiMessage(receivedReports);
-        log.info("[WeeklyReportController.getWeeklyCaffeineReportFromAI] AI 분석 처리 완료");
+        try{
+            weeklyReportService.updateAiMessage(receivedReports);
+            log.info("[WeeklyReportController.getWeeklyCaffeineReportFromAI] AI 분석 처리 완료");
+            return ResponseEntity.ok(ApiResponse.of(SuccessStatus.AI_CALLBACK_SUCCESS, null));
+        }
+        catch (CustomApiException e){
+            log.error("[WeeklyReportController.getWeeklyCaffeineReportFromAI] AI 분석 처리 실패 (CustomApiException): {}", e.getMessage());
+            return ResponseEntity
+                .status(e.getErrorCode().getStatus())
+                .body(ApiResponse.of(e.getErrorCode(), null));
+        }
+        catch (Exception e) {
+            log.error("[WeeklyReportController.getWeeklyCaffeineReportFromAI] AI 분석 처리 중 예상치 못한 오류 발생: {}", e.getMessage(), e);
+            return ResponseEntity
+                .status(ErrorStatus.INTERNAL_SERVER_ERROR.getStatus())
+                .body(ApiResponse.of(ErrorStatus.INTERNAL_SERVER_ERROR, null));
+        }
     }
 }

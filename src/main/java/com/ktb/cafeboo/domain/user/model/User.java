@@ -62,7 +62,7 @@ public class User extends BaseEntity {
     private UserHealthInfo healthInfo;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private UserCaffeinInfo caffeinInfo;
+    private UserCaffeineInfo caffeinInfo;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private UserAlarmSetting alarmSetting;

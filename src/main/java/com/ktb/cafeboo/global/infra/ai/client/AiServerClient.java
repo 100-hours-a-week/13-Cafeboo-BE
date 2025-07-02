@@ -1,5 +1,7 @@
 package com.ktb.cafeboo.global.infra.ai.client;
 
+import com.ktb.cafeboo.global.infra.ai.dto.CreateDrinkRecommendationRequest;
+import com.ktb.cafeboo.global.infra.ai.dto.CreateDrinkRecommendationResponse;
 import com.ktb.cafeboo.global.infra.ai.dto.CreateWeeklyAnalysisRequest;
 import com.ktb.cafeboo.global.infra.ai.dto.CreateWeeklyAnalysisResponse;
 import com.ktb.cafeboo.global.infra.ai.dto.PredictCaffeineLimitByRuleRequest;
@@ -58,6 +60,17 @@ public class AiServerClient {
                 .retrieve()
                 .bodyToMono(ToxicityDetectionResponse.class)
                 .block();
+    }
+
+    public CreateDrinkRecommendationResponse createCoffeeRecommendation(
+        CreateDrinkRecommendationRequest request){
+        return aiServerWebClient.post()
+            .uri("/internal/ai/drink_recommendation")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(request)
+            .retrieve()
+            .bodyToMono(CreateDrinkRecommendationResponse.class)
+            .block();
     }
 }
 

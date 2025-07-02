@@ -4,7 +4,7 @@ import com.ktb.cafeboo.domain.user.dto.UserCaffeineInfoCreateRequest;
 import com.ktb.cafeboo.domain.user.dto.UserCaffeineInfoResponse;
 import com.ktb.cafeboo.domain.user.dto.UserCaffeineInfoUpdateRequest;
 import com.ktb.cafeboo.domain.user.model.User;
-import com.ktb.cafeboo.domain.user.model.UserCaffeinInfo;
+import com.ktb.cafeboo.domain.user.model.UserCaffeineInfo;
 
 import java.time.LocalTime;
 import java.util.List;
@@ -12,9 +12,9 @@ import java.util.Optional;
 
 public class UserCaffeineInfoMapper {
 
-    public static UserCaffeinInfo toEntity(UserCaffeineInfoCreateRequest dto, User user) {
+    public static UserCaffeineInfo toEntity(UserCaffeineInfoCreateRequest dto, User user) {
 
-        return UserCaffeinInfo.builder()
+        return UserCaffeineInfo.builder()
                 .user(user)
                 .caffeineSensitivity(dto.caffeineSensitivity())
                 .averageDailyCaffeineIntake(dto.averageDailyCaffeineIntake())
@@ -22,7 +22,7 @@ public class UserCaffeineInfoMapper {
                 .build();
     }
 
-    public static void updateEntity(UserCaffeinInfo entity, UserCaffeineInfoUpdateRequest dto) {
+    public static void updateEntity(UserCaffeineInfo entity, UserCaffeineInfoUpdateRequest dto) {
         if (dto.caffeineSensitivity() != null)
             entity.setCaffeineSensitivity(dto.caffeineSensitivity());
         if (dto.averageDailyCaffeineIntake() != null)
@@ -31,7 +31,7 @@ public class UserCaffeineInfoMapper {
             entity.setFrequentDrinkTime(LocalTime.parse(dto.frequentDrinkTime()));
     }
 
-    public static UserCaffeineInfoResponse toResponse(UserCaffeinInfo entity) {
+    public static UserCaffeineInfoResponse toResponse(UserCaffeineInfo entity) {
         List<String> favoriteDrinks = Optional.ofNullable(entity.getUser().getFavoriteDrinks())
                 .orElse(List.of())
                 .stream()

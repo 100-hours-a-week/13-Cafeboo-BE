@@ -16,3 +16,5 @@ hook_method_patterns=com.ktb.cafeboo.*.*
 xlog_sampling_enabled = false
 
 xlog_discard_service_patterns = /actuator/.*
+
+xlog_fully_discard_service_patterns=/actuator/.*

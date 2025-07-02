@@ -1,3 +1,6 @@
+# Scouter Agent Configuration
+# --- General Settings ---
+scouter.log_level=7
 net_collector_ip=${LOKI_VM_IP}
 obj_name=${HOSTNAME}
 net_collector_udp_port=6100
@@ -7,5 +10,5 @@ dump_dir=/opt/scouter-agent/dump
 plugin_dir=/opt/scouter-agent/plugin
 
 # com.ktb.cafeboo 패키지 하위의 모든 클래스/메서드를 대상
-# profile_fullstack_hooked_exception_enabled=true
-# hook_method_patterns=com.ktb.cafeboo.*.*
+profile_fullstack_hooked_exception_enabled=true
+hook_method_patterns=com.ktb.cafeboo.*.*

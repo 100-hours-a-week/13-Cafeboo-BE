@@ -7,7 +7,7 @@ import com.ktb.cafeboo.domain.report.service.DailyStatisticsService;
 import com.ktb.cafeboo.domain.user.dto.*;
 import com.ktb.cafeboo.domain.user.mapper.UserCaffeineInfoMapper;
 import com.ktb.cafeboo.domain.user.model.User;
-import com.ktb.cafeboo.domain.user.model.UserCaffeinInfo;
+import com.ktb.cafeboo.domain.user.model.UserCaffeineInfo;
 import com.ktb.cafeboo.domain.user.model.UserFavoriteDrinkType;
 import com.ktb.cafeboo.domain.user.repository.UserCaffeineInfoRepository;
 import com.ktb.cafeboo.domain.user.repository.UserRepository;
@@ -52,7 +52,7 @@ public class UserCaffeineInfoService {
         }
 
         try {
-            UserCaffeinInfo entity = UserCaffeineInfoMapper.toEntity(request, user);
+            UserCaffeineInfo entity = UserCaffeineInfoMapper.toEntity(request, user);
             entity.setSleepSensitiveThresholdMg(100f);  // 기본값
 
             try {
@@ -103,7 +103,7 @@ public class UserCaffeineInfoService {
                     return new CustomApiException(ErrorStatus.USER_NOT_FOUND);
                 });
 
-        UserCaffeinInfo entity = user.getCaffeinInfo();
+        UserCaffeineInfo entity = user.getCaffeinInfo();
         if (entity == null) {
             log.warn("[UserCaffeineInfoService.update] 카페인 정보 없음 - userId={}", userId);
             throw new CustomApiException(ErrorStatus.CAFFEINE_PROFILE_NOT_FOUND);
@@ -176,7 +176,7 @@ public class UserCaffeineInfoService {
                     return new CustomApiException(ErrorStatus.USER_NOT_FOUND);
                 });
 
-        UserCaffeinInfo entity = user.getCaffeinInfo();
+        UserCaffeineInfo entity = user.getCaffeinInfo();
         if (entity == null) {
             log.warn("[UserCaffeineInfoService.getCaffeineInfo] 카페인 정보 없음 - userId={}", userId);
             throw new CustomApiException(ErrorStatus.CAFFEINE_PROFILE_NOT_FOUND);

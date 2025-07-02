@@ -15,7 +15,7 @@ import java.time.LocalTime;
 @NoArgsConstructor
 @Table(name = "user_caffeine_info")
 @Where(clause = "deleted_at IS NULL")
-public class UserCaffeinInfo extends BaseEntity {
+public class UserCaffeineInfo extends BaseEntity {
     @OneToOne
     @MapsId
     @JoinColumn(name = "user_id")

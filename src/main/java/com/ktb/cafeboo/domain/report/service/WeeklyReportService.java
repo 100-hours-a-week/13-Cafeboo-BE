@@ -1,6 +1,5 @@
 package com.ktb.cafeboo.domain.report.service;
 
-import com.ktb.cafeboo.domain.caffeinediary.model.CaffeineIntake;
 import com.ktb.cafeboo.domain.report.dto.MonthlyCaffeineReportResponse;
 import com.ktb.cafeboo.domain.report.dto.WeeklyCaffeineReportResponse;
 import com.ktb.cafeboo.domain.report.model.DailyStatistics;
@@ -8,15 +7,12 @@ import com.ktb.cafeboo.domain.report.model.MonthlyReport;
 import com.ktb.cafeboo.domain.report.model.WeeklyReport;
 import com.ktb.cafeboo.domain.report.repository.WeeklyReportRepository;
 import com.ktb.cafeboo.domain.user.model.User;
-import com.ktb.cafeboo.domain.user.model.UserCaffeinInfo;
-import com.ktb.cafeboo.domain.user.model.UserHealthInfo;
+import com.ktb.cafeboo.domain.user.model.UserCaffeineInfo;
 import com.ktb.cafeboo.domain.user.service.UserService;
 import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
-import com.ktb.cafeboo.global.infra.ai.client.AiServerClient;
 import com.ktb.cafeboo.global.infra.ai.dto.ReceiveWeeklyAnalysisRequest;
 import jakarta.transaction.Transactional;
-import java.time.DateTimeException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -74,7 +70,7 @@ public class WeeklyReportService {
         int week = Integer.parseInt(targetWeek);
 
         User user = userService.findUserById(userId);
-        UserCaffeinInfo userCaffeinInfo = user.getCaffeinInfo();
+        UserCaffeineInfo userCaffeineInfo = user.getCaffeinInfo();
 
         LocalDate startOfMonth = LocalDate.of(year, month, 1);;
         DayOfWeek dayOfWeek = startOfMonth.getDayOfWeek();
@@ -147,7 +143,7 @@ public class WeeklyReportService {
             startDate.toString(),
             endDate.toString(),
             weeklyTotal,
-            (int) userCaffeinInfo.getDailyCaffeineLimitMg(),
+            (int) userCaffeineInfo.getDailyCaffeineLimitMg(),
             overLimitDays,
             dailyAvg,
             dailyIntakeTotals,

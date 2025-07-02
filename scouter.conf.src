@@ -12,3 +12,4 @@ plugin_dir=/opt/scouter-agent/plugin
 # com.ktb.cafeboo 패키지 하위의 모든 클래스/메서드를 대상
 profile_fullstack_hooked_exception_enabled=true
 hook_method_patterns=com.ktb.cafeboo.*.*
+hook_method_ignore_classes=org.springframework.boot.actuate.*,io.micrometer.prometheus.*,io.micrometer.core.instrument.*

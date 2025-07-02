@@ -44,29 +44,6 @@ public class WeeklyReportScheduler {
     @Scheduled(cron = "0 0 12 ? * MON") // 매주 월요일 오전 9시, 현재는 12시로 설정
     public CreateWeeklyAnalysisResponse generateWeeklyReports() {
         log.info("[IntakeSuggestionService.getPredictedIntakeSuggestion] 호출 시작");
-//        int targetYear = 2024;
-//        int targetWeekNum = 19;
-//
-//        // ISO 8601 표준 (월요일 시작, 한 주의 최소 4일 포함)을 따르는 WeekFields 객체 생성
-//        WeekFields isoWeekFields = WeekFields.of(Locale.getDefault());
-//
-//        // 해당 년도의 첫 번째 날짜
-//        LocalDate firstDayOfYear = LocalDate.of(targetYear, 1, 1);
-//
-//        // 첫 번째 주(week 1)의 첫 번째 날 (월요일) 찾기
-//        LocalDate firstMonday = firstDayOfYear;
-//        if (firstMonday.getDayOfWeek() != DayOfWeek.MONDAY) {
-//            firstMonday = firstMonday.with(WeekFields.ISO.dayOfWeek(), 1); // 해당 주의 월요일로 이동
-//            if (firstMonday.getYear() > targetYear) {
-//                firstMonday = firstDayOfYear.plusWeeks(1).with(WeekFields.ISO.dayOfWeek(), 1);
-//            }
-//        }
-//
-//        // targetWeekNum 주의 시작 날짜 계산
-//        LocalDate startDate = firstMonday.plusWeeks(targetWeekNum - 1);
-//
-//        // targetWeekNum 주의 마지막 날짜 계산 (일요일)
-//        LocalDate endDate = startDate.plusDays(6);
 
         List<User> users = userRepository.findAll();
         String callbackUrl = "http://localhost:8080/api/v1/reports/weekly/ai_callback";

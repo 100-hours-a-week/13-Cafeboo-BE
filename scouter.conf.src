@@ -13,6 +13,6 @@ plugin_dir=/opt/scouter-agent/plugin
 profile_fullstack_hooked_exception_enabled=true
 hook_method_patterns=com.ktb.cafeboo.*.*
 
-xlog_sampling_enabled = true
+xlog_sampling_enabled = false
 
-xlog_sampling_exclude_patterns = /actuator/.*
+xlog_discard_service_patterns = /actuator/.*

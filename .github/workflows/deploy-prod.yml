@@ -38,7 +38,7 @@ jobs:
         env:
           GITHUB_SHA: ${{ github.sha }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          PROD_DB_URL: ${{ secrets.PROD_DB_URL }}
+          LOADTEST_DB_URL: ${{ secrets.LOADTEST_DB_URL }}
           PROD_DB_USERNAME: ${{ secrets.PROD_DB_USERNAME }}
           PROD_DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
           PROD_KAKAO_REDIRECT_URI: ${{ secrets.PROD_KAKAO_REDIRECT_URI }}
@@ -71,7 +71,7 @@ jobs:
             --label app=cafeboo-back \
             -e SPRING_PROFILES_ACTIVE=prod \
             -e JWT_SECRET="${JWT_SECRET}" \
-            -e PROD_DB_URL="${PROD_DB_URL}" \
+            -e LOADTEST_DB_URL="${LOADTEST_DB_URL}" \
             -e PROD_DB_USERNAME="${PROD_DB_USERNAME}" \
             -e PROD_DB_PASSWORD="${PROD_DB_PASSWORD}" \
             -e PROD_KAKAO_REDIRECT_URI="${PROD_KAKAO_REDIRECT_URI}" \

@@ -14,7 +14,11 @@ import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChatReview;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChatReviewImage;
 import com.ktb.cafeboo.domain.coffeechat.repository.CoffeeChatMemberRepository;
 import com.ktb.cafeboo.domain.coffeechat.repository.CoffeeChatRepository;
+import com.ktb.cafeboo.domain.coffeechat.repository.CoffeeChatReviewImageRepository;
 import com.ktb.cafeboo.domain.coffeechat.repository.CoffeeChatReviewRepository;
+import com.ktb.cafeboo.domain.tag.model.CoffeeChatTag;
+import com.ktb.cafeboo.domain.tag.repository.CoffeeChatTagRepository;
+import com.ktb.cafeboo.domain.tag.repository.TagRepository;
 import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
@@ -31,8 +35,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -45,7 +49,10 @@ public class CoffeeChatReviewService {
     private final CoffeeChatRepository coffeeChatRepository;
     private final CoffeeChatReviewRepository coffeeChatReviewRepository;
     private final CoffeeChatMemberRepository coffeeChatMemberRepository;
+    private final CoffeeChatReviewImageRepository coffeeChatReviewImageRepository;
     private final CoffeeChatLikeService coffeeChatLikeService;
+    private final TagRepository tagRepository;
+    private final CoffeeChatTagRepository coffeeChatTagRepository;
     private final S3Uploader s3Uploader;
 
     @Transactional
@@ -128,23 +135,59 @@ public class CoffeeChatReviewService {
             case ALL -> chats = coffeeChatRepository.findAllWithReviews();
             default -> throw new CustomApiException(ErrorStatus.INVALID_REVIEW_FILTER);
         }
+        List<Long> chatIds = chats.stream().map(CoffeeChat::getId).toList();
+        List<Long> reviewIds = chats.stream()
+                .flatMap(c -> c.getReviews().stream())
+                .map(CoffeeChatReview::getId)
+                .toList();
+
+        // 좋아요 상태: 모든 chatId에 대해 한 번에 조회
+        Map<Long, Boolean> likedMap = coffeeChatLikeService.bulkCheckLiked(userId, chatIds);
+
+        // 리뷰 이미지: 리뷰 ID 기준으로 일괄 조회
+        Map<Long, List<CoffeeChatReviewImage>> imageMap = coffeeChatReviewImageRepository.findAllByReviewIds(reviewIds)
+                .stream()
+                .collect(Collectors.groupingBy(img -> img.getReview().getId()));
+
+        // 태그 매핑: chatId 기준으로 조회
+        List<CoffeeChatTag> coffeeChatTags = coffeeChatTagRepository.findByChatIds(chatIds);
+        Map<Long, List<CoffeeChatTag>> tagMap = coffeeChatTags.stream()
+                .collect(Collectors.groupingBy(t -> t.getCoffeeChat().getId()));
+
+        // tagId 전부 수집
+        Set<Long> tagIds = coffeeChatTags.stream()
+                .map(t -> t.getTag().getId())
+                .collect(Collectors.toSet());
+
+        // 태그 ID → 이름 매핑
+        Map<Long, String> tagNameMap = tagRepository.findAllById(tagIds).stream()
+                .collect(Collectors.toMap(t -> t.getId(), t -> t.getName()));
 
         List<CoffeeChatReviewPreviewDto> dtos = chats.stream()
-                .filter(chat -> !chat.getReviews().isEmpty()) // 후기가 하나라도 있는 커피챗만
+                .filter(chat -> !chat.getReviews().isEmpty())
                 .map(chat -> {
-                    int totalImageCount = chat.getReviews().stream()
-                            .mapToInt(r -> r.getImages().size())
+                    List<CoffeeChatReview> reviews = new ArrayList<>(chat.getReviews());
+
+                    List<String> tagNames = tagMap.getOrDefault(chat.getId(), List.of()).stream()
+                            .map(t -> tagNameMap.get(t.getTag().getId()))
+                            .filter(Objects::nonNull)
+                            .toList();
+
+
+                    int totalImageCount = reviews.stream()
+                            .mapToInt(r -> imageMap.getOrDefault(r.getId(), List.of()).size())
                             .sum();
 
-                    String previewImageUrl = chat.getReviews().stream()
-                            .filter(r -> !r.getImages().isEmpty())
+                    String previewImageUrl = reviews.stream()
+                            .map(r -> imageMap.getOrDefault(r.getId(), List.of()))
+                            .filter(list -> !list.isEmpty())
+                            .map(list -> list.get(0).getImageUrl())
                             .findFirst()
-                            .map(r -> r.getImages().get(0).getImageUrl())
                             .orElse(null);
 
-                    boolean liked = coffeeChatLikeService.hasLiked(userId, chat.getId());
+                    boolean liked = likedMap.getOrDefault(chat.getId(), false);
 
-                    return CoffeeChatReviewPreviewDto.from(chat, totalImageCount, previewImageUrl, liked);
+                    return CoffeeChatReviewPreviewDto.from(chat, tagNames,totalImageCount, previewImageUrl, liked);
                 })
                 .toList();
 

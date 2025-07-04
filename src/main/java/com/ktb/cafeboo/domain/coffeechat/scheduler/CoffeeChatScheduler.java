@@ -19,9 +19,9 @@ public class CoffeeChatScheduler {
     private final CoffeeChatRepository coffeeChatRepository;
 
     /**
-     * 매일 오전 9시에 meetingTime 기준 만료 처리
+     * 매일 오전 9시 30분에 meetingTime 기준 만료 처리
      */
-    @Scheduled(cron = "0 0 9 * * *", zone = "Asia/Seoul")
+    @Scheduled(cron = "0 30 9 * * *", zone = "Asia/Seoul")
     @Transactional
     public void expireOutdatedCoffeeChats() {
         LocalDateTime todayMidnight = LocalDate.now().atStartOfDay();

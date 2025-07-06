@@ -141,7 +141,7 @@ jobs:
         run: |
           gcloud compute instance-templates create "${{ env.TEMPLATE_NAME }}" \
             --project=cafeboo-459107 \
-            --machine-type=c2-standard-4 \
+            --machine-type=e2-medium \
             --region=asia-northeast3 \
             --subnet=projects/cafeboo-459107/regions/asia-northeast3/subnetworks/v2-prod-vpc-private-be-a \
             --tags=backend \

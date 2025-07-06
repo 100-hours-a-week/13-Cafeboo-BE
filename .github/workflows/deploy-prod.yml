@@ -60,6 +60,8 @@ jobs:
           apt-get update
           apt-get install -y docker.io
 
+          gcloud auth configure-docker asia-northeast3-docker.pkg.dev
+
           docker pull asia-northeast3-docker.pkg.dev/cafeboo-459107/backend/cafeboo-back:${GITHUB_SHA}
 
           docker stop cafeboo-back || true

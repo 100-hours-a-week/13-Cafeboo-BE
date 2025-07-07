@@ -89,7 +89,7 @@ jobs:
             -e DEFAULT_PROFILE_IMAGE_URL='${DEFAULT_PROFILE_IMAGE_URL}' \
             -e AWS_REGION="${AWS_REGION}" \
 
-            asia-northeast3-docker.pkg.dev/cafeboo-459107/backend/cafeboo-back:latest"
+            asia-northeast3-docker.pkg.dev/cafeboo-459107/backend/cafeboo-back:latest
 
           mkdir -p /opt/promtail
           touch /opt/promtail/positions.yaml

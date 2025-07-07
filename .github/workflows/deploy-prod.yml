@@ -27,7 +27,6 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
-          ./gradlew clean build
           docker build --no-cache -t asia-northeast3-docker.pkg.dev/cafeboo-459107/backend/cafeboo-back:${{ github.sha }} .
           docker push asia-northeast3-docker.pkg.dev/cafeboo-459107/backend/cafeboo-back:${{ github.sha }}
 

@@ -27,7 +27,8 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
-          docker build -t asia-northeast3-docker.pkg.dev/cafeboo-459107/backend/cafeboo-back:${{ github.sha }} .
+          ./gradlew clean build
+          docker build --no-cache -t asia-northeast3-docker.pkg.dev/cafeboo-459107/backend/cafeboo-back:${{ github.sha }} .
           docker push asia-northeast3-docker.pkg.dev/cafeboo-459107/backend/cafeboo-back:${{ github.sha }}
 
       - name: Compute Unique Template Name
@@ -56,6 +57,9 @@ jobs:
           cat <<EOF > startup.sh
           #!/bin/bash
           set -e
+
+          echo "#### ENV CHECK ####"
+          env | grep DB
 
           apt-get update
           apt-get install -y docker.io

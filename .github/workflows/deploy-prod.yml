@@ -27,7 +27,7 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
-          docker build --no-cache -t asia-northeast3-docker.pkg.dev/cafeboo-459107/backend/cafeboo-back:${{ github.sha }} .
+          docker build -t asia-northeast3-docker.pkg.dev/cafeboo-459107/backend/cafeboo-back:${{ github.sha }} .
           docker push asia-northeast3-docker.pkg.dev/cafeboo-459107/backend/cafeboo-back:${{ github.sha }}
 
       - name: Compute Unique Template Name

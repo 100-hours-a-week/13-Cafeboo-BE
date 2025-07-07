@@ -27,8 +27,8 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
-          docker build -t asia-northeast3-docker.pkg.dev/cafeboo-459107/backend/cafeboo-back:${{ github.sha }} .
-          docker push asia-northeast3-docker.pkg.dev/cafeboo-459107/backend/cafeboo-back:${{ github.sha }}
+          docker build -t asia-northeast3-docker.pkg.dev/cafeboo-459107/backend/cafeboo-back:latest .
+          docker push asia-northeast3-docker.pkg.dev/cafeboo-459107/backend/cafeboo-back:latest 
 
       - name: Compute Unique Template Name
         run: |
@@ -64,12 +64,12 @@ jobs:
 
           gcloud auth configure-docker asia-northeast3-docker.pkg.dev
 
-          docker pull asia-northeast3-docker.pkg.dev/cafeboo-459107/backend/cafeboo-back:${GITHUB_SHA}
+          sudo docker pull asia-northeast3-docker.pkg.dev/cafeboo-459107/backend/cafeboo-back:latest && \
 
-          docker stop cafeboo-back || true
-          docker rm cafeboo-back || true
+          sudo docker stop cafeboo-back || true
+          sudo docker rm cafeboo-back || true
 
-          docker run -d --name cafeboo-back --network host \
+          sudo docker run -d --name cafeboo-back --network host \
             --label app=cafeboo-back \
             -e SPRING_PROFILES_ACTIVE=prod \
             -e JWT_SECRET="${JWT_SECRET}" \
@@ -89,7 +89,7 @@ jobs:
             -e DEFAULT_PROFILE_IMAGE_URL='${DEFAULT_PROFILE_IMAGE_URL}' \
             -e AWS_REGION="${AWS_REGION}" \
 
-            asia-northeast3-docker.pkg.dev/cafeboo-459107/backend/cafeboo-back:${GITHUB_SHA}
+            asia-northeast3-docker.pkg.dev/cafeboo-459107/backend/cafeboo-back:latest"
 
           mkdir -p /opt/promtail
           touch /opt/promtail/positions.yaml

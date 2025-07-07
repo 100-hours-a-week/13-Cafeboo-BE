@@ -20,15 +20,15 @@ jobs:
       - name: Set up Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
         with:
-          project_id: master-isotope-462503-m9
+          project_id: true-alliance-464905-t8
 
       - name: Configure Docker to use Artifact Registry
         run: gcloud auth configure-docker asia-northeast3-docker.pkg.dev
 
       - name: Build and Push Docker Image
         run: |
-          docker build -t asia-northeast3-docker.pkg.dev/master-isotope-462503-m9/backend/cafeboo-back:${{ github.sha }} .
-          docker push asia-northeast3-docker.pkg.dev/master-isotope-462503-m9/backend/cafeboo-back:${{ github.sha }}
+          docker build -t asia-northeast3-docker.pkg.dev/true-alliance-464905-t8/backend/cafeboo-back:${{ github.sha }} .
+          docker push asia-northeast3-docker.pkg.dev/true-alliance-464905-t8/backend/cafeboo-back:${{ github.sha }}
 
       - name: Compute Unique Template Name
         run: |
@@ -62,7 +62,7 @@ jobs:
 
           gcloud auth configure-docker asia-northeast3-docker.pkg.dev
 
-          docker pull asia-northeast3-docker.pkg.dev/master-isotope-462503-m9/backend/cafeboo-back:${GITHUB_SHA}
+          docker pull asia-northeast3-docker.pkg.dev/true-alliance-464905-t8/backend/cafeboo-back:${GITHUB_SHA}
 
           docker stop cafeboo-back || true
           docker rm cafeboo-back || true
@@ -85,7 +85,7 @@ jobs:
             -e AWS_ACCESS_KEY='${AWS_ACCESS_KEY}' \
             -e AWS_SECRET_KEY='${AWS_SECRET_KEY}' \
             -e DEFAULT_PROFILE_IMAGE_URL='${DEFAULT_PROFILE_IMAGE_URL}' \
-            asia-northeast3-docker.pkg.dev/master-isotope-462503-m9/backend/cafeboo-back:${GITHUB_SHA}
+            asia-northeast3-docker.pkg.dev/true-alliance-464905-t8/backend/cafeboo-back:${GITHUB_SHA}
 
           mkdir -p /opt/promtail
           touch /opt/promtail/positions.yaml
@@ -142,10 +142,10 @@ jobs:
       - name: Create New Instance Template
         run: |
           gcloud compute instance-templates create "${{ env.TEMPLATE_NAME }}" \
-            --project=master-isotope-462503-m9 \
-            --machine-type=c2-standard-4 \
+            --project=true-alliance-464905-t8 \
+            --machine-type=e2-standard-2 \
             --region=asia-northeast3 \
-            --subnet=projects/master-isotope-462503-m9/regions/asia-northeast3/subnetworks/v2-prod-vpc-private-be-a \
+            --subnet=projects/true-alliance-464905-t8/regions/asia-northeast3/subnetworks/v2-prod-vpc-private-be-a \
             --tags=backend \
             --metadata-from-file startup-script=startup.sh \
             --no-address \
@@ -153,7 +153,7 @@ jobs:
             --boot-disk-type=pd-balanced \
             --image-family=ubuntu-2204-lts \
             --image-project=ubuntu-os-cloud \
-            --service-account=terraform@master-isotope-462503-m9.iam.gserviceaccount.com \
+            --service-account=terraform@true-alliance-464905-t8.iam.gserviceaccount.com \
             --scopes=https://www.googleapis.com/auth/cloud-platform \
             --labels=managed-by-mig=true
 

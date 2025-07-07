@@ -20,7 +20,7 @@ jobs:
       - name: Set up Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
         with:
-          project_id: master-isotope-462503-m9
+          project_id: true-alliance-464905-t8
           version: latest
 
       - name: Configure Docker to use Artifact Registry
@@ -28,10 +28,10 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          docker build -t asia-northeast3-docker.pkg.dev/master-isotope-462503-m9/backend/cafeboo-back:latest .
+          docker build -t asia-northeast3-docker.pkg.dev/true-alliance-464905-t8/backend/cafeboo-back:latest .
       - name: Push Docker Image
         run: |
-          docker push asia-northeast3-docker.pkg.dev/master-isotope-462503-m9/backend/cafeboo-back:latest 
+          docker push asia-northeast3-docker.pkg.dev/true-alliance-464905-t8/backend/cafeboo-back:latest 
       - name: SSH into GCP VM via IAP and Deploy
         env:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
@@ -49,7 +49,7 @@ jobs:
           DEFAULT_PROFILE_IMAGE_URL: ${{ secrets.DEFAULT_PROFILE_IMAGE_URL }} 
         run: |
             gcloud compute ssh dev-vm \
-            --project=master-isotope-462503-m9 \
+            --project=true-alliance-464905-t8 \
             --zone=asia-northeast3-a \
             --tunnel-through-iap \
             --command="
@@ -66,7 +66,7 @@ jobs:
               sudo docker stop cafeboo-back || true && \
               sudo docker rm cafeboo-back || true && \
            
-              sudo docker pull asia-northeast3-docker.pkg.dev/master-isotope-462503-m9/backend/cafeboo-back:latest && \
+              sudo docker pull asia-northeast3-docker.pkg.dev/true-alliance-464905-t8/backend/cafeboo-back:latest && \
             
             # 백엔드 컨테이너 실행
             sudo docker run -d --name cafeboo-back --network host \
@@ -85,4 +85,4 @@ jobs:
               -e AWS_ACCESS_KEY='${AWS_ACCESS_KEY}' \
               -e AWS_SECRET_KEY='${AWS_SECRET_KEY}' \
               -e DEFAULT_PROFILE_IMAGE_URL='${DEFAULT_PROFILE_IMAGE_URL}' \
-              asia-northeast3-docker.pkg.dev/master-isotope-462503-m9/backend/cafeboo-back:latest"
+              asia-northeast3-docker.pkg.dev/true-alliance-464905-t8/backend/cafeboo-back:latest"

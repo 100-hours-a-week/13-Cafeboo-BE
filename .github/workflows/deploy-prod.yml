@@ -58,19 +58,20 @@ jobs:
           cat <<EOF > startup.sh
           #!/bin/bash
           set -e
-          
+
           apt-get update
           apt-get install -y docker.io
 
           gcloud auth configure-docker asia-northeast3-docker.pkg.dev
 
-          sudo docker pull asia-northeast3-docker.pkg.dev/cafeboo-459107/backend/cafeboo-back:latest && \
+          docker pull asia-northeast3-docker.pkg.dev/cafeboo-459107/backend/cafeboo-back:latest
 
-          sudo docker stop cafeboo-back || true
-          sudo docker rm cafeboo-back || true
+          docker stop cafeboo-back || true
+          docker rm cafeboo-back || true
 
-          sudo docker run -d --name cafeboo-back --network host \
+          docker run -d --name cafeboo-back --network host \
             --label app=cafeboo-back \
+            --restart unless-stopped \
             -e SPRING_PROFILES_ACTIVE=prod \
             -e JWT_SECRET="${JWT_SECRET}" \
             -e LOADTEST_DB_URL="${LOADTEST_DB_URL}" \
@@ -88,13 +89,12 @@ jobs:
             -e AWS_SECRET_KEY='${AWS_SECRET_KEY}' \
             -e DEFAULT_PROFILE_IMAGE_URL='${DEFAULT_PROFILE_IMAGE_URL}' \
             -e AWS_REGION="${AWS_REGION}" \
-
             asia-northeast3-docker.pkg.dev/cafeboo-459107/backend/cafeboo-back:latest
 
           mkdir -p /opt/promtail
           touch /opt/promtail/positions.yaml
           chown 65534:65534 /opt/promtail/positions.yaml
-          
+
           INSTANCE_NAME=\$(curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/name)
 
           cat > /opt/promtail/promtail.yaml <<EOC
@@ -116,8 +116,6 @@ jobs:
                     instance: "\${INSTANCE_NAME}"
                     __path__: /var/lib/docker/containers/*/*.log
           EOC
-          touch /opt/promtail/positions.yaml
-          chown 65534:65534 /opt/promtail/positions.yaml
 
           docker stop promtail || true
           docker rm promtail || true

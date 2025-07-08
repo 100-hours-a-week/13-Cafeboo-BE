@@ -21,7 +21,7 @@ public class DrinkRecommendationService {
     private final UserService userService;
 
     public CreateDrinkRecommendationResponse getRecommendationResult(Long userId){
-
+        log.info("[DrinkRecommendationService.getRecommendationResult] - userId : {}", userId);
         User user = userService.findUserById(userId);
 
         UserHealthInfo healthInfo = user.getHealthInfo();
@@ -47,7 +47,9 @@ public class DrinkRecommendationService {
             .caffeineSensitivity(caffeineInfo.getCaffeineSensitivity())
             .build();
 
+        log.info("[DrinkRecommendationService.getRecommendationResult] - AI 추천 결과 생성 요청");
         CreateDrinkRecommendationResponse response = aiServerClient.createCoffeeRecommendation(request);
+        log.info("[DrinkRecommendationService.getRecommendationResult] - AI 추천 결과 생성 성공");
 
         if (!"success".equals(response.getStatus())) {
             log.error("[CaffeineRecommendationService.getPredictedCaffeineLimitByRule] AI 서버 예측 실패 - message={}", response.getMessage());

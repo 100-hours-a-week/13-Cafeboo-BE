@@ -27,10 +27,10 @@ public class DrinkRecommendationController {
     @GetMapping
     public ResponseEntity<ApiResponse<?>> getRecommendation(@AuthenticationPrincipal CustomUserDetails userDetails){
         Long userId = userDetails.getId();
-
+        log.info("[DrinkRecommendationController.getRecommendation] - 실행 시작");
         try{
             CreateDrinkRecommendationResponse response = recommendationService.getRecommendationResult(userId);
-
+            log.info("[DrinkRecommendationController.getRecommendation] - 실행 종료");
             return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.of(SuccessStatus.RECOMMENDATION_GENERATE_SUCCESS, response));

@@ -55,9 +55,6 @@ dependencies {
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	annotationProcessor 'org.projectlombok:lombok'
 
-	// Kafka
-	implementation 'org.springframework.kafka:spring-kafka'
-
 	// test
 	testImplementation 'com.h2database:h2'
 	testImplementation 'org.springframework.boot:spring-boot-test'

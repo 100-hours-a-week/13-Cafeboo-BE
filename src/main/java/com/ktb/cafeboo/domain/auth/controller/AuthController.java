@@ -1,14 +1,18 @@
 package com.ktb.cafeboo.domain.auth.controller;
 
+import com.ktb.cafeboo.domain.auth.dto.GuestLoginResponse;
 import com.ktb.cafeboo.domain.auth.dto.KakaoLoginRequest;
 import com.ktb.cafeboo.domain.auth.dto.LoginResponse;
 import com.ktb.cafeboo.domain.auth.dto.TokenRefreshResponse;
 import com.ktb.cafeboo.domain.auth.service.AuthService;
 import com.ktb.cafeboo.domain.auth.service.KakaoOauthService;
+import com.ktb.cafeboo.domain.user.model.User;
+import com.ktb.cafeboo.domain.user.service.UserService;
 import com.ktb.cafeboo.global.apiPayload.ApiResponse;
 import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.code.status.SuccessStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
+import com.ktb.cafeboo.global.security.JwtProvider;
 import com.ktb.cafeboo.global.security.userdetails.CustomUserDetails;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -28,9 +32,10 @@ import java.net.URI;
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 public class AuthController {
-
+    private final JwtProvider jwtProvider;
     private final AuthService authService;
     private final KakaoOauthService kakaoOauthService;
+    private final UserService userService;
 
     @PostMapping("/oauth")
     public ResponseEntity<ApiResponse<String>> redirectToOauth(@RequestParam("type") String type) {
@@ -123,4 +128,20 @@ public class AuthController {
 
         return ResponseEntity.noContent().build(); // 204 No Content
     }
+
+    @PostMapping("/guest")
+    public ResponseEntity<ApiResponse<GuestLoginResponse>> guestLogin() {
+        User guest = userService.createGuestUser(); // UserRole.GUEST
+        String token = jwtProvider.createAccessToken(
+                guest.getId().toString(),
+                guest.getLoginType().toString(),
+                guest.getRole().toString()
+        );
+
+        return ResponseEntity.ok(ApiResponse.of(
+                SuccessStatus.GUEST_LOGIN_SUCCESS,
+                new GuestLoginResponse(token, guest.getId().toString(), guest.getRole().toString())
+        ));
+    }
+
 }

@@ -53,7 +53,7 @@ public class KafkaConsumerConfiguration {
 
         log.info("[KafkaConsumerConfiguration.consumerFactory] group id {}를 가지는 consumerFactory 생성", kafkaConsumerGroupId);
 
-        return new DefaultKafkaConsumerFactory<>(consumerConfigurations);
+        return new DefaultKafkaConsumerFactory<>(consumerConfigurations, new StringDeserializer(), errorHandlingValueDeserializer);
     }
 
     @Bean

@@ -5,6 +5,7 @@ import com.ktb.cafeboo.domain.coffeechat.dto.StompMessage;
 import com.ktb.cafeboo.domain.coffeechat.service.ChatService;
 import com.ktb.cafeboo.domain.user.service.UserService;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
+import com.ktb.cafeboo.global.infra.kafka.service.KafkaProducerService;
 import jakarta.annotation.PostConstruct;
 import java.security.Principal;
 import java.util.HashMap;
@@ -32,6 +33,7 @@ public class ChatController {
     private StreamOperations<String, Object, Object> streamOperations; // StreamOperations 선언
     private final ChatService chatService;
     private final UserService userService;
+    private final KafkaProducerService kafkaProducerService; // ✨ KafkaProducerService 주입 추가 ✨
 
     @PostConstruct
     private void init() {

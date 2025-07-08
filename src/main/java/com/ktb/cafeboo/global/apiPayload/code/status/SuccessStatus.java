@@ -15,6 +15,7 @@ public enum SuccessStatus implements BaseCode {
     // 인증 관련 응답
     LOGIN_SUCCESS(200, "LOGIN_SUCCESS", "성공적으로 로그인되었습니다."),
     TOKEN_REFRESH_SUCCESS(200, "TOKEN_REFRESH_SUCCESS", "액세스 토큰이 성공적으로 재발급되었습니다."),
+    GUEST_LOGIN_SUCCESS(201, "GUEST_LOGIN_SUCCESS", "비회원 로그인에 성공하였습니다."),
 
     // 유저 관련 응답
     EMAIL_DUPLICATION_CHECK_SUCCESS(200, "EMAIL_DUPLICATION_CHECK_SUCCESS", "이메일 중복 확인 결과를 반환했습니다."),

@@ -21,7 +21,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
-@PreAuthorize("hasRole('USER')")
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/coffee-chats/reviews")
@@ -43,6 +42,7 @@ public class CoffeeChatReviewController {
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.COFFEECHAT_REVIEW_LIST_LOAD_SUCCESS, response));
     }
 
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/{coffeechatId}")
     public ResponseEntity<ApiResponse<CoffeeChatReviewResponse>> getCoffeeChatReview(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -59,6 +59,7 @@ public class CoffeeChatReviewController {
         );
     }
 
+    @PreAuthorize("hasRole('USER')")
     @PostMapping(value = "/{coffeechatId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<CoffeeChatReviewCreateResponse>> createCoffeeChatReview(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -82,6 +83,7 @@ public class CoffeeChatReviewController {
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.COFFEECHAT_REVIEW_CREATE_SUCCESS, response));
     }
 
+    @PreAuthorize("hasRole('USER')")
     @PostMapping("/{coffeechatId}/likes")
     public ResponseEntity<ApiResponse<CoffeeChatReviewLikeResponse>> toggleLike(
             @AuthenticationPrincipal CustomUserDetails userDetails,

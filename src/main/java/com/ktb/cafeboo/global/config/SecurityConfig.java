@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
@@ -22,6 +23,7 @@ import java.util.List;
 @EnableWebSecurity
 @RequiredArgsConstructor
 @Profile("!test")
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -32,6 +34,7 @@ public class SecurityConfig {
             new AntPathRequestMatcher("/api/v1/auth/oauth"),
             new AntPathRequestMatcher("/api/v1/auth/kakao"),
             new AntPathRequestMatcher("/api/v1/auth/refresh"),
+            new AntPathRequestMatcher("/api/v1/auth/guest"),
             new AntPathRequestMatcher("/api/v1/users/email"),
             new AntPathRequestMatcher("/api/v1/reports/weekly/ai_callback"),
             new AntPathRequestMatcher("/v3/api-docs/**"),

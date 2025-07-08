@@ -5,6 +5,7 @@ import com.ktb.cafeboo.domain.coffeechat.dto.StompMessage;
 import com.ktb.cafeboo.domain.coffeechat.service.ChatService;
 import com.ktb.cafeboo.domain.user.service.UserService;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
+import com.ktb.cafeboo.global.infra.kafka.service.KafkaProducerService;
 import jakarta.annotation.PostConstruct;
 import java.security.Principal;
 import java.util.HashMap;
@@ -31,7 +32,6 @@ public class ChatController {
     private final RedisTemplate<String, Object> redisTemplate; // RedisTemplate 주입
     private StreamOperations<String, Object, Object> streamOperations; // StreamOperations 선언
     private final ChatService chatService;
-    private final UserService userService;
 
     @PostConstruct
     private void init() {
@@ -56,8 +56,6 @@ public class ChatController {
             return; // 유효한 세션 ID가 없으면 STOMP 연결이 활성화되지 않을 것이기에 메시지 처리 중단
         }
 
-//        String userIdentifier = principal.getName();
-//
         try{
             chatService.handleNewMessage(roomId, chatMessage);
         }

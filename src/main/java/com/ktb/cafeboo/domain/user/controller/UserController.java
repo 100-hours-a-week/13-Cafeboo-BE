@@ -17,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -53,6 +54,7 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.BASIC_PROFILE_FETCH_SUCCESS, response));
     }
 
+    @PreAuthorize("hasRole('USER')")
     @PatchMapping(value = "/{userId}/profile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<UserProfileUpdateResponse>> updateUserProfile(
             @PathVariable Long userId,
@@ -73,7 +75,7 @@ public class UserController {
         );
     }
 
-
+    @PreAuthorize("hasRole('USER')")
     @PostMapping("/{userId}/health")
     public ResponseEntity<ApiResponse<UserHealthInfoCreateResponse>> createHealthInfo(
             @PathVariable Long userId,
@@ -87,6 +89,7 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.HEALTH_PROFILE_CREATION_SUCCESS, response));
     }
 
+    @PreAuthorize("hasRole('USER')")
     @PatchMapping("/{userId}/health")
     public ResponseEntity<ApiResponse<UserHealthInfoUpdateResponse>> updateHealthInfo(
             @PathVariable Long userId,
@@ -100,6 +103,7 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.HEALTH_PROFILE_UPDATE_SUCCESS, response));
     }
 
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/{userId}/health")
     public ResponseEntity<ApiResponse<UserHealthInfoResponse>> getHealthInfo(
             @PathVariable Long userId,
@@ -112,6 +116,7 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.HEALTH_PROFILE_FETCH_SUCCESS, response));
     }
 
+    @PreAuthorize("hasRole('USER')")
     @PostMapping("/{userId}/caffeine")
     public ResponseEntity<ApiResponse<UserCaffeineInfoCreateResponse>> createCaffeineInfo(
             @PathVariable Long userId,
@@ -127,6 +132,7 @@ public class UserController {
                 .body(ApiResponse.of(SuccessStatus.CAFFEINE_PROFILE_CREATION_SUCCESS, response));
     }
 
+    @PreAuthorize("hasRole('USER')")
     @PatchMapping("/{userId}/caffeine")
     public ResponseEntity<ApiResponse<UserCaffeineInfoUpdateResponse>> updateCaffeineInfo(
             @PathVariable Long userId,
@@ -140,6 +146,7 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.CAFFEINE_PROFILE_UPDATE_SUCCESS, response));
     }
 
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/{userId}/caffeine")
     public ResponseEntity<ApiResponse<UserCaffeineInfoResponse>> getCaffeineInfo(
             @PathVariable Long userId,
@@ -152,6 +159,7 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.CAFFEINE_PROFILE_FETCH_SUCCESS, response));
     }
 
+    @PreAuthorize("hasRole('USER')")
     @PostMapping("/{userId}/alarm")
     public ResponseEntity<ApiResponse<UserAlarmSettingCreateResponse>> createAlarmSetting(
             @PathVariable Long userId,
@@ -166,6 +174,7 @@ public class UserController {
                 .body(ApiResponse.of(SuccessStatus.ALARM_SETTING_CREATION_SUCCESS, response));
     }
 
+    @PreAuthorize("hasRole('USER')")
     @PatchMapping("/{userId}/alarm")
     public ResponseEntity<ApiResponse<UserAlarmSettingUpdateResponse>> updateAlarmSetting(
             @PathVariable Long userId,
@@ -179,6 +188,7 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.ALARM_SETTING_UPDATE_SUCCESS, response));
     }
 
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/{userId}/alarm")
     public ResponseEntity<ApiResponse<UserAlarmSettingResponse>> getAlarmSetting(
             @PathVariable Long userId,
@@ -191,6 +201,7 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.ALARM_SETTING_FETCH_SUCCESS, response));
     }
 
+    @PreAuthorize("hasRole('USER')")
     @DeleteMapping("/{userId}")
     public ResponseEntity<Void> deleteUser(
             @PathVariable Long userId,

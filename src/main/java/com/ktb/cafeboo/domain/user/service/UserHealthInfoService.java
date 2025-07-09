@@ -5,7 +5,7 @@ import com.ktb.cafeboo.domain.report.service.DailyStatisticsService;
 import com.ktb.cafeboo.domain.user.dto.*;
 import com.ktb.cafeboo.domain.user.mapper.UserHealthInfoMapper;
 import com.ktb.cafeboo.domain.user.model.User;
-import com.ktb.cafeboo.domain.user.model.UserCaffeinInfo;
+import com.ktb.cafeboo.domain.user.model.UserCaffeineInfo;
 import com.ktb.cafeboo.domain.user.model.UserHealthInfo;
 import com.ktb.cafeboo.domain.user.repository.UserHealthInfoRepository;
 import com.ktb.cafeboo.domain.user.repository.UserRepository;
@@ -77,7 +77,7 @@ public class UserHealthInfoService {
             UserHealthInfoMapper.updateEntity(healthInfo, request);
 
             try {
-                UserCaffeinInfo caffeinInfo = user.getCaffeinInfo();
+                UserCaffeineInfo caffeinInfo = user.getCaffeinInfo();
                 if (caffeinInfo != null) {
                     float predictedLimit = caffeineRecommendationService.getPredictedCaffeineLimitByRule(user, caffeinInfo.getCaffeineSensitivity());
                     caffeinInfo.setDailyCaffeineLimitMg(predictedLimit);

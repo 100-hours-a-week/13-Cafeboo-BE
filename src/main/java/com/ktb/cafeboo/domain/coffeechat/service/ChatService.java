@@ -13,7 +13,6 @@ import com.ktb.cafeboo.global.censorship.CensorshipStrategy;
 import com.ktb.cafeboo.global.censorship.TextCensorshipFilter;
 import com.ktb.cafeboo.global.config.RedisConfig;
 import com.ktb.cafeboo.global.enums.MessageType;
-import com.ktb.cafeboo.global.infra.kafka.producer.KafkaMessageProducer;
 import com.ktb.cafeboo.global.infra.redis.stream.listener.RedisStreamListener;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -72,7 +71,6 @@ public class ChatService {
     private final CoffeeChatMemberRepository coffeeChatMemberRepository;
     private final CoffeeChatMessageService coffeeChatMessageService;
     private final TextCensorshipFilter textCensorshipFilter;
-    private final KafkaMessageProducer kafkaMessageProducer;
 
     private static final String CHAT_STREAM_PREFIX = "coffeechat:room:";
     private static final String CHAT_CONSUMER_GROUP_PREFIX = "coffeechat:group:";

@@ -14,11 +14,11 @@ public record CoffeeChatReviewPreviewDto(
         int imagesCount,
         String previewImageUrl
 ) {
-    public static CoffeeChatReviewPreviewDto from(CoffeeChat coffeeChat, int imagesCount, String previewImageUrl, boolean liked) {
+    public static CoffeeChatReviewPreviewDto from(CoffeeChat coffeeChat, List<String> tagNames, int imagesCount, String previewImageUrl, boolean liked) {
         return new CoffeeChatReviewPreviewDto(
                 coffeeChat.getId().toString(),
                 coffeeChat.getName(),
-                coffeeChat.getTagNames(),
+                tagNames,
                 coffeeChat.getAddress(),
                 coffeeChat.getLikesCount(),
                 liked,

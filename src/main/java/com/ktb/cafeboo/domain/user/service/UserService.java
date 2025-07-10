@@ -8,6 +8,7 @@ import com.ktb.cafeboo.domain.user.dto.UserProfileUpdateRequest;
 import com.ktb.cafeboo.domain.user.dto.UserProfileUpdateResponse;
 import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.domain.user.model.UserCaffeineInfo;
+import com.ktb.cafeboo.domain.user.model.UserHealthInfo;
 import com.ktb.cafeboo.domain.user.repository.UserRepository;
 import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
@@ -167,8 +168,10 @@ public class UserService {
                 .dailyCaffeineLimitMg(400.0f)         // 기본값
                 .sleepSensitiveThresholdMg(100.0f)    // 기본값
                 .build();
-
         guest.setCaffeinInfo(caffeineInfo);
+
+        UserHealthInfo healthInfo = UserHealthInfo.createGuestDefault(guest);
+        guest.setHealthInfo(healthInfo);
 
         return userRepository.save(guest);
     }

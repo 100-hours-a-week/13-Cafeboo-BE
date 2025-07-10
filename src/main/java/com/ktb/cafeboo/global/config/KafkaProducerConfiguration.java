@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.EnableKafka;
@@ -21,11 +22,14 @@ import software.amazon.awssdk.utils.ImmutableMap;
 @Slf4j
 public class KafkaProducerConfiguration {
 
+    @Value("spring.data.kafka.port")
+    private String kafkaHost;
+
     @Bean
     public ProducerFactory<String, StompMessagePublish> producerFactory() {
         Map<String, Object> producerConfigurations =
                 ImmutableMap.<String, Object>builder()
-                        .put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092")
+                        .put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaHost)
                         .put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class)
                         .put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class)
                         .put(JsonSerializer.ADD_TYPE_INFO_HEADERS, true)

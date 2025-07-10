@@ -1,9 +1,6 @@
 package com.ktb.cafeboo.domain.coffeechat.dto;
 
 import com.ktb.cafeboo.domain.coffeechat.dto.common.MemberDto;
-import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChatMember;
-import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
-import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 
 import java.util.List;
 
@@ -32,10 +29,8 @@ public record CoffeeChatListResponse(
                 boolean isReviewed
         ) {
             MemberDto writerDto = chat.getMembers().stream()
-                // chat.getWriter()가 null일 가능성도 고려하여 필터 조건 추가
                 .filter(m -> chat.getWriter() != null && m.getUser().getId().equals(chat.getWriter().getId()))
                 .findFirst()
-                // CoffeeChatMember를 찾았다면, MemberDto로 변환합니다.
                 .map(m -> new MemberDto(
                     m.getId().toString(),
                     m.getChatNickname(),
@@ -52,7 +47,6 @@ public record CoffeeChatListResponse(
                         false // 호스트 여부 (알 수 없으므로 false)
                     );
                 });
-
 
             return new CoffeeChatSummary(
                     chat.getId().toString(),

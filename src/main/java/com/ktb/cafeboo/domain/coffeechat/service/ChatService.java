@@ -179,7 +179,7 @@ public class ChatService {
     public void startListeningToCoffeeChat(String roomId){
         String streamKey = CHAT_STREAM_PREFIX + roomId;
         String consumerGroupName = CHAT_CONSUMER_GROUP_PREFIX + roomId; // 커피챗 ID를 컨슈머 그룹으로 사용
-        String consumerName = redisConfig.getConsumerName();
+        String consumerName = "room-consumer-" + roomId;
         log.info("[ChatService.startListeningToRoom] - streamKey: {}, consumerGroupName: {}, consumerName: {}", streamKey, consumerGroupName, consumerName);
 
         // 이미 구독 중이고 서버의 인메모리 맵에 존재하는지 확인

@@ -53,11 +53,11 @@ public class RedisConfig {
     private String consumerName; // 개별 컨슈머 이름. @PostConstruct에서 동적으로 생성
     private String failureListKey;
 
-    @PostConstruct // ApplicationConfig의 @PostConstruct 로직도 여기로 옮깁니다.
-    public void setConsumerName() throws UnknownHostException {
-        // 각 서버 인스턴스에 고유한 컨슈머 이름을 부여
-        consumerName = InetAddress.getLocalHost().getHostName() + "-" + UUID.randomUUID().toString().substring(0, 8);
-    }
+//    @PostConstruct // ApplicationConfig의 @PostConstruct 로직도 여기로 옮깁니다.
+//    public void setConsumerName() throws UnknownHostException {
+//        // 각 서버 인스턴스에 고유한 컨슈머 이름을 부여
+//        consumerName = InetAddress.getLocalHost().getHostName() + "-" + UUID.randomUUID().toString().substring(0, 8);
+//    }
 
     /**
      * redis의 연결 정보 설정

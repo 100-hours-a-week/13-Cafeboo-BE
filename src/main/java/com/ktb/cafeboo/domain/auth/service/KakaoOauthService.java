@@ -7,6 +7,7 @@ import com.ktb.cafeboo.domain.user.dto.UserAlarmSettingCreateRequest;
 import com.ktb.cafeboo.domain.user.service.UserAlarmSettingService;
 import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
+import com.ktb.cafeboo.global.enums.UserRole;
 import com.ktb.cafeboo.global.infra.kakao.dto.KakaoTokenResponse;
 import com.ktb.cafeboo.global.infra.kakao.dto.KakaoUserResponse;
 import com.ktb.cafeboo.global.infra.kakao.client.KakaoTokenClient;
@@ -102,6 +103,7 @@ public class KakaoOauthService {
 
         return new LoginResponse(
                 user.getId().toString(),
+                UserRole.USER.name(),
                 accessToken,
                 requiresOnboarding,
                 refreshToken

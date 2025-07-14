@@ -24,7 +24,7 @@ public interface CoffeeChatRepository extends JpaRepository<CoffeeChat, Long> {
         AND c.deletedAt IS NULL
         ORDER BY 
             CASE WHEN c.status = 'EVENT' THEN 0 ELSE 1 END,
-            c.meetingTime DESC
+            c.createdAt DESC
     """)
     List<CoffeeChat> findJoinedChats(Long userId);
 

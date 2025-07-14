@@ -111,4 +111,9 @@ public class CoffeeChat extends BaseEntity {
                 .map(coffeeChatTag -> coffeeChatTag.getTag().getName())
                 .toList();
     }
+
+    public void softDelete() {
+        this.status = CoffeeChatStatus.DELETED;
+        this.delete();
+    }
 }

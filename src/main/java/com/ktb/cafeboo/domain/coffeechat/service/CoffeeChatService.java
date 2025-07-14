@@ -173,7 +173,7 @@ public class CoffeeChatService {
             member.delete();
         }
 
-        chat.delete();
+        chat.softDelete();
         coffeeChatRepository.save(chat);
     }
 

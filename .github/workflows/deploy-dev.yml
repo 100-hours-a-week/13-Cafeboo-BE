@@ -85,4 +85,6 @@ jobs:
               -e AWS_ACCESS_KEY='${AWS_ACCESS_KEY}' \
               -e AWS_SECRET_KEY='${AWS_SECRET_KEY}' \
               -e DEFAULT_PROFILE_IMAGE_URL='${DEFAULT_PROFILE_IMAGE_URL}' \
+              -e DEV_KAFKA_HOST='${DEV_KAFKA_HOST}' \
+              -e DEV_KAFKA_PORT='${DEV_KAFKA_PORT}' \
               asia-northeast3-docker.pkg.dev/true-alliance-464905-t8/backend/cafeboo-back:latest"

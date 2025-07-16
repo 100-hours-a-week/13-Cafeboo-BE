@@ -7,10 +7,14 @@ import com.ktb.cafeboo.domain.user.dto.UserProfileResponse;
 import com.ktb.cafeboo.domain.user.dto.UserProfileUpdateRequest;
 import com.ktb.cafeboo.domain.user.dto.UserProfileUpdateResponse;
 import com.ktb.cafeboo.domain.user.model.User;
+import com.ktb.cafeboo.domain.user.model.UserCaffeineInfo;
+import com.ktb.cafeboo.domain.user.model.UserHealthInfo;
 import com.ktb.cafeboo.domain.user.repository.UserRepository;
 import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
+import com.ktb.cafeboo.global.enums.LoginType;
 import com.ktb.cafeboo.global.enums.TokenBlacklistReason;
+import com.ktb.cafeboo.global.enums.UserRole;
 import com.ktb.cafeboo.global.infra.s3.S3Uploader;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -138,5 +143,36 @@ public class UserService {
         }
       
         log.info("[UserService.deleteUser] 사용자 soft delete 완료 - userId={}", userId);
+    }
+
+    @Transactional
+    public User createGuestUser() {
+        String guestToken = UUID.randomUUID().toString();
+        String nickname = "guest_" + guestToken.substring(0, 3);
+
+        User guest = User.builder()
+                .loginType(LoginType.GUEST)
+                .nickname(nickname)
+                .role(UserRole.GUEST)
+                .darkMode(false)
+                .coffeeBean(0)
+                .profileImageUrl(s3Uploader.getDefaultProfileImageUrl())
+                .refreshToken("")
+                .build();
+
+        UserCaffeineInfo caffeineInfo = UserCaffeineInfo.builder()
+                .user(guest)
+                .caffeineSensitivity(0)
+                .averageDailyCaffeineIntake(0f)
+                .frequentDrinkTime(null)
+                .dailyCaffeineLimitMg(400.0f)         // 기본값
+                .sleepSensitiveThresholdMg(100.0f)    // 기본값
+                .build();
+        guest.setCaffeinInfo(caffeineInfo);
+
+        UserHealthInfo healthInfo = UserHealthInfo.createGuestDefault(guest);
+        guest.setHealthInfo(healthInfo);
+
+        return userRepository.save(guest);
     }
 }

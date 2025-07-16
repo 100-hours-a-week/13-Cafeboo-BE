@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,6 +26,7 @@ public class CoffeeChatController {
     private final CoffeeChatMessageService coffeeChatMessageService;
     private final CoffeeChatMemberService coffeeChatMemberService;
 
+    @PreAuthorize("hasRole('USER')")
     @PostMapping
     public ResponseEntity<ApiResponse<CoffeeChatCreateResponse>> createCoffeeChat(
         @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -61,6 +63,7 @@ public class CoffeeChatController {
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.COFFEECHAT_LIST_LOAD_SUCCESS, response));
     }
 
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/{coffeechatId}")
     public ResponseEntity<ApiResponse<CoffeeChatDetailResponse>> getCoffeeChatDetail(
         @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -70,6 +73,7 @@ public class CoffeeChatController {
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.COFFEECHAT_LOAD_SUCCESS, response));
     }
 
+    @PreAuthorize("hasRole('USER')")
     @PostMapping("/{coffeechatId}/members")
     public ResponseEntity<ApiResponse<CoffeeChatJoinResponse>> joinCoffeeChat(
         @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -85,6 +89,7 @@ public class CoffeeChatController {
             .body(ApiResponse.of(SuccessStatus.COFFEECHAT_JOIN_SUCCESS, response));
     }
 
+    @PreAuthorize("hasRole('USER')")
     @DeleteMapping("/{coffeechatId:\\d+}/members/{memberId:\\d+}")
     public ResponseEntity<Void> leaveChat(
         @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -95,6 +100,7 @@ public class CoffeeChatController {
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("hasRole('USER')")
     @DeleteMapping("/{coffeechatId:\\d+}")
     public ResponseEntity<Void> deleteCoffeeChat(
         @PathVariable Long coffeechatId,
@@ -107,6 +113,7 @@ public class CoffeeChatController {
         return ResponseEntity.noContent().build(); // 204 No Content
     }
 
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/{coffeechatId}/messages")
     public ResponseEntity<ApiResponse<CoffeeChatMessagesResponse>> getMessages(
         @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -141,7 +148,7 @@ public class CoffeeChatController {
 
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.COFFEECHAT_MEMBER_LOAD_SUCCESS, response));
     }
-
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/{coffeechatId}/membership")
     public ResponseEntity<ApiResponse<CoffeeChatMembershipCheckResponse>> checkMembership(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -157,6 +164,7 @@ public class CoffeeChatController {
                 .body(ApiResponse.of(SuccessStatus.COFFEECHAT_MEMBERSHIP_CHECK_SUCCESS, response));
     }
 
+    @PreAuthorize("hasRole('USER')")
     @PostMapping("/{coffeechatId}/listeners")
     public ResponseEntity<?> createCoffeeChatListener(
         @AuthenticationPrincipal CustomUserDetails userDetails,

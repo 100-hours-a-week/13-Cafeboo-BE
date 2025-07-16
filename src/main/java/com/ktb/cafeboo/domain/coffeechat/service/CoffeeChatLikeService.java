@@ -14,6 +14,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 public class CoffeeChatLikeService {
@@ -63,5 +69,20 @@ public class CoffeeChatLikeService {
                 userId,
                 CoffeeChatLikeStatus.ACTIVE
         );
+    }
+
+    @Transactional(readOnly = true)
+    public Map<Long, Boolean> bulkCheckLiked(Long userId, List<Long> chatIds) {
+        List<CoffeeChatLike> likes = coffeeChatLikeRepository.findLikesByUserAndChatIds(userId, chatIds);
+
+        Set<Long> likedChatIds = likes.stream()
+                .map(like -> like.getCoffeeChat().getId())
+                .collect(Collectors.toSet());
+
+        return chatIds.stream()
+                .collect(Collectors.toMap(
+                        Function.identity(),
+                        likedChatIds::contains
+                ));
     }
 }

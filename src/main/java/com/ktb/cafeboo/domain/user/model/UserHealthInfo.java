@@ -10,6 +10,9 @@ import java.time.LocalTime;
 @Entity
 @Getter
 @Setter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "user_health_info")
 @Where(clause = "deleted_at IS NULL")
 public class UserHealthInfo extends BaseEntity {
@@ -48,4 +51,19 @@ public class UserHealthInfo extends BaseEntity {
     @Column(nullable = false)
     private LocalTime wakeUpTime;
 
+    public static UserHealthInfo createGuestDefault(User guest) {
+        return UserHealthInfo.builder()
+                .user(guest)
+                .gender("M")
+                .age(25)
+                .height(175f)
+                .weight(70f)
+                .pregnant(false)
+                .takingBirthPill(false)
+                .smoking(false)
+                .hasLiverDisease(false)
+                .sleepTime(LocalTime.of(0, 0))
+                .wakeUpTime(LocalTime.of(0, 0))
+                .build();
+    }
 }

@@ -31,7 +31,7 @@ public class User extends BaseEntity {
     private String password;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 20)
     private LoginType loginType;
 
     @Column
@@ -62,7 +62,7 @@ public class User extends BaseEntity {
     private UserHealthInfo healthInfo;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private UserCaffeinInfo caffeinInfo;
+    private UserCaffeineInfo caffeinInfo;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private UserAlarmSetting alarmSetting;

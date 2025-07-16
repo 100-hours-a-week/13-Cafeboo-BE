@@ -13,6 +13,7 @@ import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
 import com.ktb.cafeboo.global.enums.CoffeeChatStatus;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +43,7 @@ public class CoffeeChatMessageService {
         CoffeeChat chat = coffeeChatRepository.findById(coffeechatId)
                 .orElseThrow(() -> new CustomApiException(ErrorStatus.COFFEECHAT_NOT_FOUND));
 
-        if (!chat.getStatus().equals(CoffeeChatStatus.ACTIVE)) {
+        if (!EnumSet.of(CoffeeChatStatus.ACTIVE, CoffeeChatStatus.EVENT).contains(chat.getStatus())) {
             throw new CustomApiException(ErrorStatus.COFFEECHAT_NOT_ACTIVE);
         }
 

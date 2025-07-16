@@ -34,30 +34,39 @@ public class CaffeineIntakeController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<CaffeineIntakeResponse>> recordCaffeineIntake(
-        @AuthenticationPrincipal CustomUserDetails userDetails,
-        @RequestBody CaffeineIntakeRequest request) {
-        log.info("[POST /api/v1/caffeine-intakes] 카페인 섭취 기록 요청 수신");
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody CaffeineIntakeRequest request) {
 
         Long userId = userDetails.getId();
+        log.info("[POST /api/v1/caffeine-intakes] 카페인 섭취 기록 요청 수신 - userId={}, request={}", userId, request);
 
-        try{
+        try {
+            log.info("[recordCaffeineIntake] 서비스 호출 시작 - userId={}", userId);
+
             // 1. 서비스 메서드 호출
             CaffeineIntakeResponse response = caffeineIntakeService.recordCaffeineIntake(userId, request);
 
+            log.info("[recordCaffeineIntake] 서비스 호출 성공 - intakeId={}", response.id());
+
             // 2. 응답 반환
             return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(ApiResponse.of(SuccessStatus.CAFFEINE_INTAKE_RECORDED, response));
-        }
-        catch(CustomApiException e){
+                    .status(HttpStatus.CREATED)
+                    .body(ApiResponse.of(SuccessStatus.CAFFEINE_INTAKE_RECORDED, response));
+
+        } catch (CustomApiException e) {
+            log.warn("[recordCaffeineIntake] CustomApiException 발생 - status={}, message={}, error={}",
+                    e.getErrorCode().getStatus(), e.getErrorCode().getMessage(), e.getMessage());
+
             return ResponseEntity
-                .status(e.getErrorCode().getStatus()) // ErrorStatus에서 정의된 HTTP 상태 코드 사용
-                .body(ApiResponse.of(e.getErrorCode(), null));
-        }
-        catch (Exception e) {
+                    .status(e.getErrorCode().getStatus())
+                    .body(ApiResponse.of(e.getErrorCode(), null));
+
+        } catch (Exception e) {
+            log.error("[recordCaffeineIntake] 예상치 못한 예외 발생", e);
+
             return ResponseEntity
-                .status(ErrorStatus.INTERNAL_SERVER_ERROR.getStatus()) // ErrorStatus에서 정의된 HTTP 상태 코드 사용
-                .body(ApiResponse.of(ErrorStatus.INTERNAL_SERVER_ERROR, null));
+                    .status(ErrorStatus.INTERNAL_SERVER_ERROR.getStatus())
+                    .body(ApiResponse.of(ErrorStatus.INTERNAL_SERVER_ERROR, null));
         }
     }
 

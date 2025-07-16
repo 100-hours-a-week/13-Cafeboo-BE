@@ -1,5 +1,5 @@
 package com.ktb.cafeboo.global.enums;
 
 public enum CoffeeChatStatus {
-    ACTIVE, ENDED, DELETED
+    ACTIVE, ENDED, DELETED, EVENT
 }

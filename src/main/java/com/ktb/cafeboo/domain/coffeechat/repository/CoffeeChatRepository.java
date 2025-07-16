@@ -14,15 +14,17 @@ import java.util.Optional;
 
 public interface CoffeeChatRepository extends JpaRepository<CoffeeChat, Long> {
 
-    // 사용자가 참여중인 채팅방 목록 (JOINED)
+    // 사용자가 참여중인 채팅방 목록 (JOINED) - 이벤트 우선
     @Query("""
         SELECT c FROM CoffeeChat c
         JOIN CoffeeChatMember m ON c.id = m.coffeeChat.id
         JOIN User u ON m.user.id = u.id
         WHERE m.user.id = :userId
-        AND c.status = 'ACTIVE'
+        AND c.status IN ('ACTIVE', 'EVENT')
         AND c.deletedAt IS NULL
-        ORDER BY c.createdAt DESC
+        ORDER BY 
+            CASE WHEN c.status = 'EVENT' THEN 0 ELSE 1 END,
+            c.createdAt DESC
     """)
     List<CoffeeChat> findJoinedChats(Long userId);
 
@@ -48,12 +50,14 @@ public interface CoffeeChatRepository extends JpaRepository<CoffeeChat, Long> {
     List<CoffeeChat> findReviewableChats(Long userId, @Param("now") LocalDateTime now);
 
 
-    // 모든 활성화된 채팅방 목록 (ALL)
+    // 모든 활성화된 채팅방 목록 (ALL) - 이벤트 우선
     @Query("""
         SELECT c FROM CoffeeChat c
-        WHERE c.status = 'ACTIVE'
+        WHERE c.status IN ('ACTIVE', 'EVENT')
         AND c.deletedAt IS NULL
-        ORDER BY c.createdAt DESC
+        ORDER BY 
+            CASE WHEN c.status = 'EVENT' THEN 0 ELSE 1 END,  
+            c.createdAt DESC
     """)
     List<CoffeeChat> findAllActiveChats();
 

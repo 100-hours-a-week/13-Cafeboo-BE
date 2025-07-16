@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -173,7 +174,7 @@ public class CoffeeChatService {
             member.delete();
         }
 
-        chat.delete();
+        chat.softDelete();
         coffeeChatRepository.save(chat);
     }
 
@@ -226,7 +227,7 @@ public class CoffeeChatService {
         CoffeeChat chat = coffeeChatRepository.findById(coffeechatId)
                 .orElseThrow(() -> new CustomApiException(ErrorStatus.COFFEECHAT_NOT_FOUND));
 
-        if (!chat.getStatus().equals(CoffeeChatStatus.ACTIVE)) {
+        if (!EnumSet.of(CoffeeChatStatus.ACTIVE, CoffeeChatStatus.EVENT).contains(chat.getStatus())) {
             throw new CustomApiException(ErrorStatus.COFFEECHAT_NOT_ACTIVE);
         }
 

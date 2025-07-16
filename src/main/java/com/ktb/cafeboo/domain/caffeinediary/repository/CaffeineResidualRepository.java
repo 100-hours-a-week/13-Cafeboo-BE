@@ -33,4 +33,18 @@ public interface CaffeineResidualRepository extends JpaRepository<CaffeineResidu
         @Param("startTime") LocalDateTime startTime,
         @Param("endTime") LocalDateTime endTime
     );
+
+    // 특정 사용자, 특정 날짜 범위, 특정 시간 범위에 해당하는 모든 잔존량 데이터를 가져오는 쿼리
+    @Query("SELECT cr FROM CaffeineResidual cr " +
+            "WHERE cr.user = :user " +
+            "AND cr.targetDate BETWEEN :startDate AND :endDate " + // 날짜 범위 (시간 00:00:00 기준)
+            "AND cr.hour BETWEEN :startHour AND :endHour " +
+            "AND cr.deletedAt IS NULL")
+    List<CaffeineResidual> findByUserAndTargetDateRangeAndHourRange(
+            @Param("user") User user,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("startHour") Integer startHour,
+            @Param("endHour") Integer endHour
+    );
 }

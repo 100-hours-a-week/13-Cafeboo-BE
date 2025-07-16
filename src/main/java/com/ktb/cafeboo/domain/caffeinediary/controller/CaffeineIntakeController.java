@@ -42,19 +42,22 @@ public class CaffeineIntakeController {
 
         try{
             // 1. 서비스 메서드 호출
+            log.info("[POST /api/v1/caffeine-intakes] 카페인 섭취 기록 실행");
             CaffeineIntakeResponse response = caffeineIntakeService.recordCaffeineIntake(userId, request);
-
+            log.info("[POST /api/v1/caffeine-intakes] 카페인 섭취 기록 완료");
             // 2. 응답 반환
             return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.of(SuccessStatus.CAFFEINE_INTAKE_RECORDED, response));
         }
         catch(CustomApiException e){
+            log.error("[POST /api/v1/caffeine-intakes] 카페인 섭취 기록 오류 : {}", e.getMessage());
             return ResponseEntity
                 .status(e.getErrorCode().getStatus()) // ErrorStatus에서 정의된 HTTP 상태 코드 사용
                 .body(ApiResponse.of(e.getErrorCode(), null));
         }
         catch (Exception e) {
+            log.error("[POST /api/v1/caffeine-intakes] 카페인 섭취 기록 오류 : {}", e.getMessage());
             return ResponseEntity
                 .status(ErrorStatus.INTERNAL_SERVER_ERROR.getStatus()) // ErrorStatus에서 정의된 HTTP 상태 코드 사용
                 .body(ApiResponse.of(ErrorStatus.INTERNAL_SERVER_ERROR, null));
@@ -70,8 +73,9 @@ public class CaffeineIntakeController {
 
         try{
             // 1. 서비스 메서드 호출
+            log.info("[PATCH /api/v1/caffeine-intakes/{}] 카페인 섭취 수정 시작", id);
             CaffeineIntakeResponse response = caffeineIntakeService.updateCaffeineIntake(id, request);
-
+            log.info("[PATCH /api/v1/caffeine-intakes/{}] 카페인 섭취 수정 완료", id);
             // 2. 응답 반환
             return ResponseEntity.ok(ApiResponse.of(SuccessStatus.CAFFEINE_INTAKE_UPDATED, response));
         }

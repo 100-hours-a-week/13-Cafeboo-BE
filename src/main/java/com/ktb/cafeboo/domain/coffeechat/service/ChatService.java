@@ -13,6 +13,7 @@ import com.ktb.cafeboo.global.censorship.CensorshipStrategy;
 import com.ktb.cafeboo.global.censorship.TextCensorshipFilter;
 import com.ktb.cafeboo.global.config.RedisConfig;
 import com.ktb.cafeboo.global.enums.MessageType;
+import com.ktb.cafeboo.global.infra.kafka.producer.KafkaMessageProducer;
 import com.ktb.cafeboo.global.infra.redis.stream.listener.RedisStreamListener;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -71,6 +72,7 @@ public class ChatService {
     private final CoffeeChatMemberRepository coffeeChatMemberRepository;
     private final CoffeeChatMessageService coffeeChatMessageService;
     private final TextCensorshipFilter textCensorshipFilter;
+    private final KafkaMessageProducer kafkaMessageProducer;
 
     private static final String CHAT_STREAM_PREFIX = "coffeechat:room:";
     private static final String CHAT_CONSUMER_GROUP_PREFIX = "coffeechat:group:";
@@ -160,12 +162,12 @@ public class ChatService {
             StompMessagePublish messagePublish = StompMessagePublish.from(savedMessage, sender);
 
             log.info("[ChatService.handleNewMessage] - 직렬화 전 messagePublish 객체 데이터: {}", messagePublish);
-
-            ObjectRecord<String, StompMessagePublish> record =
-                ObjectRecord.create(streamKey, messagePublish); // 스트림 키 지정 (필수)
-
-            RecordId recordId = redisTemplate.opsForStream().add(record);
-            log.info("[ChatService.handleNewMessage] - Stream {}에 추가된 메시지: {}", streamKey, recordId.getValue());
+//            ObjectRecord<String, StompMessagePublish> record =
+//            ObjectRecord.create(streamKey, messagePublish); // 스트림 키 지정 (필수)
+//
+//            RecordId recordId = redisTemplate.opsForStream().add(record);
+            kafkaMessageProducer.publishChatMessage(messagePublish);
+            log.info("[ChatService.handleNewMessage] - Kafka 토픽 {}에 추가된 메시지: {}", KafkaMessageProducer.CHAT_MESSAGES_TOPIC, messagePublish.getMessageId());
         }
         catch (Exception e){
             log.error("[ChatService.handleNewMessage] - 메시지 전송 오류. roomId: {}, message: {}", message.getCoffeechatId(), e.getMessage(), e);

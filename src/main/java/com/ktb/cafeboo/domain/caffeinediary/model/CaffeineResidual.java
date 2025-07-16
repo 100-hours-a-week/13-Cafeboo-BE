@@ -2,10 +2,8 @@ package com.ktb.cafeboo.domain.caffeinediary.model;
 
 import com.ktb.cafeboo.domain.user.model.User;
 import com.ktb.cafeboo.global.BaseEntity;
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
@@ -18,7 +16,12 @@ import org.hibernate.annotations.Where;
 @Getter
 @Setter
 @Entity
-@Table(name = "CaffeineResiduals")
+@Table(
+        name = "CaffeineResiduals",
+        indexes = {
+                @Index(name = "idx_user_target_hour", columnList = "user_id, targetDate, hour")
+        }
+)
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

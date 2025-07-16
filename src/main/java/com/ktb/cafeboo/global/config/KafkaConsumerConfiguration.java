@@ -30,8 +30,8 @@ public class KafkaConsumerConfiguration {
     @Value("${kafka.dlq.topic}")
     private String dlqTopic;
 
-    @Value("spring.data.kafka.port")
-    private String kafkaHost;
+    @Value("${spring.data.kafka.host}:${spring.data.kafka.port}")
+    private String kafkaBootstrapServers;
 
     @Bean
     public ConsumerFactory<String, StompMessagePublish> consumerFactory(){
@@ -44,7 +44,7 @@ public class KafkaConsumerConfiguration {
 
         Map<String, Object> consumerConfigurations =
                 ImmutableMap.<String, Object>builder()
-                        .put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaHost)
+                        .put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers)
                         .put(ConsumerConfig.GROUP_ID_CONFIG, kafkaConsumerGroupId)
                         .put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class)
                         .put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class)

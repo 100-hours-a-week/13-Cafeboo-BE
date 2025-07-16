@@ -46,6 +46,8 @@ jobs:
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
           AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
           AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
+          DEV_KAFKA_HOST: ${{ secrets.DEV_KAFKA_HOST }}
+          DEV_KAFKA_PORT: ${{ secrets.DEV_KAFKA_PORT }}
           DEFAULT_PROFILE_IMAGE_URL: ${{ secrets.DEFAULT_PROFILE_IMAGE_URL }} 
         run: |
             gcloud compute ssh dev-vm \

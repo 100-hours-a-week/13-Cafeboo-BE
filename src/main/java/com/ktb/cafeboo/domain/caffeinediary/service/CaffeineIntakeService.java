@@ -82,7 +82,7 @@ public class CaffeineIntakeService {
         intakeRepository.save(intake);
 
         // 2. 잔존량 계산
-        caffeineResidualService.updateResidualAmounts(userId, request.intakeTime(), request.caffeineAmount());
+        caffeineResidualService.updateResidualAmounts(user, request.intakeTime(), request.caffeineAmount());
 
         // 3. DailyStatistics 업데이트
         dailyStatisticsService.updateDailyStatistics(user, LocalDate.from(request.intakeTime()), request.caffeineAmount());
@@ -162,13 +162,13 @@ public class CaffeineIntakeService {
                     request.intakeTime() != null ? request.intakeTime() : intake.getIntakeTime();
 
             // 기존 시간 기준 삭제 ->  수정 이전의 잔존량 삭제
-            caffeineResidualService.modifyResidualAmounts(user.getId(), previousIntakeTime,
+            caffeineResidualService.modifyResidualAmounts(user, previousIntakeTime,
                 previousCaffeineAmount);
             dailyStatisticsService.updateDailyStatistics(user, LocalDate.from(previousIntakeTime),
                 previousCaffeineAmount * -1);
 
             // 새로운 시간 기준으로 update -> 수정 후의 잔존량 계산 및 저장
-            caffeineResidualService.updateResidualAmounts(user.getId(), newIntakeTime,
+            caffeineResidualService.updateResidualAmounts(user, newIntakeTime,
                 newCaffeineAmount);
             dailyStatisticsService.updateDailyStatistics(user, LocalDate.from(newIntakeTime),
                 newCaffeineAmount);
@@ -204,7 +204,7 @@ public class CaffeineIntakeService {
             int previousDrinkCount = intake.getDrinkCount();
 
             // 2. 해당 섭취 내역의 영향이 있는 시간 범위 내의 카페인 잔존량 수치 수정
-            caffeineResidualService.modifyResidualAmounts(user.getId(), previousIntakeTime, previousCaffeineAmount);
+            caffeineResidualService.modifyResidualAmounts(user, previousIntakeTime, previousCaffeineAmount);
             dailyStatisticsService.updateDailyStatistics(user, LocalDate.from(previousIntakeTime), previousCaffeineAmount * -1);
 
             // 3. 해당 데이터 CaffeineIntakes 테이블에서 삭제

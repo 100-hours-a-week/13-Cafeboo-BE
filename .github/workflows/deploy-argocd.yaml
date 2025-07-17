@@ -1,0 +1,64 @@
+name: Deploy to Prod (GitOps 자동 배포)
+
+on:
+  push:
+    branches:
+      - v3-test
+
+env:
+  ENV: prod
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout 소스 레포
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set variables
+        run: |
+          TAG=$(git describe --tags --abbrev=0)
+          SHA=$(git rev-parse --short=6 HEAD)
+          echo "IMAGE_TAG=${ENV}-${TAG}-${SHA}" >> $GITHUB_ENV
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to ECR
+        run: |
+          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | \
+          docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+
+      - name: Build & Push image
+        run: |
+          docker build -t ${{ secrets.ECR_REPOSITORY }}:$IMAGE_TAG .
+          docker tag ${{ secrets.ECR_REPOSITORY }}:$IMAGE_TAG ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:$IMAGE_TAG
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:$IMAGE_TAG
+
+      # 터미널에서 편집할 수 있는 CLI 도구인 yq
+      - name: Install yq
+        run: |
+          sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq
+          sudo chmod +x /usr/bin/yq
+
+      - name: Update image tag in backend.yaml
+        run: |
+          cd gitops/values
+          yq e '.image.tag = "${{ env.IMAGE_TAG }}"' -i backend.yaml
+
+
+      - name: Commit & Push changes
+        run: |
+          cd gitops
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add values/backend.yaml
+          git commit -m "chore: Update backend image tag to $IMAGE_TAG"
+          git push origin main

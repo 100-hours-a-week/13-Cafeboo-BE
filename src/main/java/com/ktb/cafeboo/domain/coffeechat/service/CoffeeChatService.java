@@ -71,7 +71,7 @@ public class CoffeeChatService {
         // 생성자 본인 참여
         CoffeeChatJoinRequest joinRequest = new CoffeeChatJoinRequest(
                 request.chatNickname(),
-                request.profileImageType()
+                request.profileImageType().toString()
         );
         joinMember(user, saved.getId(), joinRequest, true);
 
@@ -244,9 +244,9 @@ public class CoffeeChatService {
 
         validateDuplicateNickname(coffeechatId, request.chatNickname());
 
-        String profileImageUrl = (request.profileImageType() == ProfileImageType.DEFAULT)
-                ? s3Properties.getDefaultProfileImageUrl()
-                : user.getProfileImageUrl();
+        String profileImageUrl = (request.profileImageType() == ProfileImageType.USER.toString())
+                ? user.getProfileImageUrl()
+                : s3Properties.getDefaultProfileImageUrl();
 
         CoffeeChatMember member = CoffeeChatMember.of(
                 chat,

@@ -48,6 +48,13 @@ jobs:
           sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq
           sudo chmod +x /usr/bin/yq
 
+      - name: Clone GitOps Repository
+        uses: actions/checkout@v3
+        with:
+          repository: 100-hours-a-week/13-Cafeboo-GitOps
+          path: gitops
+
+
       - name: Update image tag in backend.yaml
         run: |
           cd gitops/values

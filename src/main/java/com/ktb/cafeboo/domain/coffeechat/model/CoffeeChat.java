@@ -89,12 +89,12 @@ public class CoffeeChat extends BaseEntity {
 
     public void addMember(CoffeeChatMember member) {
         this.members.add(member);
-        this.currentMemberCount = this.members.size();
+        this.currentMemberCount += 1;
     }
 
     public void removeMember(CoffeeChatMember member) {
         this.members.remove(member);
-        this.currentMemberCount = this.members.size();
+        this.currentMemberCount -= 1;
     }
 
     public boolean isJoinedBy(Long userId) {

@@ -17,6 +17,7 @@ import com.ktb.cafeboo.global.enums.CoffeeChatFilterType;
 import com.ktb.cafeboo.global.enums.CoffeeChatStatus;
 import com.ktb.cafeboo.global.enums.ProfileImageType;
 import com.ktb.cafeboo.global.infra.s3.S3Properties;
+import com.ktb.cafeboo.global.infra.sse.SseSender;
 import com.ktb.cafeboo.global.util.AuthChecker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +40,8 @@ public class CoffeeChatService {
     private final TagService tagService;
     private final ChatService chatService;
     private final S3Properties s3Properties;
+    private final CoffeeChatSseService coffeeChatSseService;
+    private final SseSender sseSender;
 
     @Transactional
     public CoffeeChatCreateResponse create(Long userId, CoffeeChatCreateRequest request) {
@@ -57,7 +60,7 @@ public class CoffeeChatService {
                 .status(CoffeeChatStatus.ACTIVE)
                 .meetingTime(meetingTime)
                 .maxMemberCount(request.memberCount())
-                .currentMemberCount(1)
+                .currentMemberCount(0)
                 .address(loc.address())
                 .latitude(loc.latitude())
                 .longitude(loc.longitude())
@@ -75,6 +78,8 @@ public class CoffeeChatService {
         );
         joinMember(user, saved.getId(), joinRequest, true);
 
+        sseSender.sendAfterCommit(() -> coffeeChatSseService.sendNewCoffeeChat(saved));
+
         return new CoffeeChatCreateResponse(saved.getId().toString());
     }
 
@@ -84,7 +89,12 @@ public class CoffeeChatService {
                 .orElseThrow(() -> new CustomApiException(ErrorStatus.USER_NOT_FOUND));
 
         boolean isHost = false;
-        return joinMember(user, coffeechatId, request, isHost);
+        CoffeeChatJoinResponse response = joinMember(user, coffeechatId, request, isHost);
+
+        sseSender.sendAfterCommit(() -> coffeeChatSseService.sendCurrentMemberCountUpdate(
+                coffeechatId, response.currentMemberCount()));
+
+        return response;
     }
 
     @Transactional(readOnly = true)
@@ -151,6 +161,9 @@ public class CoffeeChatService {
 
         chat.removeMember(member);
         coffeeChatMemberRepository.delete(member);
+
+        sseSender.sendAfterCommit(() -> coffeeChatSseService.sendCurrentMemberCountUpdate(
+                coffeechatId, chat.getCurrentMemberCount()));
     }
 
     @Transactional
@@ -176,6 +189,8 @@ public class CoffeeChatService {
 
         chat.softDelete();
         coffeeChatRepository.save(chat);
+
+        coffeeChatSseService.sendDeletedCoffeeChat(coffeechatId);
     }
 
     @Transactional(readOnly = true)
@@ -259,6 +274,7 @@ public class CoffeeChatService {
 
         CoffeeChatMember saved = coffeeChatMemberRepository.save(member);
         log.info("[CoffeeChatService.join] 참여자 닉네임: {}", request.chatNickname());
-        return CoffeeChatJoinResponse.from(saved.getId());
+
+        return CoffeeChatJoinResponse.of(saved.getId(), chat.getCurrentMemberCount());
     }
 }

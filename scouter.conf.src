@@ -1,6 +1,9 @@
 # Scouter Agent Configuration
 # --- General Settings ---
-scouter.log_level=7
+scouter.log_level=9
+
+trace_debug=true
+xlog_profile_debug=true
 net_collector_ip=34.85.100.95
 obj_name=${HOSTNAME}
 net_collector_udp_port=6100

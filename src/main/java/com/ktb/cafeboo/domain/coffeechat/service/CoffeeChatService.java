@@ -190,7 +190,7 @@ public class CoffeeChatService {
         chat.softDelete();
         coffeeChatRepository.save(chat);
 
-        coffeeChatSseService.sendDeletedCoffeeChat(coffeechatId);
+        sseSender.sendAfterCommit(() -> coffeeChatSseService.sendDeletedCoffeeChat(coffeechatId));
     }
 
     @Transactional(readOnly = true)

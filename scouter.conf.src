@@ -9,6 +9,9 @@ log_dir=/opt/scouter-agent/log
 dump_dir=/opt/scouter-agent/dump
 plugin_dir=/opt/scouter-agent/plugin
 
+xlog_profile_max_count=10000
+xlog_profile_max_size=200000
+
 # com.ktb.cafeboo 패키지 하위의 모든 클래스/메서드를 대상
 profile_fullstack_hooked_exception_enabled=true
 hook_method_patterns=com.ktb.cafeboo.*.*

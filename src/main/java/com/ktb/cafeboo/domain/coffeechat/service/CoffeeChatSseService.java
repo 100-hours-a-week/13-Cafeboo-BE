@@ -5,6 +5,7 @@ import com.ktb.cafeboo.domain.coffeechat.dto.sse.DeletedCoffeeChatPayload;
 import com.ktb.cafeboo.domain.coffeechat.dto.sse.NewCoffeeChatPayload;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChat;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -104,7 +105,6 @@ public class CoffeeChatSseService {
         });
     }
 
-
     public void sendDeletedCoffeeChat(Long coffeeChatId) {
         DeletedCoffeeChatPayload payload = new DeletedCoffeeChatPayload(coffeeChatId.toString());
 
@@ -120,4 +120,18 @@ public class CoffeeChatSseService {
         });
     }
 
+    // 1분마다 heartbeat 보내는 스케줄러 메서드
+    @Scheduled(fixedRate = 60000)
+    public void sendHeartbeatToAll() {
+        emitters.forEach((userId, emitter) -> {
+            try {
+                emitter.send(SseEmitter.event()
+                        .name("heartbeat")
+                        .data("ping"));
+            } catch (IOException e) {
+                emitter.complete();
+                emitters.remove(userId);
+            }
+        });
+    }
 }

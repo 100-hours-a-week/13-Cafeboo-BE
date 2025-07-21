@@ -1,7 +1,7 @@
 # Scouter Agent Configuration
 # --- General Settings ---
 scouter.log_level=7
-net_collector_ip=10.146.0.5
+net_collector_ip=34.85.100.95
 obj_name=${HOSTNAME}
 net_collector_udp_port=6100
 net_collector_tcp_port=6180

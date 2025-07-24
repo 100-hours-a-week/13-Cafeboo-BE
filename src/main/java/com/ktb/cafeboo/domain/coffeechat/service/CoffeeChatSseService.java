@@ -5,6 +5,7 @@ import com.ktb.cafeboo.domain.coffeechat.dto.sse.DeletedCoffeeChatPayload;
 import com.ktb.cafeboo.domain.coffeechat.dto.sse.NewCoffeeChatPayload;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChat;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CoffeeChatSseService {
@@ -27,28 +29,19 @@ public class CoffeeChatSseService {
 
         emitters.put(userId, emitter);
 
-        emitter.onCompletion(() -> {
-            emitter.complete();
-            emitters.remove(userId);
-        });
-
-        emitter.onTimeout(() -> {
-            emitter.complete();
-            emitters.remove(userId);
-        });
-
-        emitter.onError((e) -> {
-            emitter.complete();
-            emitters.remove(userId);
-        });
+        emitter.onCompletion(() -> cleanupEmitter(userId, emitter, "onCompletion"));
+        emitter.onTimeout(() -> cleanupEmitter(userId, emitter, "onTimeout"));
+        emitter.onError(e -> cleanupEmitter(userId, emitter, "onError: " + e.getMessage()));
 
 
         // 연결 확인용 더미 이벤트 전송
         try {
             emitter.send(SseEmitter.event()
                     .name("connect")
-                    .data("SSE connection established.")); // 503 에러 방지를 위한 더미 데이터
+                    .data("SSE connection established."));
+            log.info("[SSE] 연결 성공 - userId: {}", userId);
         } catch (IOException e) {
+            log.warn("[SSE] 연결 실패 - userId: {}, error: {}", userId, e.getMessage());
             emitter.completeWithError(e);
         }
 
@@ -74,8 +67,12 @@ public class CoffeeChatSseService {
     }
 
     public void sendNewCoffeeChat(CoffeeChat chat) {
-        LocalDateTime meetingTime = chat.getMeetingTime();
+        if (emitters.isEmpty()) {
+            log.warn("[SSE] 등록된 Emitter 없음 - 이벤트: new-coffeechat");
+            return;
+        }
 
+        LocalDateTime meetingTime = chat.getMeetingTime();
         NewCoffeeChatPayload payload = new NewCoffeeChatPayload(
                 chat.getId().toString(),
                 chat.getName(),
@@ -133,5 +130,11 @@ public class CoffeeChatSseService {
                 emitters.remove(userId);
             }
         });
+    }
+
+    private void cleanupEmitter(Long userId, SseEmitter emitter, String reason) {
+        log.warn("[SSE] Emitter 제거 - userId: {}, 이유: {}", userId, reason);
+        emitter.complete();
+        emitters.remove(userId);
     }
 }

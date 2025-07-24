@@ -78,7 +78,8 @@ public class CoffeeChatService {
         );
         joinMember(user, saved.getId(), joinRequest, true);
 
-        sseSender.sendAfterCommit(() -> coffeeChatSseService.sendNewCoffeeChat(saved));
+        //sseSender.sendAfterCommit(() -> coffeeChatSseService.sendNewCoffeeChat(saved));
+        coffeeChatSseService.sendNewCoffeeChat(saved);
 
         return new CoffeeChatCreateResponse(saved.getId().toString());
     }
@@ -91,8 +92,10 @@ public class CoffeeChatService {
         boolean isHost = false;
         CoffeeChatJoinResponse response = joinMember(user, coffeechatId, request, isHost);
 
-        sseSender.sendAfterCommit(() -> coffeeChatSseService.sendCurrentMemberCountUpdate(
-                coffeechatId, response.currentMemberCount()));
+        //sseSender.sendAfterCommit(() -> coffeeChatSseService.sendCurrentMemberCountUpdate(
+        //        coffeechatId, response.currentMemberCount()));
+
+        coffeeChatSseService.sendCurrentMemberCountUpdate(coffeechatId, response.currentMemberCount());
 
         return response;
     }
@@ -162,8 +165,10 @@ public class CoffeeChatService {
         chat.removeMember(member);
         coffeeChatMemberRepository.delete(member);
 
-        sseSender.sendAfterCommit(() -> coffeeChatSseService.sendCurrentMemberCountUpdate(
-                coffeechatId, chat.getCurrentMemberCount()));
+        //sseSender.sendAfterCommit(() -> coffeeChatSseService.sendCurrentMemberCountUpdate(
+        //        coffeechatId, chat.getCurrentMemberCount()));
+
+        coffeeChatSseService.sendCurrentMemberCountUpdate(coffeechatId, chat.getCurrentMemberCount());
     }
 
     @Transactional
@@ -190,7 +195,9 @@ public class CoffeeChatService {
         chat.softDelete();
         coffeeChatRepository.save(chat);
 
-        sseSender.sendAfterCommit(() -> coffeeChatSseService.sendDeletedCoffeeChat(coffeechatId));
+        //sseSender.sendAfterCommit(() -> coffeeChatSseService.sendDeletedCoffeeChat(coffeechatId));
+        coffeeChatSseService.sendDeletedCoffeeChat(coffeechatId);
+
     }
 
     @Transactional(readOnly = true)

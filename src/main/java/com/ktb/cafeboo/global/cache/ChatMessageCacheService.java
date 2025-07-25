@@ -37,7 +37,7 @@ public class ChatMessageCacheService {
 
         redisTemplate.delete(key); // 기존 캐시 제거
         if (!jsonList.isEmpty()) {
-            redisTemplate.opsForList().leftPushAll(key, jsonList);
+            redisTemplate.opsForList().rightPushAll(key, jsonList);
             redisTemplate.opsForList().trim(key, 0, MAX_CACHE_SIZE - 1);
             redisTemplate.expire(key, Duration.ofHours(24));
         }
@@ -55,7 +55,7 @@ public class ChatMessageCacheService {
         }
 
         String messageJson = convertToJson(messageDto);
-        redisTemplate.opsForList().leftPush(key, messageJson);
+        redisTemplate.opsForList().rightPush(key, messageJson);
         redisTemplate.opsForList().trim(key, 0, MAX_CACHE_SIZE - 1);
 
         log.debug("[cacheMessage] 캐시 저장 - roomId={}, messageId={}", roomId, messageDto.messageId());
@@ -84,7 +84,6 @@ public class ChatMessageCacheService {
                         .filter(Objects::nonNull)
                         .toList()
         );
-        Collections.reverse(cachedMessages);
 
         if (cursor.equals("0")) {
             List<MessageDto> result = cachedMessages.subList(0, Math.min(limit, cachedMessages.size()));

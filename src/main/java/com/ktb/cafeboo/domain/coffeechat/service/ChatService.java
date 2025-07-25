@@ -2,6 +2,7 @@ package com.ktb.cafeboo.domain.coffeechat.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ktb.cafeboo.domain.coffeechat.dto.StompMessagePublish;
+import com.ktb.cafeboo.domain.coffeechat.dto.common.MessageDto;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChat;
 import com.ktb.cafeboo.domain.coffeechat.model.CoffeeChatMember;
 import com.ktb.cafeboo.domain.coffeechat.dto.StompMessage;
@@ -9,6 +10,7 @@ import com.ktb.cafeboo.domain.coffeechat.repository.CoffeeChatMemberRepository;
 import com.ktb.cafeboo.domain.coffeechat.repository.CoffeeChatRepository;
 import com.ktb.cafeboo.global.apiPayload.code.status.ErrorStatus;
 import com.ktb.cafeboo.global.apiPayload.exception.CustomApiException;
+import com.ktb.cafeboo.global.cache.ChatMessageCacheService;
 import com.ktb.cafeboo.global.censorship.CensorshipStrategy;
 import com.ktb.cafeboo.global.censorship.TextCensorshipFilter;
 import com.ktb.cafeboo.global.config.RedisConfig;
@@ -73,6 +75,7 @@ public class ChatService {
     private final CoffeeChatMessageService coffeeChatMessageService;
     private final TextCensorshipFilter textCensorshipFilter;
     private final KafkaMessageProducer kafkaMessageProducer;
+    private final ChatMessageCacheService chatMessageCacheService;
 
     private static final String CHAT_STREAM_PREFIX = "coffeechat:room:";
     private static final String CHAT_CONSUMER_GROUP_PREFIX = "coffeechat:group:";
@@ -158,6 +161,11 @@ public class ChatService {
                 .build();
 
             CoffeeChatMessage savedMessage = coffeeChatMessageService.save(coffeeChatMessage);
+
+            // 캐시에 메시지 추가
+            MessageDto messageDto = MessageDto.from(savedMessage, sender);  // Dto로 변환
+            chatMessageCacheService.cacheMessage(chat.getId(), messageDto); // Redis 캐시 push
+            log.info("[ChatService] 새로운 메세지 redis 캐싱 업데이트");
 
             StompMessagePublish messagePublish = StompMessagePublish.from(savedMessage, sender);
 

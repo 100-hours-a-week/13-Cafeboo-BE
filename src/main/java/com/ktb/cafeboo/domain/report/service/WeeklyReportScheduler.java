@@ -41,7 +41,7 @@ public class WeeklyReportScheduler {
     private final CaffeineIntakeRepository intakeRepository;
     private final CaffeineResidualService caffeineResidualService;
 
-    @Scheduled(cron = "0 0 12 ? * MON") // 매주 월요일 오전 9시, 현재는 12시로 설정
+    @Scheduled(cron = "0 0 15 ? * MON", zone="Asia/Seoul") // 매주 월요일 오전 9시, 현재는 12시로 설정
     public CreateWeeklyAnalysisResponse generateWeeklyReports() {
         log.info("[IntakeSuggestionService.getPredictedIntakeSuggestion] 호출 시작");
 //        int targetYear = 2024;

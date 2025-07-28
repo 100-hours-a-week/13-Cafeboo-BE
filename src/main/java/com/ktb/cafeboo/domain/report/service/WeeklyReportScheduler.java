@@ -69,7 +69,7 @@ public class WeeklyReportScheduler {
 //        LocalDate endDate = startDate.plusDays(6);
 
         List<User> users = userRepository.findAll();
-        String callbackUrl = "http://localhost:8080/api/v1/reports/weekly/ai_callback";
+        String callbackUrl = "https://cafeboo.com/api/v1/reports/weekly/ai_callback";
 
         CreateWeeklyAnalysisRequest batchRequest = createWeeklyAnalysisRequest(users, callbackUrl);
 

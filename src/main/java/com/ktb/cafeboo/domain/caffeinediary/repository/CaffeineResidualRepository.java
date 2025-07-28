@@ -13,11 +13,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface CaffeineResidualRepository extends JpaRepository<CaffeineResidual, Long> {
-    @Query("SELECT cr FROM CaffeineResidual cr " +
-            "WHERE cr.user = :user " +
-            "AND cr.targetDate = :targetDate " +
-            "AND cr.hour = :hour " +
-            "AND cr.deletedAt IS NULL")
     Optional<CaffeineResidual> findByUserAndTargetDateAndHour(User user, LocalDateTime targetDate, int hour);
 
     @Query("SELECT cr FROM CaffeineResidual cr " +

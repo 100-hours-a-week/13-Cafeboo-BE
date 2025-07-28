@@ -41,7 +41,7 @@ public class WeeklyReportScheduler {
     private final CaffeineIntakeRepository intakeRepository;
     private final CaffeineResidualService caffeineResidualService;
 
-    @Scheduled(cron = "0 0 15 ? * MON", zone="Asia/Seoul") // 매주 월요일 오전 9시, 현재는 12시로 설정
+    @Scheduled(cron = "0 0 16 ? * MON", zone="Asia/Seoul") // 매주 월요일 오전 9시, 현재는 12시로 설정
     public CreateWeeklyAnalysisResponse generateWeeklyReports() {
         log.info("[IntakeSuggestionService.getPredictedIntakeSuggestion] 호출 시작");
 //        int targetYear = 2024;
@@ -69,7 +69,7 @@ public class WeeklyReportScheduler {
 //        LocalDate endDate = startDate.plusDays(6);
 
         List<User> users = userRepository.findAll();
-        String callbackUrl = "http://localhost:8080/api/v1/reports/weekly/ai_callback";
+        String callbackUrl = "https://cafeboo.com/api/v1/reports/weekly/ai_callback";
 
         CreateWeeklyAnalysisRequest batchRequest = createWeeklyAnalysisRequest(users, callbackUrl);
 

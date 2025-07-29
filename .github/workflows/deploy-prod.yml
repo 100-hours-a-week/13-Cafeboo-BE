@@ -51,6 +51,8 @@ jobs:
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
           AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
           AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
+          PROD_KAFKA_HOST: ${{ secrets.PROD_KAFKA_HOST }}
+          PROD_KAFKA_PORT: ${{ secrets.PROD_KAFKA_PORT }}
           DEFAULT_PROFILE_IMAGE_URL: ${{ secrets.DEFAULT_PROFILE_IMAGE_URL }}
         run: |
           cat <<EOF > startup.sh
@@ -84,6 +86,8 @@ jobs:
             -e AWS_S3_BUCKET='${AWS_S3_BUCKET}' \
             -e AWS_ACCESS_KEY='${AWS_ACCESS_KEY}' \
             -e AWS_SECRET_KEY='${AWS_SECRET_KEY}' \
+            -e PROD_KAFKA_HOST='${PROD_KAFKA_HOST}' \
+            -e PROD_KAFKA_PORT='${PROD_KAFKA_PORT}' \
             -e DEFAULT_PROFILE_IMAGE_URL='${DEFAULT_PROFILE_IMAGE_URL}' \
             asia-northeast3-docker.pkg.dev/true-alliance-464905-t8/backend/cafeboo-back:${GITHUB_SHA}
 
